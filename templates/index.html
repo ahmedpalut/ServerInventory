@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunucu Envanteri</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div id="toast">
+        {{ messages[0] }}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="page-header">
+        <h1 id="title">🖥️ Sunucu Envanteri</h1>
+
+        <button id="tableSettingsBtn" class="beautify">
+            ⚙️ Tablo Ayarları
+        </button>
+    </div>
+
+    <div class="cards">
+
+        <div class="card">
+            <h2>{{ servers|length }}</h2>
+            <p id="card1">Toplam Sunucu</p>
+        </div>
+
+        <div class="card">
+            <h2>{{ windows_amount }}</h2>
+            <p id="card2">Windows Sunucu</p>
+        </div>
+
+        <div class="card">
+            <h2>GIG</h2>
+            <p id="card3">IT Envanteri</p>
+        </div>
+
+    </div>
+
+    <div class="toolbar"> 
+        <form id="searchForm" action="/search" method="GET">
+            <div class="search-area">
+                <input type="text"
+                    id="searchInput"
+                    name="q"
+                    placeholder="🔍 Sunucu Ara..."
+                    value="{{ request.args.get('q','') }}">
+
+                <button type="submit" id="searchBtn" class="beautify">
+                    {% if request.path == "/search" %}
+                        ⬅️ Geri Dön
+                    {% else %}
+                        🔍 Ara
+                    {% endif %}
+                </button>
+
+                <button type="button" id="searchSettingsBtn" class="beautify">
+                    ⚙️ Arama Ayarları
+                </button>
+            </div>
+        </form>
+        
+        
+        <div> 
+            <a href="/add" class="add-btn" id="addBtn">➕ Yeni Sunucu</a> 
+            <button id="langButton"> TR / EN </button> 
+        </div>
+
+    </div>
+    <div class="table-wrapper">
+        <table id="serverTable">
+            <thead>
+                <tr>
+                    <th id="th1" onclick="sortTable(0)">Sunucu</th>
+                    <th id="th2" onclick="sortTable(1)">Disk Boyutu (GB)</th>
+                    <th id="th3" onclick="sortTable(2)">İşletim Sistemi</th>
+                    <th id="th4" onclick="sortTable(3)">RAM</th>
+                    <th id="th5" onclick="sortTable(4)">IP</th>
+                    <th id="th6" onclick="sortTable(5)">Açıklama</th>
+                    <th id="th7" onclick="sortTable(6)">CPU</th>
+                    <th id="th8" onclick="sortTable(7)">Tarih</th>
+                    <th id="th9" onclick="sortTable(8)">İşlem</th>
+                </tr>
+            </thead>
+            <tbody> {% for s in servers %} 
+                <tr class="serverRow">
+                    <td id="left">{{ s.name }}</td>
+                    <td>{{ s.disk_gb }}</td>
+                    <td>{{ s.os_name }}</td>
+                    <td>{{ s.ram_g }}</td>
+                    <td>{{ s.ip_address }}</td>
+                    <td>{{s.usage_project}}</td>
+                    <td>{{ s.core_amount }}</td>
+                    <td>{{s.created_at}}</td>
+                    <td>
+                        <a href="#"
+                        class="edit-btn"
+                        onclick="openPanel(
+                            '{{ s.id }}',
+                            '{{ s.name }}',
+                            '{{ s.disk_gb }}',
+                            '{{ s.os_name }}',
+                            '{{ s.ram_g }}',
+                            '{{ s.ip_address }}',
+                            '{{ s.usage_project }}',
+                            '{{ s.core_amount }}',
+                            '{{ s.created_at }}'
+                        ); return false;">
+                            ✏️
+                        </a>
+
+                        <a href="/delete/{{ s.id }}" class="delete-btn"
+                        onclick="return confirm('Bu sunucuyu silmek istediğinize emin misiniz?')">
+                            🗑️
+                        </a>
+                    </td>
+                </tr> {% endfor %} 
+            </tbody>
+        </table>
+    </div>
+
+    <div id="editPanel">
+        <span onclick="closePanel()" id="closeBtn">✖</span>
+
+        <h2 id="editSunucuDuzenle">Sunucu Düzenle</h2>
+
+        <form id="editForm" method="POST">
+            <label id="esl1">Sunucu Adı</label><br>
+            <input type="text" name="ad" id="p_name"><br><br>
+
+            <label id="esl2">Disk Boyutu</label><br>
+            <input type="number" name="disk" id="p_disk" step="any"><br><br>
+
+            <label id="esl3">Disk Boyut Türü (GB/TB)</label><br>
+            <input type="text" name="disktur" id="p_disktur"><br><br>
+
+            <label id="esl4">İşletim Sistemi</label><br>
+
+            <select name="server" id="server">
+                <option value="" id="esl41">Sunucu Seçin</option>
+
+                {% for os in os_list %}
+                    <option value="{{ os.name }}">{{ os.name }}</option>
+                {% endfor %}
+
+                <option value="Yeni" id="esl42">Yeni</option>
+            </select>
+
+            <div id="serverekle" style="display:none; margin-top:10px;">
+                <input
+                    type="text"
+                    name="isletim"
+                    placeholder="Yeni işletim sistemi"
+                    id="yeniIsletim">
+            </div>
+            <br><br>
+
+            <label>RAM (GB)</label><br>
+            <input type="number" name="ram" id="p_ram" ><br><br>
+
+            <label>IP</label><br>
+            <input type="text" name="ip" id="p_ip"><br><br>
+
+            <label id="esl5">Açıklama</label><br>
+            <input type="text" name="project" id="p_project"><br><br>
+
+            <label>CPU</label><br>
+            <input type="number" name="cpu" id="p_cpu"><br><br>
+
+            <label id="esl6">Tarih</label><br>
+            <input type="date" name="date" id="p_date"><br><br>
+
+            <button type="submit" class="add-btn">Kaydet</button>
+        </form>
+    </div>
+
+    <div id="searchSettingsOverlay">
+        <div id="searchSettingsPanel">
+            <span id="closeSearchSettings">✖</span>
+            <h2 id="aramalabel">Arama Ayarları</h2>
+            <br>
+            <h3 id="aranacakalan">Aranacak Alanlar</h3>
+            <div class="search-options">
+
+                <div class="search-fields">
+                    <label id="sl1">
+                        <input type="checkbox" name="fields" value="name" checked>
+                        Sunucu Adı 
+                    </label>
+
+                    <label id="sl2">
+                        <input type="checkbox" name="fields" value="os_name" checked>
+                        İşletim Sistemi
+                    </label>
+
+                    <label id="sl3">
+                        <input type="checkbox" name="fields" value="ip_address">
+                        IP Adresi
+                    </label>
+
+                    <label id="sl4">
+                        <input type="checkbox" name="fields" value="usage_project">
+                        Açıklama
+                    </label>
+
+                    <label id="sl5">
+                        <input type="checkbox" name="fields" value="disk_gb">
+                        Disk Boyutu
+                    </label>
+
+                    <div id="diskUnitOptions">
+                        <label>
+                            <input type="radio" name="disk_unit" value="GB" checked>
+                            GB
+                        </label>
+
+                        <label>
+                            <input type="radio" name="disk_unit" value="TB">
+                            TB
+                        </label>
+                    </div>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="ram_g">
+                        RAM
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="core_amount">
+                        CPU
+                    </label>
+
+                    <label id="sl6">
+                        <input type="checkbox" name="fields" value="created_at">
+                        Tarih
+                    </label>
+
+                </div>
+
+                <div class="search-buttons">
+                    <button type="button" id="selectAllBtn" class="beautify">Tümünü Seç</button>
+                    <button type="button" id="clearAllBtn" class="beautify">Temizle</button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script src="{{url_for('static', filename='js/index.js')}}"></script>
+</body>
+
+</html>

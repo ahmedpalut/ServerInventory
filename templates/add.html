@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Yeni Sunucu Ekle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="top-bar">
+            <h1 id="title">Yeni Sunucu Ekle</h1>
+
+            <button type="button" id="langButton">
+                TR / EN
+            </button>
+        </div>
+            
+            <form action="/add" method="POST"> 
+
+                <label id="l1">Sunucu Adı</label>
+                <input type="text" name="ad" required>
+
+                <label id="l2">Disk Boyutu (GB)</label>
+                <input type="text" name="disk" required>
+
+                <label id="l9">Disk Boyut Cinsi (GB/TB)</label>
+                <input type="text" name="disktur" required>
+
+                <label id="l3">İşletim Sistemi</label>
+                <select name="server" id="server">
+                    <option value="" id="sunucusec">Sunucu Seçin</option>
+
+                    {% for os in os_list %}
+                        <option value="{{ os.name }}">{{ os.name }}</option>
+                    {% endfor %}
+                    
+                    <option value="Yeni" id="yeni">Yeni</option>
+                </select>
+                <div id="serverekle" style="display: none;">
+                    <label id="l10">Yeni İşletim Sistemi</label>
+                    <input type="text" name="isletim">
+                </div>
+                <br><br>
+
+                <label id="l4">RAM</label>
+                <input type="text" name="ram" required>
+                
+                <label id="l5">IP</label>
+                <input type="text" name="ip" required>
+
+                <label id="l7">CPU</label>
+                <input type="text" name="cpu" required>
+
+                <label id="l8">Tarih</label>
+                <input type="date" name="tarih">
+
+                <label id="l6">Açıklama</label>
+                <input type="text" name="aciklama">
+
+                <div class="buttons">
+                    <button type="submit" id="saveBtn">Ekle</button>
+
+                    <a href="/" id="cancelBtn">İptal</a>
+                </div>
+            </form>    
+    </div>
+        
+
+        <script src="{{ url_for('static', filename='js/add.js')}}"> </script>
+</body>
+
+</html>
