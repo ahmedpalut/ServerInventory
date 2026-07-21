@@ -23,14 +23,17 @@
                 <label id="l1">Sunucu Adı</label>
                 <input type="text" name="ad" required>
 
-                <label id="l2">Disk Boyutu (GB)</label>
+                <label id="l2">Disk Boyutu</label>
                 <input type="text" name="disk" required>
 
-                <label id="l9">Disk Boyut Cinsi (GB/TB)</label>
-                <input type="text" name="disktur" required>
+                <label id="l9">Disk Boyut Türü (GB/TB)</label>
+                <select name="disktur" class="beautifySelect">
+                    <option value="GB">GB</option>
+                    <option value="TB">TB</option>
+                </select>
 
                 <label id="l3">İşletim Sistemi</label>
-                <select name="server" id="server">
+                <select name="server" id="server" class="beautifySelect">
                     <option value="" id="sunucusec">Sunucu Seçin</option>
 
                     {% for os in os_list %}

@@ -127,6 +127,8 @@
         </table>
     </div>
 
+    <div id="editOverlay"></div>
+
     <div id="editPanel">
         <span onclick="closePanel()" id="closeBtn">✖</span>
 
@@ -140,11 +142,14 @@
             <input type="number" name="disk" id="p_disk" step="any"><br><br>
 
             <label id="esl3">Disk Boyut Türü (GB/TB)</label><br>
-            <input type="text" name="disktur" id="p_disktur"><br><br>
+            <select name="disktur" id="p_disktur" class="beautifySelect">
+                <option value="GB">GB</option>
+                <option value="TB">TB</option>
+            </select>
 
             <label id="esl4">İşletim Sistemi</label><br>
 
-            <select name="server" id="server">
+            <select name="server" id="server" class="beautifySelect">
                 <option value="" id="esl41">Sunucu Seçin</option>
 
                 {% for os in os_list %}
@@ -248,7 +253,29 @@
                 <div class="search-buttons">
                     <button type="button" id="selectAllBtn" class="beautify">Tümünü Seç</button>
                     <button type="button" id="clearAllBtn" class="beautify">Temizle</button>
+
+                    <div id="diskCompareOptions">
+
+                        <label>
+                            <input type="radio" name="disk_compare" value="equal" checked>
+                            Tam eşleşme
+                        </label>
+
+                        <label>
+                            <input type="radio" name="disk_compare" value="gte">
+                            En az (≥)
+                        </label>
+
+                        <label>
+                            <input type="radio" name="disk_compare" value="lte">
+                            En fazla (≤)
+                        </label>
+
+                    </div>
+                    
                 </div>
+
+                
 
             </div>
 

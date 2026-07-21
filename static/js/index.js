@@ -30,12 +30,18 @@ function openPanel(
         "/edit/" + id;
 
     document.getElementById("editPanel").style.right = "0";
+    document.getElementById("editOverlay").style.display = "block";
 }
 
 function closePanel() {
-    document.getElementById("editPanel").style.right =
-        "-420px";
+    document.getElementById("editPanel").style.right = "-420px";
+    document.getElementById("editOverlay").style.display = "none";
 }
+
+document.getElementById("editOverlay").onclick = function(){
+    closePanel();
+}
+
 const select = document.getElementById("server");
 const serverekle =
     document.getElementById("serverekle");
@@ -206,6 +212,17 @@ document.getElementById("clearAllBtn").onclick = function () {
         box.checked = false;
     });
 
+    document.querySelectorAll("input[name='disk_compare']").forEach(function(radio){
+        radio.checked = false;
+    });
+
+    document.querySelectorAll("input[name='disk_unit']").forEach(function(radio){
+        radio.checked = false;
+    });
+
+    diskOptions.style.display = "none";
+    diskCompareOptions.style.display = "none";  
+
 };
 
 const searchForm = document.getElementById("searchForm");
@@ -239,6 +256,13 @@ document.getElementById("searchBtn").onclick = function (e) {
 
     if (diskRadio) {
         url += "&disk_unit=" + encodeURIComponent(diskRadio.value);
+    }
+
+    const compare =
+        document.querySelector("input[name='disk_compare']:checked");
+
+    if (compare) {
+        url += "&disk_compare=" + encodeURIComponent(compare.value);
     }
 
     window.location.href = url;
@@ -287,12 +311,23 @@ const diskUnitOptions = document.getElementById("diskUnitOptions");
 
 const diskOptions = document.getElementById("diskUnitOptions");
 
-function updateDiskOptions() {
-    if (diskCheckbox.checked) {
-        diskOptions.style.display = "flex";
-    } else {
-        diskOptions.style.display = "none";
+const diskCompareOptions =
+    document.getElementById("diskCompareOptions");
+
+function updateDiskOptions(){
+
+    if(diskCheckbox.checked){
+
+        diskOptions.style.display="flex";
+        diskCompareOptions.style.display="flex";
+
+    }else{
+
+        diskOptions.style.display="none";
+        diskCompareOptions.style.display="none";
+
     }
+
 }
 
 diskCheckbox.addEventListener("change", updateDiskOptions);

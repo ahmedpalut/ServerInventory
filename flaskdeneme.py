@@ -1,11 +1,15 @@
 from flask import *
 import mysql.connector
+import os
+from dotenv import load_dotenv
 
-mydb=mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="OrdekBumbo1453",
-    database="serverinventorydeneme"
+load_dotenv()
+
+mydb = mysql.connector.connect(
+    host=os.getenv("DB_HOST"),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    database=os.getenv("DB_NAME")
 )
 
 cursor=mydb.cursor(dictionary=True)
@@ -57,10 +61,8 @@ def edit(id):
     ip = request.form["ip"]
     project = request.form["project"]
     cpu = int(request.form["cpu"])
-    date=request.form["date"]
+    date = request.form["date"] or None
     disk_type=request.form["disktur"]
-    
-    date.replace(".","-")
     
     if(disk_type.upper() == "TB"):
         disk*=1024
@@ -183,7 +185,7 @@ def ekle():
         
         flash("Sunucu başarıyla eklendi!")
         
-        return redirect(url_for("ekle"))
+        return redirect(url_for("index"))
     
     cursor.execute("select name from os_types order by name")
     os_list=cursor.fetchall()
@@ -197,6 +199,7 @@ def search():
     q = request.args.get("q", "").strip()
     fields = request.args.getlist("fields")
     disk_unit = request.args.get("disk_unit", "GB")
+    disk_compare = request.args.get("disk_compare", "equal")
 
     if not fields:
         fields = ["name"]
@@ -243,7 +246,21 @@ def search():
                     if disk_unit == "TB":
                         limit *= 1024
 
-                    conditions.append("servers.disk_gb <= %s")
+                    if disk_compare == "equal":
+                        conditions.append(
+                            "CAST(servers.disk_gb AS DECIMAL(10,2)) = CAST(%s AS DECIMAL(10,2))"
+                        )
+
+                    elif disk_compare == "gte":
+                        conditions.append(
+                            "CAST(servers.disk_gb AS DECIMAL(10,2)) >= CAST(%s AS DECIMAL(10,2))"
+                        )
+
+                    elif disk_compare == "lte":
+                        conditions.append(
+                            "CAST(servers.disk_gb AS DECIMAL(10,2)) <= CAST(%s AS DECIMAL(10,2))"
+                        )
+
                     values.append(limit)
 
                 except ValueError:
