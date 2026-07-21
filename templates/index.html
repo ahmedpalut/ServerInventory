@@ -256,26 +256,69 @@
 
                     <div id="diskCompareOptions">
 
-                        <label>
+                        <label id="ssr1">
                             <input type="radio" name="disk_compare" value="equal" checked>
                             Tam eşleşme
                         </label>
 
-                        <label>
+                        <label id="ssr2">
                             <input type="radio" name="disk_compare" value="gte">
                             En az (≥)
                         </label>
 
-                        <label>
+                        <label id="ssr3">
                             <input type="radio" name="disk_compare" value="lte">
                             En fazla (≤)
                         </label>
 
                     </div>
-                    
                 </div>
 
                 
+
+            </div>
+
+        </div>
+    </div>
+
+    <div id="tableSettingsOverlay">
+        <div id="tableSettingsPanel">
+
+            <span id="closeTableSettings">✖</span>
+
+            <h2 id="tableLabel">Tablo Ayarları</h2>
+            <br>
+
+            <div class="table-options">
+
+                <div class="table-fields">
+
+                    <label id="ts1"><input type="checkbox" data-column="0" checked class="columnToggle" > Sunucu Adı</label>
+                    <label id="ts2"><input type="checkbox" data-column="1" checked class="columnToggle" > Disk Boyutu</label>
+                    <label id="ts3"><input type="checkbox" data-column="2" checked class="columnToggle" > İşletim Sistemi</label>
+                    <label id="ts4"><input type="checkbox" data-column="3" checked class="columnToggle" > RAM</label>
+                    <label id="ts5"><input type="checkbox" data-column="4" checked class="columnToggle" > IP</label>
+                    <label id="ts6"><input type="checkbox" data-column="5" checked class="columnToggle" > Açıklama</label>
+                    <label id="ts7"><input type="checkbox" data-column="6" checked class="columnToggle" > CPU</label>
+                    <label id="ts8"><input type="checkbox" data-column="7" checked class="columnToggle" > Tarih</label>
+
+                </div>
+
+                <div class="table-buttons">
+
+                    <button id="addColumnBtn" class="beautify" title="Sütun Ekle">
+                        ➕
+                    </button>
+
+                    <button id="deleteColumnBtn" class="beautify" title="Sütun Sil">
+                        ➖
+                    </button>
+
+                    <button id="deleteColumnBtn" class="beautify" title="Sütun Düzenle">
+                        ✏️
+                    </button>
+
+                </div>
 
             </div>
 

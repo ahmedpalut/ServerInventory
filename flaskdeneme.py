@@ -294,6 +294,10 @@ def search():
         windows_amount=windows_amount,
         os_list=os_list
     )
+    
+@app.route("/addcolumn", methods=["GET","POST"])
+def add_column():
+    pass
 
 
 if __name__=="__main__":

@@ -109,7 +109,19 @@ document.getElementById("langButton").onclick = function () {
         document.getElementById("sl5").lastChild.textContent = "Disk Size";
         document.getElementById("sl6").lastChild.textContent = "Date";
 
+        document.getElementById("ssr1").lastChild.textContent = "Equals";
+        document.getElementById("ssr2").lastChild.textContent = "Min (≥)";
+        document.getElementById("ssr3").lastChild.textContent = "Max (≤)";
+
         document.getElementById("addBtn").innerHTML = "➕ Add Server";
+
+        document.getElementById("tableSettingsBtn").innerHTML="⚙️ Table Settings";
+        document.getElementById("ts1").lastChild.textContent="Server Name";
+        document.getElementById("ts2").lastChild.textContent="Disk Size";
+        document.getElementById("ts3").lastChild.textContent="Operating System";
+        document.getElementById("ts6").lastChild.textContent="Description";
+        document.getElementById("ts8").lastChild.textContent="Date";
+        document.getElementById("tableLabel").innerHTML="Table Settings";
 
     }
 
@@ -163,13 +175,25 @@ document.getElementById("langButton").onclick = function () {
         document.getElementById("sl5").lastChild.textContent = "Disk Boyutu";
         document.getElementById("sl6").lastChild.textContent = "Tarih";
 
+        document.getElementById("ssr1").lastChild.textContent = "Tam Eşleşme";
+        document.getElementById("ssr2").lastChild.textContent = "En az (≥)";
+        document.getElementById("ssr3").lastChild.textContent = "En fazla (≤)";
+
         document.getElementById("addBtn").innerHTML = "➕ Yeni Sunucu";
+
+        document.getElementById("tableSettingsBtn").innerHTML="⚙️ Tablo Ayarları";
+        document.getElementById("ts1").lastChild.textContent="Sunucu Adı";
+        document.getElementById("ts2").lastChild.textContent="Disk Boyutu";
+        document.getElementById("ts3").lastChild.textContent="İşletim Sistemi";
+        document.getElementById("ts6").lastChild.textContent="Açıklama";
+        document.getElementById("ts8").lastChild.textContent="Tarih";
+        document.getElementById("tableLabel").innerHTML="Tablo Ayarları";
 
     }
 
     turkce = !turkce;
 
-}
+};
 
 
 
@@ -177,10 +201,30 @@ const searchSettingsBtn = document.getElementById("searchSettingsBtn");
 const overlay = document.getElementById("searchSettingsOverlay");
 const panel = document.getElementById("searchSettingsPanel");
 const closeBtn = document.getElementById("closeSearchSettings");
+const tableSettingsOverlay=document.getElementById("tableSettingsOverlay");
+const tableSettingsBtn=document.getElementById("tableSettingsBtn");
+const tableCloseBtn=document.getElementById("closeTableSettings");
+const tablePanel=document.getElementById("tableSettingsPanel");
+
+tableSettingsBtn.onclick = function(){
+    tableSettingsOverlay.style.display="flex";
+};
+
+tableCloseBtn.onclick = function(){
+    tableSettingsOverlay.style.display="none";
+};
+
+tableSettingsOverlay.onclick=function(){
+    tableSettingsOverlay.style.display="none";
+};
 
 searchSettingsBtn.onclick = function () {
     overlay.style.display = "flex";
 };
+
+tablePanel.onclick=function(e){
+    e.stopPropagation();
+}
 
 closeBtn.onclick = function () {
     overlay.style.display = "none";
@@ -334,3 +378,48 @@ diskCheckbox.addEventListener("change", updateDiskOptions);
 
 updateDiskOptions();
 
+document.querySelectorAll(".columnToggle").forEach(function (checkbox) {
+
+    checkbox.addEventListener("change", function () {
+
+        const column = Number(this.dataset.column);
+
+        document.querySelectorAll("#serverTable tr").forEach(function (row) {
+
+            if (row.cells[column]) {
+                row.cells[column].style.display = checkbox.checked ? "" : "none";
+            }
+
+        });
+
+        localStorage.setItem(
+            "column_" + column,
+            checkbox.checked
+        );
+
+    });
+
+});
+
+document.querySelectorAll(".columnToggle").forEach(function (checkbox) {
+
+    const column = Number(checkbox.dataset.column);
+
+    const saved = localStorage.getItem("column_" + column);
+
+    if (saved !== null) {
+
+        checkbox.checked = (saved === "true");
+
+        document.querySelectorAll("#serverTable tr").forEach(function (row) {
+
+            if (row.cells[column]) {
+                row.cells[column].style.display =
+                    checkbox.checked ? "" : "none";
+            }
+
+        });
+
+    }
+
+});
