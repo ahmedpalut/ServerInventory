@@ -45,6 +45,35 @@ document.getElementById("prevPage").onclick=function(){
 
 }
 
+function openDeleteColumnPanel(){
+
+    document.body.classList.add("modal-open");
+
+    fillDeleteColumn();
+
+    document.getElementById("columnDeletePanel").style.right="0";
+
+    document.getElementById("columndeletelay").style.display="block";
+    tableSettingsOverlay.style.display="none";
+
+}
+
+function closeDeleteColumnPanel(){
+
+    document.body.classList.remove("modal-open");
+
+    document.getElementById("columnDeletePanel").style.right="-420px";
+
+    document.getElementById("columndeletelay").style.display="none";
+
+}
+
+document.getElementById("columndeletelay").onclick=function(){
+
+    closeDeleteColumnPanel();
+
+}
+
 function openColumnPanel(){
 
     document.body.classList.add("modal-open");
@@ -71,6 +100,21 @@ function closeColumnPanel(){
 document.getElementById("columnOverlay").onclick=function(){
 
     closeColumnPanel();
+
+}
+
+function fillDeleteColumn(){
+
+    const select=document.getElementById("columnDeleteSelect");
+
+    const option=
+        select.options[select.selectedIndex];
+
+    document.getElementById("columnName").value=
+        option.dataset.name;
+
+    document.getElementById("columnDeleteForm").action=
+        "/editcolumn/"+option.value;
 
 }
 

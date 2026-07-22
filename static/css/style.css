@@ -711,3 +711,39 @@ select:hover{
 .dynamic-column{
     display: none;
 }
+
+#columndeletelay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+
+    display: none;
+
+    z-index: 999;
+}
+
+#columnDeletePanel {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 400px;
+    height: 100%;
+    background: #1e293b;
+    padding: 25px;
+    transition: .3s;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+#columnDeletePanel input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+}
+
+#closeDeleteColumnBtn {
+    float: right;
+    cursor: pointer;
+    font-size: 22px;
+}

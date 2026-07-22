@@ -265,6 +265,49 @@
 
         </div>
 
+        <div id="columndeletelay"></div>
+
+        <div id="columnDeletePanel">
+
+            <span  id="closeDeleteColumnBtn">✖</span>
+
+            <h2>Sütun Düzenle</h2>
+
+            <form id="columnDeleteForm" method="POST">
+
+                <label>Sütun Seçin</label><br>
+
+                <select
+                    id="columnDeleteSelect"
+                    class="beautifySelect"
+                    onchange="fillColumn()">
+
+                    {% for c in custom_columns %}
+                        <option
+                            value="{{ c.id }}"
+                            data-name="{{ c.column_name }}"
+                            data-type="{{ c.data_type }}">
+                            {{ c.column_name }}
+                        </option>
+                    {% endfor %}
+
+                </select>
+
+                <br><br>
+
+                <button
+                    class="delete-btn bold"
+                    type="submit">
+
+                    Sil
+
+                </button>
+
+            </form>
+
+        </div>
+
+
     <div id="searchSettingsOverlay">
         <div id="searchSettingsPanel">
             <span id="closeSearchSettings">✖</span>
@@ -388,7 +431,7 @@
                         ➕
                     </a>
 
-                    <a href="" class="delete-btn" id="deleteColumnBtn" title="Sütun Sil">
+                    <a onclick="openDeleteColumnPanel()" class="delete-btn" id="deleteColumnBtn" title="Sütun Sil">
                         ➖
                     </a>
 
