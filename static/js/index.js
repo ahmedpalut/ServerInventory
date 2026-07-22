@@ -1,7 +1,95 @@
-function openColumnPanel(
+const searchSettingsBtn = document.getElementById("searchSettingsBtn");
+const overlay = document.getElementById("searchSettingsOverlay");
+const panel = document.getElementById("searchSettingsPanel");
+const closeBtn = document.getElementById("closeSearchSettings");
+const tableSettingsOverlay=document.getElementById("tableSettingsOverlay");
+const tableSettingsBtn=document.getElementById("tableSettingsBtn");
+const tableCloseBtn=document.getElementById("closeTableSettings");
+const tablePanel=document.getElementById("tableSettingsPanel");
+let currentPage = 1;
+const maxPage = 2;
 
-){
-    
+function updatePageButtons(){
+
+    document.getElementById("prevPage").style.display =
+        currentPage > 1 ? "" : "none";
+
+    document.getElementById("nextPage").style.display =
+        currentPage < maxPage ? "" : "none";
+
+    document.querySelectorAll(".prevPageCell").forEach(cell=>{
+        cell.style.display =
+            currentPage>1 ? "" : "none";
+    });
+
+    document.querySelectorAll(".nextPageCell").forEach(cell=>{
+        cell.style.display =
+            currentPage<maxPage ? "" : "none";
+    });
+
+}
+
+document.getElementById("nextPage").onclick=function(){
+
+    currentPage++;
+
+    updatePageButtons();
+
+}
+
+document.getElementById("prevPage").onclick=function(){
+
+    currentPage--;
+
+    updatePageButtons();
+
+}
+
+function openColumnPanel(){
+
+    document.body.classList.add("modal-open");
+
+    fillColumn();
+
+    document.getElementById("columnPanel").style.right="0";
+
+    document.getElementById("columnOverlay").style.display="block";
+    tableSettingsOverlay.style.display="none";
+
+}
+
+function closeColumnPanel(){
+
+    document.body.classList.remove("modal-open");
+
+    document.getElementById("columnPanel").style.right="-420px";
+
+    document.getElementById("columnOverlay").style.display="none";
+
+}
+
+document.getElementById("columnOverlay").onclick=function(){
+
+    closeColumnPanel();
+
+}
+
+function fillColumn(){
+
+    const select=document.getElementById("columnSelect");
+
+    const option=
+        select.options[select.selectedIndex];
+
+    document.getElementById("columnName").value=
+        option.dataset.name;
+
+    document.getElementById("columnType").value=
+        option.dataset.type;
+
+    document.getElementById("columnForm").action=
+        "/editcolumn/"+option.value;
+
 }
 
 function openPanel(
@@ -62,16 +150,6 @@ select.addEventListener("change", function () {
         serverekle.style.display = "none";
     }
 });
-
-
-const searchSettingsBtn = document.getElementById("searchSettingsBtn");
-const overlay = document.getElementById("searchSettingsOverlay");
-const panel = document.getElementById("searchSettingsPanel");
-const closeBtn = document.getElementById("closeSearchSettings");
-const tableSettingsOverlay=document.getElementById("tableSettingsOverlay");
-const tableSettingsBtn=document.getElementById("tableSettingsBtn");
-const tableCloseBtn=document.getElementById("closeTableSettings");
-const tablePanel=document.getElementById("tableSettingsPanel");
 
 tableSettingsBtn.onclick = function(){
     tableSettingsOverlay.style.display="flex";
@@ -296,3 +374,5 @@ document.querySelectorAll(".columnToggle").forEach(function (checkbox) {
     }
 
 });
+
+updatePageButtons();

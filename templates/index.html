@@ -88,6 +88,9 @@
                     <th id="th7" onclick="sortTable(6)">CPU</th>
                     <th id="th8" onclick="sortTable(7)">Tarih</th>
                     <th id="th9" onclick="sortTable(8)">İşlem</th>
+
+                    <th id="prevPage" style="display:none; width:40px;">❮</th>
+                    <th id="nextPage" style="display:none; width:40px;">❯</th>
                 </tr>
             </thead>
             <tbody> {% for s in servers %} 
@@ -121,6 +124,13 @@
                         onclick="return confirm('Bu sunucuyu silmek istediğinize emin misiniz?')">
                             🗑️
                         </a>
+                    </td>
+                    <td class="prevPageCell" style="display:none;">
+                        
+                    </td>
+
+                    <td class="nextPageCell" style="display:none;">
+                        
                     </td>
                 </tr> {% endfor %} 
             </tbody>
@@ -186,6 +196,74 @@
             <button type="submit" class="add-btn" id="saveEditBtn">Kaydet</button>
         </form>
     </div>
+
+    <div id="columnOverlay"></div>
+
+        <div id="columnPanel">
+
+            <span onclick="closeColumnPanel()" id="closeColumnBtn">✖</span>
+
+            <h2>Sütun Düzenle</h2>
+
+            <form id="columnForm" method="POST">
+
+                <label>Sütun Seçin</label><br>
+
+                <select
+                    id="columnSelect"
+                    class="beautifySelect"
+                    onchange="fillColumn()">
+
+                    {% for c in custom_columns %}
+                        <option
+                            value="{{ c.id }}"
+                            data-name="{{ c.column_name }}"
+                            data-type="{{ c.data_type }}">
+                            {{ c.column_name }}
+                        </option>
+                    {% endfor %}
+
+                </select>
+
+                <br><br>
+
+                <label>Sütun Adı</label><br>
+
+                <input
+                    type="text"
+                    id="columnName"
+                    name="columnName">
+
+                <br><br>
+
+                <label>Veri Tipi</label><br>
+
+                <select
+                    id="columnType"
+                    name="dataType"
+                    class="beautifySelect">
+
+                    <option value="TEXT">TEXT</option>
+                    <option value="INTEGER">INTEGER</option>
+                    <option value="DECIMAL">DECIMAL</option>
+                    <option value="DATE">DATE</option>
+                    <option value="BOOLEAN">BOOLEAN</option>
+
+                </select>
+
+                <br><br>
+
+                <button
+                    class="add-btn bold"
+                    type="submit">
+
+                    Kaydet
+
+                </button>
+
+            </form>
+
+        </div>
 
     <div id="searchSettingsOverlay">
         <div id="searchSettingsPanel">

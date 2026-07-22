@@ -20,6 +20,14 @@ app.secret_key="SunucuEnvanter"
 
 @app.route("/")
 def index():
+    
+    cursor.execute("""
+        SELECT *
+        FROM custom_columns
+        ORDER BY column_name
+        """)
+
+    custom_columns = cursor.fetchall()
 
     cursor.execute("""
         SELECT
@@ -51,7 +59,8 @@ def index():
         "index.html",
         servers=servers,
         windows_amount=windows_amount,
-        os_list=os_list
+        os_list=os_list,
+        custom_columns=custom_columns
     )
 
 @app.route("/edit/<int:id>", methods=["POST"])
@@ -328,8 +337,26 @@ def addcolumn():
     return render_template("addcolumn.html")
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
+@app.route("/editcolumn/<int:id>", methods=["POST"])
+def editcolumn(id):
+
+    column_name=request.form["columnName"].strip()
+
+    data_type=request.form["dataType"]
+
+    cursor.execute("""
+        UPDATE custom_columns
+        SET
+            column_name=%s,
+            data_type=%s
+        WHERE id=%s
+    """,(column_name,data_type,id))
+
+    mydb.commit()
+
+    flash("Sütun güncellendi!")
+
+    return redirect(url_for("index"))
 
 
 if __name__=="__main__":
