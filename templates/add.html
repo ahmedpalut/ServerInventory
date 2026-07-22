@@ -63,11 +63,61 @@
                 <label id="l6">Açıklama</label>
                 <input type="text" name="aciklama">
 
+                {% if custom_columns %}
+
+                <hr> <br>
+
+                <h3>Özel Alanlar</h3>
+
+                {% for column in custom_columns %}
+
+                    <label>{{ column.column_name }}</label>
+
+                    {% if column.data_type == "TEXT" %}
+
+                        <input
+                            type="text"
+                            name="custom_{{ column.id }}">
+
+                    {% elif column.data_type == "INTEGER" %}
+
+                        <input
+                            type="number"
+                            step="1"
+                            name="custom_{{ column.id }}">
+
+                    {% elif column.data_type == "DECIMAL" %}
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            name="custom_{{ column.id }}">
+
+                    {% elif column.data_type == "DATE" %}
+
+                        <input
+                            type="date"
+                            name="custom_{{ column.id }}">
+
+                    {% elif column.data_type == "BOOLEAN" %}
+
+                        <input
+                            type="checkbox"
+                            value="True"
+                            name="custom_{{ column.id }}">
+
+                    {% endif %}
+
+                {% endfor %}
+
+                {% endif %}
+
                 <div class="buttons">
                     <button type="submit" id="saveBtn">Ekle</button>
 
                     <a href="/" id="cancelBtn">İptal</a>
                 </div>
+
             </form>    
     </div>
         

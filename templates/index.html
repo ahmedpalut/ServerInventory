@@ -89,6 +89,12 @@
                     <th id="th8" onclick="sortTable(7)">Tarih <span class="sort-icon">↕</span></th>
                     <th id="th9" onclick="sortTable(8)">İşlem</th>
 
+                    {% for column in custom_columns %}
+                    <th class="page2" style="display:none;">
+                        {{ column.column_name }}
+                    </th>
+                    {% endfor %}
+
                     <th id="prevPage" style="display:none; width:40px;">❮</th>
                     <th id="nextPage" style="display:none; width:40px;">❯</th>
                 </tr>
@@ -125,6 +131,17 @@
                             🗑️
                         </a>
                     </td>
+
+                    {% for column in custom_columns %}
+
+                    <td class="page2" style="display:none;">
+
+                        {{ custom_values.get((s.id,column.id),"") }}
+
+                    </td>
+
+                    {% endfor %}
+
                     <td class="prevPageCell" style="display:none;">
                         
                     </td>
@@ -192,6 +209,46 @@
 
             <label id="esl6">Tarih</label><br>
             <input type="date" name="date" id="p_date"><br><br>
+
+            <hr> <br>
+
+            <h3>Özel Alanlar</h3>
+
+            {% for column in custom_columns %}
+
+                <label>{{ column.column_name }}</label>
+
+                {% if column.data_type == "TEXT" %}
+                    <input type="text"
+                        id="custom_{{ column.id }}" 
+                        name="custom_{{ column.id }}"> <br> <br>
+
+                {% elif column.data_type == "INTEGER" %}
+                    <input type="number"
+                        step="1"
+                        id="custom_{{ column.id }}"
+                        name="custom_{{ column.id }}"> <br> <br>
+
+                {% elif column.data_type == "DECIMAL" %}
+                    <input type="number"
+                        step="0.01"
+                        id="custom_{{ column.id }}"
+                        name="custom_{{ column.id }}"> <br> <br>
+
+                {% elif column.data_type == "DATE" %}
+                    <input type="date"
+                        id="custom_{{ column.id }}"
+                        name="custom_{{ column.id }}"> <br> <br>
+
+                {% elif column.data_type == "BOOLEAN" %}
+                    <input type="checkbox"
+                        id="custom_{{ column.id }}"
+                        name="custom_{{ column.id }}" 
+                        value="True"> <br> <br>
+
+                {% endif %}
+
+            {% endfor %}
 
             <button type="submit" class="add-btn" id="saveEditBtn">Kaydet</button>
         </form>
