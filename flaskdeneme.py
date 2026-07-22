@@ -28,6 +28,18 @@ def index():
         """)
 
     custom_columns = cursor.fetchall()
+    
+    cursor.execute("""
+    SELECT server_id,column_id,value
+    FROM custom_values
+    """)
+
+    rows = cursor.fetchall()
+
+    custom_values = {}
+
+    for row in rows:
+        custom_values[(row["server_id"], row["column_id"])] = row["value"]
 
     cursor.execute("""
         SELECT
@@ -60,7 +72,8 @@ def index():
         servers=servers,
         windows_amount=windows_amount,
         os_list=os_list,
-        custom_columns=custom_columns
+        custom_columns=custom_columns,
+        custom_values=custom_values
     )
 
 @app.route("/edit/<int:id>", methods=["POST"])
@@ -160,6 +173,7 @@ def sil(id):
 
 @app.route("/add", methods=["GET","POST"])
 def ekle():
+    
     if request.method=="POST":
         name=request.form["ad"]
         disk_gb=float(request.form["disk"])
@@ -204,17 +218,55 @@ def ekle():
         
         values=(name,disk_gb,ram_g,core_amount,ip_address,os_type_id,usage_project,created_at)
         
-        cursor.execute(sql,values)
-        mydb.commit()
+        cursor.execute(sql, values)
+
+        server_id = cursor.lastrowid
         
+        cursor.execute("""
+            SELECT id, data_type
+            FROM custom_columns
+        """)
+
+        custom_columns = cursor.fetchall()
+        
+        for column in custom_columns:
+
+            value = request.form.get(f"custom_{column['id']}")
+
+            if column["data_type"] == "BOOLEAN":
+                value = "True" if value else "False"
+
+            if value not in ("", None):
+
+                cursor.execute("""
+                    INSERT INTO custom_values
+                    (server_id, column_id, value)
+                    VALUES (%s, %s, %s)
+                """,
+                (
+                    server_id,
+                    column["id"],
+                    value
+                ))
+                
+        mydb.commit()
+                
         flash("Sunucu başarıyla eklendi!")
         
         return redirect(url_for("index"))
     
     cursor.execute("select name from os_types order by name")
     os_list=cursor.fetchall()
+    
+    cursor.execute("""
+        SELECT id, column_name, data_type
+        FROM custom_columns
+        ORDER BY id
+    """)
+
+    custom_columns = cursor.fetchall()
         
-    return render_template("add.html",os_list=os_list)
+    return render_template("add.html",os_list=os_list,custom_columns=custom_columns)
 
 
 @app.route("/search")
@@ -309,14 +361,35 @@ def search():
     """)
     windows_amount = cursor.fetchone()["count"]
 
-    cursor.execute("SELECT name FROM os_types")
+    cursor.execute("SELECT name FROM os_types ORDER BY name")
     os_list = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT *
+        FROM custom_columns
+        ORDER BY column_name
+    """)
+    custom_columns = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT server_id, column_id, value
+        FROM custom_values
+    """)
+
+    rows = cursor.fetchall()
+
+    custom_values = {}
+
+    for row in rows:
+        custom_values[(row["server_id"], row["column_id"])] = row["value"]
 
     return render_template(
         "index.html",
         servers=servers,
         windows_amount=windows_amount,
-        os_list=os_list
+        os_list=os_list,
+        custom_columns=custom_columns,
+        custom_values=custom_values
     )
     
 @app.route("/addcolumn", methods=["GET", "POST"])

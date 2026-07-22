@@ -11,6 +11,28 @@ const maxPage = 2;
 
 function updatePageButtons(){
 
+    document.querySelectorAll(".page2").forEach(function(cell){
+
+        cell.style.display =
+            currentPage == 2 ? "" : "none";
+
+    });
+
+    document.querySelectorAll("#serverTable tr").forEach(function(row){
+
+        for(let i=0;i<firstPageColumns;i++){
+
+            if(row.cells[i]){
+
+                row.cells[i].style.display =
+                    currentPage==1 ? "" : "none";
+
+            }
+
+        }
+
+    });
+
     document.getElementById("prevPage").style.display =
         currentPage > 1 ? "" : "none";
 
