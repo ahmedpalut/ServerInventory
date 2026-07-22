@@ -271,7 +271,7 @@
 
             <span  id="closeDeleteColumnBtn">✖</span>
 
-            <h2>Sütun Düzenle</h2>
+            <h2>Sütun Sil</h2> <br>
 
             <form id="columnDeleteForm" method="POST">
 
@@ -280,7 +280,7 @@
                 <select
                     id="columnDeleteSelect"
                     class="beautifySelect"
-                    onchange="fillColumn()">
+                    onchange="fillDeleteColumn()">
 
                     {% for c in custom_columns %}
                         <option
@@ -431,9 +431,11 @@
                         ➕
                     </a>
 
-                    <a onclick="openDeleteColumnPanel()" class="delete-btn" id="deleteColumnBtn" title="Sütun Sil">
+                    <button onclick="openDeleteColumnPanel()" class="delete-btn" id="deleteColumnBtn" title="Sütun Sil">
                         ➖
-                    </a>
+                    </button> 
+                        
+                    
 
                     <button id="deleteColumnBtn" class="beautify" title="Sütun Düzenle" onclick="openColumnPanel()">
                         ✏️

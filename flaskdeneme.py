@@ -132,6 +132,20 @@ def edit(id):
 
     return redirect(url_for("index"))
 
+@app.route("/deleteColumn/<int:id>", methods=["POST"])
+def deleteColumn(id):
+
+    cursor.execute(
+        "DELETE FROM custom_columns WHERE id = %s",
+        (id,)
+    )
+
+    mydb.commit()
+
+    flash("Sütun başarıyla silindi!")
+
+    return redirect(url_for("index"))
+
 @app.route("/delete/<int:id>")
 def sil(id):
     sql="delete from servers where id = %s"

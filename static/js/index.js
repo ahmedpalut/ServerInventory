@@ -74,6 +74,10 @@ document.getElementById("columndeletelay").onclick=function(){
 
 }
 
+document.getElementById("closeDeleteColumnBtn").onclick=function(){
+    closeDeleteColumnPanel();
+}
+
 function openColumnPanel(){
 
     document.body.classList.add("modal-open");
@@ -103,6 +107,12 @@ document.getElementById("columnOverlay").onclick=function(){
 
 }
 
+document.getElementById("columnDeleteForm").onsubmit = function () {
+
+    return confirm("Bu sütun silinecek. Devam etmek istiyor musunuz?");
+
+};
+
 function fillDeleteColumn(){
 
     const select=document.getElementById("columnDeleteSelect");
@@ -110,11 +120,9 @@ function fillDeleteColumn(){
     const option=
         select.options[select.selectedIndex];
 
-    document.getElementById("columnName").value=
-        option.dataset.name;
 
     document.getElementById("columnDeleteForm").action=
-        "/editcolumn/"+option.value;
+        "/deleteColumn/"+option.value;
 
 }
 
