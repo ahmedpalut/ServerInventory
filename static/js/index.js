@@ -339,9 +339,6 @@ document.getElementById("searchBtn").onclick = function (e) {
 
 let sortDirection = {};
 
-// Sayfa genelinde hangi kolonun hangi yöne sıralandığını tutmak için (Eğer tanımlı değilse)
-let sortDirection = {};
-
 function sortTable(column) {
     const table = document.getElementById("serverTable");
     const tbody = table.tBodies[0];
