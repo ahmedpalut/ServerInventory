@@ -45,22 +45,22 @@ body {
     border-radius: 8px;
 }
 
-#editPanel::-webkit-scrollbar{
+::-webkit-scrollbar{
     width: 10px;
 }
 
-#editPanel::-webkit-scrollbar-track{
+::-webkit-scrollbar-track{
     background-color: #1e293b;
     border-radius: 10px;
 }
 
-#editPanel::-webkit-scrollbar-thumb{
+::-webkit-scrollbar-thumb{
     background-color: #ffffff;
     border-radius: 10px;
     border: 2px solid 1e293b;
 }
 
-#editPanel::-webkit-scrollbar-thumb:hover{
+ ::-webkit-scrollbar-thumb:hover{
     background-color: #c6c6c6;
 }
 
@@ -250,6 +250,10 @@ a {
     backdrop-filter:blur(15px);
     border:1px solid rgba(255,255,255,.20);
     transition:.3s;
+}
+
+#saveEditBtn{
+    font-weight: bold;
 }
 
 .add-btn{
@@ -656,20 +660,11 @@ input{
     width:100%;
 }
 
-.table-fields::-webkit-scrollbar{
-    width:10px;
+body.modal-open {
+    overflow: hidden;
 }
 
-.table-fields::-webkit-scrollbar-track{
-    background:#1e293b;
-    border-radius:10px;
+select:hover{
+    cursor: pointer;
 }
 
-.table-fields::-webkit-scrollbar-thumb{
-    background:white;
-    border-radius:10px;
-}
-
-.table-fields::-webkit-scrollbar-thumb:hover{
-    background:#c6c6c6;
-}

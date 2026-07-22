@@ -8,6 +8,13 @@
 </head>
 
 <body>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div id="toast">
+                {{ messages[0] }}
+            </div>
+        {% endif %}
+    {% endwith %}
 
     <div class="container">
         <div class="top-bar">
@@ -33,7 +40,7 @@
                 </select>
 
                 <div class="buttons">
-                    <button type="submit" id="addColumnBtn">Ekle</button>
+                    <button type="submit" id="saveColumnBtn">Ekle</button>
 
                     <a href="/" id="cancelColumnBtn">İptal</a>
                 </div>

@@ -44,6 +44,7 @@ document.getElementById("langButton").onclick = function () {
         document.getElementById("yeniIsletim").placeholder="New operating system";
         document.getElementById("esl5").innerHTML = "Description";
         document.getElementById("esl6").innerHTML = "Date";
+        document.getElementById("saveEditBtn").innerHTML="Save";
 
         document.getElementById("sl1").lastChild.textContent = "Server Name";
         document.getElementById("sl2").lastChild.textContent = "Operating System";
@@ -110,6 +111,7 @@ document.getElementById("langButton").onclick = function () {
         document.getElementById("yeniIsletim").placeholder="Yeni İşletim Sistemi";
         document.getElementById("esl5").innerHTML = "Açıklama";
         document.getElementById("esl6").innerHTML = "Tarih";
+        document.getElementById("saveEditBtn").innerHTML="Kaydet";
 
         document.getElementById("sl1").lastChild.textContent = "Sunucu Adı";
         document.getElementById("sl2").lastChild.textContent = "işletim Sistemi";

@@ -1,3 +1,8 @@
+function openColumnPanel(
+
+){
+    
+}
 
 function openPanel(
     id,
@@ -10,6 +15,8 @@ function openPanel(
     cpu,
     date
 ) {
+    document.body.classList.add("modal-open");
+
     document.getElementById("p_name").value = name;
     if(disk>=1024){
         disk/=1024;
@@ -34,6 +41,7 @@ function openPanel(
 }
 
 function closePanel() {
+    document.body.classList.remove("modal-open");
     document.getElementById("editPanel").style.right = "-420px";
     document.getElementById("editOverlay").style.display = "none";
 }
@@ -67,18 +75,22 @@ const tablePanel=document.getElementById("tableSettingsPanel");
 
 tableSettingsBtn.onclick = function(){
     tableSettingsOverlay.style.display="flex";
+    document.body.classList.add("modal-open");
 };
 
 tableCloseBtn.onclick = function(){
     tableSettingsOverlay.style.display="none";
+    document.body.classList.remove("modal-open");
 };
 
 tableSettingsOverlay.onclick=function(){
     tableSettingsOverlay.style.display="none";
+    document.body.classList.remove("modal-open");
 };
 
 searchSettingsBtn.onclick = function () {
     overlay.style.display = "flex";
+    document.body.classList.add("modal-open");
 };
 
 tablePanel.onclick=function(e){
@@ -87,10 +99,12 @@ tablePanel.onclick=function(e){
 
 closeBtn.onclick = function () {
     overlay.style.display = "none";
+    document.body.classList.remove("modal-open");
 };
 
 overlay.onclick = function () {
     overlay.style.display = "none";
+    document.body.classList.remove("modal-open");
 };
 
 panel.onclick = function (e) {

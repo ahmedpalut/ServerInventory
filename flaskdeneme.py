@@ -300,9 +300,36 @@ def search():
 def addcolumn():
 
     if request.method == "POST":
-        pass
+
+        column_name = request.form["colName"].strip()
+        data_type = request.form["dataType"]
+
+        cursor.execute("""
+            SELECT id
+            FROM custom_columns
+            WHERE LOWER(column_name) = LOWER(%s)
+        """, (column_name,))
+
+        if cursor.fetchone():
+            flash("Bu isimde bir sütun zaten mevcut!")
+            return redirect(url_for("addcolumn"))
+
+        cursor.execute("""
+            INSERT INTO custom_columns
+            (column_name, data_type, created_at)
+            VALUES (%s, %s, CURDATE())
+        """, (column_name, data_type))
+
+        mydb.commit()
+
+        flash("Yeni sütun başarıyla eklendi!")
+        return redirect(url_for("index"))
 
     return render_template("addcolumn.html")
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
 
 
 if __name__=="__main__":
