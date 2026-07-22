@@ -219,13 +219,21 @@ table {
 
 th {
     background: #2563eb;
-    padding:15px;
+    padding: 15px;
+    color: #ffffff; /* Başlık yazılarının okunaklı olması için */
+    user-select: none; /* Tıklama sırasında yazıların seçilmesini engeller */
 }
 
-th:hover{
+th:hover {
     cursor: pointer;
+    background: #1d4ed8; /* Üzerine gelindiğinde hafif koyulaşma efekti (isteğe bağlı) */
 }
 
+th .sort-icon {
+    font-size: 0.8em;
+    color: #cbd5e1; /* Ok simgelerinin rengi */
+    margin-left: 5px;
+}
 td{
     padding:15px;
     text-align:center;

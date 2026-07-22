@@ -317,24 +317,26 @@ document.getElementById("searchBtn").onclick = function (e) {
 
 let sortDirection = {};
 
-function sortTable(column) {
+// Sayfa genelinde hangi kolonun hangi yöne sıralandığını tutmak için (Eğer tanımlı değilse)
+let sortDirection = {};
 
+function sortTable(column) {
     const table = document.getElementById("serverTable");
     const tbody = table.tBodies[0];
-
     const rows = Array.from(tbody.rows);
 
+    // Sıralama yönünü tersine çevir (true: artalan/yukarı, false: azalan/aşağı)
     sortDirection[column] = !sortDirection[column];
 
-    rows.sort(function(a, b){
-
+    // Satırları sırala
+    rows.sort(function(a, b) {
         let x = a.cells[column].innerText.trim();
         let y = b.cells[column].innerText.trim();
 
         let nx = parseFloat(x);
         let ny = parseFloat(y);
 
-        if(!isNaN(nx) && !isNaN(ny)){
+        if (!isNaN(nx) && !isNaN(ny)) {
             return sortDirection[column] ? nx - ny : ny - nx;
         }
 
@@ -343,11 +345,30 @@ function sortTable(column) {
             : y.localeCompare(x, "tr");
     });
 
-    rows.forEach(function(row){
+    // Sıralanan satırları tabloya tekrar ekle
+    rows.forEach(function(row) {
         tbody.appendChild(row);
     });
-}
 
+    // --- OK SİMGELERİNİ GÜNCELLEME KISMI ---
+    // Tüm başlıklardaki okları sıfırla veya varsayılan yap
+    for (let i = 0; i < 9; i++) {
+        let th = document.getElementById("th" + (i + 1));
+        if (th) {
+            let span = th.querySelector(".sort-icon");
+            if (span) span.innerText = "↕";
+        }
+    }
+
+    // Tıklanan başlığın okunu yönüne göre değiştir
+    let activeTh = document.getElementById("th" + (column + 1));
+    if (activeTh) {
+        let activeSpan = activeTh.querySelector(".sort-icon");
+        if (activeSpan) {
+            activeSpan.innerText = sortDirection[column] ? "▲" : "▼";
+        }
+    }
+}
 const diskCheckbox = document.querySelector(
     "input[name='fields'][value='disk_gb']"
 );
