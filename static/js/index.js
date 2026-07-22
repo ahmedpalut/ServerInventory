@@ -344,10 +344,8 @@ function sortTable(column) {
     const tbody = table.tBodies[0];
     const rows = Array.from(tbody.rows);
 
-    // Sıralama yönünü tersine çevir (true: artalan/yukarı, false: azalan/aşağı)
     sortDirection[column] = !sortDirection[column];
 
-    // Satırları sırala
     rows.sort(function(a, b) {
         let x = a.cells[column].innerText.trim();
         let y = b.cells[column].innerText.trim();
@@ -364,13 +362,10 @@ function sortTable(column) {
             : y.localeCompare(x, "tr");
     });
 
-    // Sıralanan satırları tabloya tekrar ekle
     rows.forEach(function(row) {
         tbody.appendChild(row);
     });
 
-    // --- OK SİMGELERİNİ GÜNCELLEME KISMI ---
-    // Tüm başlıklardaki okları sıfırla veya varsayılan yap
     for (let i = 0; i < 9; i++) {
         let th = document.getElementById("th" + (i + 1));
         if (th) {
@@ -379,7 +374,6 @@ function sortTable(column) {
         }
     }
 
-    // Tıklanan başlığın okunu yönüne göre değiştir
     let activeTh = document.getElementById("th" + (column + 1));
     if (activeTh) {
         let activeSpan = activeTh.querySelector(".sort-icon");
