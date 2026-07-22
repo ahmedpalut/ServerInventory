@@ -289,6 +289,7 @@ a:hover{
     color:white;
     padding:8px 12px;
     border-radius:8px;
+    text-align: center;
 }
 
 .delete-btn:hover{
