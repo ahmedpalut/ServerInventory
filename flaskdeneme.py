@@ -2,6 +2,7 @@ from flask import *
 import mysql.connector
 import os
 from dotenv import load_dotenv
+from datetime import date
 
 load_dotenv()
 
@@ -295,9 +296,13 @@ def search():
         os_list=os_list
     )
     
-@app.route("/addcolumn", methods=["GET","POST"])
-def add_column():
-    pass
+@app.route("/addcolumn", methods=["GET", "POST"])
+def addcolumn():
+
+    if request.method == "POST":
+        pass
+
+    return render_template("addcolumn.html")
 
 
 if __name__=="__main__":

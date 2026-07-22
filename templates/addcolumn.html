@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Yeni Sütun Ekle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="top-bar">
+            <h1 id="title">Yeni Sütun Ekle</h1>
+
+            <button type="button" id="langButton">
+                TR / EN
+            </button>
+        </div>
+            
+            <form action="/addcolumn" method="POST"> 
+
+                <label>Sütun Adı</label>
+                <input type="text" name="colName" required>
+
+                <label>Veri Tipi</label>
+                <select name="varType" class="beautifySelect">
+                    <option value="TEXT">TEXT</option>
+                    <option value="INTEGER">INTEGER</option>
+                    <option value="DECIMAL">DECIMAL</option>
+                    <option value="DATE">DATE</option>
+                    <option value="BOOLEAN">BOOLEAN</option>
+                </select>
+
+                <div class="buttons">
+                    <button type="submit" id="addColumnBtn">Ekle</button>
+
+                    <a href="/" id="cancelColumnBtn">İptal</a>
+                </div>
+            </form>    
+    </div>
+        
+        <script src="{{url_for('static', filename='js/TranslateFiles/addcolumnTranslate.js')}}"></script>
+        <script src="{{ url_for('static', filename='js/addcolumn.js')}}"> </script>
+        
+</body>
+
+</html>

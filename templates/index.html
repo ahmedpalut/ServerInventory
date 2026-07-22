@@ -306,9 +306,9 @@
 
                 <div class="table-buttons">
 
-                    <button id="addColumnBtn" class="beautify" title="Sütun Ekle">
+                    <a href="/addcolumn" class="add-btn" id="addColumnBtn" title="Sütun Ekle">
                         ➕
-                    </button>
+                    </a>
 
                     <button id="deleteColumnBtn" class="beautify" title="Sütun Sil">
                         ➖
@@ -326,6 +326,7 @@
     </div>
 
     <script src="{{url_for('static', filename='js/index.js')}}"></script>
+    <script src="{{url_for('static', filename='js/TranslateFiles/indexTranslate.js')}}"></script>
 </body>
 
 </html>
