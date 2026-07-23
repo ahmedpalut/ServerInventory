@@ -72,7 +72,7 @@
             <a href="/add" class="add-btn" id="addBtn">➕ Yeni Sunucu</a> 
             <button id="langButton"> TR / EN </button> 
         </div>
-    </div> <!-- DİV EKSİKLİĞİ BURADA GİDERİLDİ -->
+    </div>
 
     <div class="table-wrapper">
         <table id="serverTable">
@@ -116,17 +116,19 @@
                     <td>
                         <a href="#"
                         class="edit-btn"
-                        onclick="openPanel(
-                            '{{ s.id }}',
-                            '{{ s.name }}',
-                            '{{ s.disk_gb }}',
-                            '{{ s.os_name }}',
-                            '{{ s.ram_g }}',
-                            '{{ s.ip_address }}',
-                            '{{ s.usage_project }}',
-                            '{{ s.core_amount }}',
-                            '{{ s.created_at }}'
-                        ); return false;">
+                        data-custom='{{ s.custom_values | tojson }}'
+                        onclick='openPanel(
+                            "{{ s.id }}",
+                            "{{ s.name }}",
+                            "{{ s.disk_gb }}",
+                            "{{ s.os_name }}",
+                            "{{ s.ram_g }}",
+                            "{{ s.ip_address }}",
+                            "{{ s.usage_project }}",
+                            "{{ s.core_amount }}",
+                            "{{ s.created_at }}",
+                            JSON.parse(this.dataset.custom)
+                        ); return false;'>
                             ✏️
                         </a>
 
@@ -200,7 +202,7 @@
 
             <hr> <br>
 
-            <h3>Özel Alanlar</h3>
+            <h3>-Özel Alanlar-</h3>
 
             {% for column in custom_columns %}
 

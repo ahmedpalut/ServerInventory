@@ -116,7 +116,8 @@ function openPanel(
     ip,
     project,
     cpu,
-    date
+    date,
+    customValues
 ) {
     document.body.classList.add("modal-open");
 
@@ -135,6 +136,34 @@ function openPanel(
     document.getElementById("p_project").value = project;
     document.getElementById("p_cpu").value = cpu;
     document.getElementById("p_date").value = date;
+
+    document.querySelectorAll("[id^='custom_']").forEach(input => {
+
+        if (input.type === "checkbox") {
+            input.checked = false;
+        } else {
+            input.value = "";
+        }
+
+    });
+
+    for (const columnId in customValues) {
+
+        const input = document.getElementById("custom_" + columnId);
+
+        if (!input) continue;
+
+        if (input.type === "checkbox") {
+
+            input.checked = (customValues[columnId] === "True");
+
+        } else {
+
+            input.value = customValues[columnId];
+
+        }
+
+    }
 
     document.getElementById("editForm").action =
         "/edit/" + id;
@@ -407,11 +436,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const headers = document.querySelectorAll("#serverTable th");
     
     headers.forEach((th) => {
-        // İşlem sütunu hariç başlıklara tıklama verelim
+        
         if (th.id !== "th_last") {
             th.style.cursor = "pointer";
             th.addEventListener("click", function () {
-                // th id'sinden index numarasını güvenle çekelim (Örn: "th3" -> 3, "th_8" -> 8)
+                
                 let colIndex;
                 if (th.id.startsWith("th_")) {
                     colIndex = parseInt(th.id.replace("th_", ""));

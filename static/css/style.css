@@ -197,25 +197,25 @@ button {
     transition:.3s;
 }
 
-/* Tablo sarmalayıcısı */
+
 .table-wrapper {
     overflow-x: auto;
     position: relative;
     max-width: 100%;
 }
 
-/* Tablo genel yapı */
+
 #serverTable {
     width: max-content;
     min-width: 100%;
     border-collapse: collapse;
 }
 
-/* Hücre ve Başlık Ortak Boyut Koruma */
+
 #serverTable th, 
 #serverTable td {
     padding: 12px 16px;
-    white-space: nowrap; /* Sütunların küçülmesini ve yazının sıkışmasını önler */
+    white-space: nowrap; 
 }
 
 table {
@@ -233,18 +233,18 @@ table {
 th {
     background: #2563eb;
     padding: 15px;
-    color: #ffffff; /* Başlık yazılarının okunaklı olması için */
-    user-select: none; /* Tıklama sırasında yazıların seçilmesini engeller */
+    color: #ffffff; 
+    user-select: none; 
 }
 
 th:hover {
     cursor: pointer;
-    background: #1d4ed8; /* Üzerine gelindiğinde hafif koyulaşma efekti (isteğe bağlı) */
+    background: #1d4ed8; 
 }
 
 th .sort-icon {
     font-size: 0.8em;
-    color: #cbd5e1; /* Ok simgelerinin rengi */
+    color: #cbd5e1; 
     margin-left: 5px;
 }
 td{
