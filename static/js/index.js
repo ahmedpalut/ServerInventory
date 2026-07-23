@@ -310,11 +310,11 @@ document.getElementById("searchBtn").onclick = function (e) {
 let sortDirection = {};
 
 function sortTable(column) {
-
     const table = document.getElementById("serverTable");
     const tbody = table.tBodies[0];
     const rows = Array.from(tbody.rows);
 
+    // Sıralama yönünü tersine çevir
     sortDirection[column] = !sortDirection[column];
 
     rows.sort(function(a, b) {
@@ -325,11 +325,7 @@ function sortTable(column) {
         let ny = parseFloat(y);
 
         if (!isNaN(nx) && !isNaN(ny)) {
-            if (sortDirection[column]) {
-                return nx - ny;
-            } else {
-                return ny - nx;
-            }
+            return sortDirection[column] ? nx - ny : ny - nx;
         }
 
         return sortDirection[column]
@@ -341,17 +337,15 @@ function sortTable(column) {
         tbody.appendChild(row);
     });
 
-    // Tablodaki toplam sütun sayısına göre dinamik döngü
-    const totalColumns = table.rows[0].cells.length;
-    for (let i = 0; i < totalColumns; i++) {
-        let th = document.getElementById("th" + (i + 1));
-        if (th) {
-            let span = th.querySelector(".sort-icon");
-            if (span) span.innerText = "↕";
-        }
-    }
+    // İkonları sıfırla (HTML'deki ID'lere tam uyumlu olacak şekilde düzeltildi)
+    const headers = document.querySelectorAll("#serverTable th");
+    headers.forEach((th, i) => {
+        let span = th.querySelector(".sort-icon");
+        if (span) span.innerText = "↕";
+    });
 
-    let activeTh = document.getElementById("th" + (column + 1));
+    // Aktif olan sütunun ikonunu güncelle
+    let activeTh = document.getElementById("th" + column) || document.getElementById("th_" + column);
     if (activeTh) {
         let activeSpan = activeTh.querySelector(".sort-icon");
         if (activeSpan) {
