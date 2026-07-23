@@ -197,33 +197,47 @@ button {
     transition:.3s;
 }
 
+/* Tablo sarmalayıcısının yatay kaydırma yapabilmesi için */
 .table-wrapper {
-    width: 100%;
-    overflow-x: auto; /* Yatay kaydırma çubuğu ekler */
-    white-space: nowrap;
+    overflow-x: auto;
+    position: relative;
+    max-width: 100%;
 }
 
+/* Tablo genel metin renginin düzgün okunması için */
 #serverTable {
-    width: 100%;
+    color: #ffffff; /* veya temanıza uygun koyu/açık bir renk */
     border-collapse: collapse;
+    width: 100%;
 }
 
+/* İlk Sütun (Sunucu Adı) Sabitleme */
 #serverTable th:first-child,
 #serverTable td:first-child {
     position: sticky;
     left: 0;
-    background-color: #fff; /* Arka plan rengi tablonun altından yazı görünmesini engeller */
-    z-index: 2;
+    z-index: 3;
+    background-color: var(--card-bg, #1e1e1e); /* Tablonun arka plan rengiyle aynı olmalı */
 }
 
+/* Son Sütun (İşlem) Sabitleme */
 #serverTable th:last-child,
 #serverTable td:last-child {
     position: sticky;
     right: 0;
-    background-color: #fff;
-    z-index: 2;
+    z-index: 3;
+    background-color: var(--card-bg, #1e1e1e); /* Tablonun arka plan rengiyle aynı olmalı */
 }
 
+/* Başlıkların (th) ve hücrelerin (td) yazı rengi ve arka plan çakışmasını önlemek için */
+#serverTable th {
+    background-color: #2b2b2b; /* Başlık arka planınız */
+    color: #ffffff !important; /* Yazıların net beyaz ve okunabilir olması için */
+}
+
+#serverTable td {
+    color: #ffffff !important; /* Hücre yazı rengi okunurluğu */
+}
 td:last-child{
     white-space: nowrap;
 }
