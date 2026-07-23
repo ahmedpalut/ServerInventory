@@ -280,8 +280,6 @@ document.getElementById("searchBtn").onclick = function (e) {
 
 let sortDirection = {};
 
-let sortDirection = {};
-
 function sortTable(column) {
     const table = document.getElementById("serverTable");
     const tbody = table.tBodies[0];
