@@ -68,11 +68,11 @@
             </div>
         </form>
         
-        
         <div> 
             <a href="/add" class="add-btn" id="addBtn">➕ Yeni Sunucu</a> 
             <button id="langButton"> TR / EN </button> 
         </div>
+    </div> <!-- DİV EKSİKLİĞİ BURADA GİDERİLDİ -->
 
     <div class="table-wrapper">
         <table id="serverTable">
@@ -87,12 +87,11 @@
                     <th id="th7" onclick="sortTable(6)">CPU <span class="sort-icon">↕</span></th>
                     <th id="th8" onclick="sortTable(7)">Tarih <span class="sort-icon">↕</span></th>
                     
-                    <!-- Dinamik Eklenen Sütun Başlıkları -->
-                    {% for col in custom_columns %}
-                        <th>{{ col.column_name }}</th>
-                    {% endfor %}
+					{% for col in custom_columns %}
+    					<th id="th_{{ loop.index0 + 8 }}">{{ col.column_name }} <span class="sort-icon">↕</span></th>
+					{% endfor %}
 
-                    <th id="th9">İşlem</th>
+                    <th id="th_last">İşlem</th>
                 </tr>
             </thead>
             <tbody> 
@@ -467,6 +466,11 @@
                     <label id="ts7"><input type="checkbox" data-column="6" checked class="columnToggle" > CPU</label>
                     <label id="ts8"><input type="checkbox" data-column="7" checked class="columnToggle" > Tarih</label>
 
+                    <!-- Dinamik Sütunlar için Tablo Ayarları Checkbox'ları -->
+                    {% for col in custom_columns %}
+                        <label><input type="checkbox" data-column="{{ loop.index0 + 8 }}" checked class="columnToggle"> {{ col.column_name }}</label>
+                    {% endfor %}
+
                 </div>
 
                 <div class="table-buttons">
@@ -481,7 +485,7 @@
                         
                     
 
-                    <button id="deleteColumnBtn" class="beautify" title="Sütun Düzenle" onclick="openColumnPanel()">
+                    <button id="editColumnPanelBtn" class="beautify" title="Sütun Düzenle" onclick="openColumnPanel()">
                         ✏️
                     </button>
 

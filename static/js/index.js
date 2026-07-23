@@ -403,3 +403,15 @@ document.querySelectorAll(".columnToggle").forEach(function (checkbox) {
     }
 
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+    const headers = document.querySelectorAll("#serverTable th");
+    headers.forEach((th, index) => {
+        if (th.id !== "th_last") {
+            th.style.cursor = "pointer";
+            th.addEventListener("click", function () {
+                sortTable(index);
+            });
+        }
+    });
+});
