@@ -6,66 +6,7 @@ const tableSettingsOverlay=document.getElementById("tableSettingsOverlay");
 const tableSettingsBtn=document.getElementById("tableSettingsBtn");
 const tableCloseBtn=document.getElementById("closeTableSettings");
 const tablePanel=document.getElementById("tableSettingsPanel");
-let currentPage = 1;
-const maxPage = 2;
 
-function updatePageButtons(){
-
-    document.querySelectorAll(".page2").forEach(function(cell){
-
-        cell.style.display =
-            currentPage == 2 ? "" : "none";
-
-    });
-
-    document.querySelectorAll("#serverTable tr").forEach(function(row){
-
-        for(let i=0;i<firstPageColumns;i++){
-
-            if(row.cells[i]){
-
-                row.cells[i].style.display =
-                    currentPage==1 ? "" : "none";
-
-            }
-
-        }
-
-    });
-
-    document.getElementById("prevPage").style.display =
-        currentPage > 1 ? "" : "none";
-
-    document.getElementById("nextPage").style.display =
-        currentPage < maxPage ? "" : "none";
-
-    document.querySelectorAll(".prevPageCell").forEach(cell=>{
-        cell.style.display =
-            currentPage>1 ? "" : "none";
-    });
-
-    document.querySelectorAll(".nextPageCell").forEach(cell=>{
-        cell.style.display =
-            currentPage<maxPage ? "" : "none";
-    });
-
-}
-
-document.getElementById("nextPage").onclick=function(){
-
-    currentPage++;
-
-    updatePageButtons();
-
-}
-
-document.getElementById("prevPage").onclick=function(){
-
-    currentPage--;
-
-    updatePageButtons();
-
-}
 
 function openDeleteColumnPanel(){
 
@@ -395,7 +336,9 @@ function sortTable(column) {
         tbody.appendChild(row);
     });
 
-    for (let i = 0; i < 9; i++) {
+    // Tablodaki toplam sütun sayısına göre dinamik döngü
+    const totalColumns = table.rows[0].cells.length;
+    for (let i = 0; i < totalColumns; i++) {
         let th = document.getElementById("th" + (i + 1));
         if (th) {
             let span = th.querySelector(".sort-icon");
@@ -490,4 +433,26 @@ document.querySelectorAll(".columnToggle").forEach(function (checkbox) {
 
 });
 
-updatePageButtons();
+document.addEventListener("DOMContentLoaded", function () {
+    const headers = document.querySelectorAll("#serverTable th");
+    
+    headers.forEach((th) => {
+        // İşlem sütunu hariç başlıklara tıklama verelim
+        if (th.id !== "th_last") {
+            th.style.cursor = "pointer";
+            th.addEventListener("click", function () {
+                // th id'sinden index numarasını güvenle çekelim (Örn: "th3" -> 3, "th_8" -> 8)
+                let colIndex;
+                if (th.id.startsWith("th_")) {
+                    colIndex = parseInt(th.id.replace("th_", ""));
+                } else {
+                    colIndex = parseInt(th.id.replace("th", ""));
+                }
+
+                if (!isNaN(colIndex) && typeof sortTable === "function") {
+                    sortTable(colIndex);
+                }
+            });
+        }
+    });
+});

@@ -68,47 +68,51 @@
             </div>
         </form>
         
-        
         <div> 
             <a href="/add" class="add-btn" id="addBtn">➕ Yeni Sunucu</a> 
             <button id="langButton"> TR / EN </button> 
         </div>
+    </div> <!-- DİV EKSİKLİĞİ BURADA GİDERİLDİ -->
 
-    </div>
     <div class="table-wrapper">
         <table id="serverTable">
             <thead>
                 <tr>
-					<th id="th1" onclick="sortTable(0)">Sunucu <span class="sort-icon">↕</span></th>
-					<th id="th2" onclick="sortTable(1)">Disk Boyutu (GB) <span class="sort-icon">↕</span></th>
-                	<th id="th3" onclick="sortTable(2)">İşletim Sistemi <span class="sort-icon">↕</span></th>
-                    <th id="th4" onclick="sortTable(3)">RAM <span class="sort-icon">↕</span></th>
-                    <th id="th5" onclick="sortTable(4)">IP <span class="sort-icon">↕</span></th>
-                    <th id="th6" onclick="sortTable(5)">Açıklama <span class="sort-icon">↕</span></th>
-                    <th id="th7" onclick="sortTable(6)">CPU <span class="sort-icon">↕</span></th>
-                    <th id="th8" onclick="sortTable(7)">Tarih <span class="sort-icon">↕</span></th>
-                    <th id="th9" onclick="sortTable(8)">İşlem</th>
+                    <th id="th0" onclick="sortTable(0)">Sunucu <span class="sort-icon">↕</span></th>
+    				<th id="th1" onclick="sortTable(1)">Disk Boyutu (GB) <span class="sort-icon">↕</span></th>
+    				<th id="th2" onclick="sortTable(2)">İşletim Sistemi <span class="sort-icon">↕</span></th>
+    				<th id="th3" onclick="sortTable(3)">RAM <span class="sort-icon">↕</span></th>
+    				<th id="th4" onclick="sortTable(4)">IP <span class="sort-icon">↕</span></th>
+    				<th id="th5" onclick="sortTable(5)">Açıklama <span class="sort-icon">↕</span></th>
+    				<th id="th6" onclick="sortTable(6)">CPU <span class="sort-icon">↕</span></th>
+    				<th id="th7" onclick="sortTable(7)">Tarih <span class="sort-icon">↕</span></th>
+    
+    				<!-- Dinamik Eklenen Sütun Başlıkları -->
+    				<!-- Dinamik Eklenen Sütun Başlıkları -->
+					{% for col in custom_columns %}
+    					<th id="th_{{ loop.index0 + 8 }}">{{ col.column_name }} <span class="sort-icon">↕</span></th>
+					{% endfor %}
 
-                    {% for column in custom_columns %}
-                    <th class="page2" style="display:none;">
-                        {{ column.column_name }}
-                    </th>
-                    {% endfor %}
-
-                    <th id="prevPage" style="display:none; width:40px;">❮</th>
-                    <th id="nextPage" style="display:none; width:40px;">❯</th>
+    				<th id="th_last">İşlem</th>
                 </tr>
             </thead>
-            <tbody> {% for s in servers %} 
+            <tbody> 
+                {% for s in servers %} 
                 <tr class="serverRow">
                     <td id="left">{{ s.name }}</td>
                     <td>{{ s.disk_gb }}</td>
                     <td>{{ s.os_name }}</td>
                     <td>{{ s.ram_g }}</td>
                     <td>{{ s.ip_address }}</td>
-                    <td>{{s.usage_project}}</td>
+                    <td>{{ s.usage_project }}</td>
                     <td>{{ s.core_amount }}</td>
-                    <td>{{s.created_at}}</td>
+                    <td>{{ s.created_at }}</td>
+
+                    <!-- Dinamik Eklenen Sütunların Değerleri -->
+                    {% for col in custom_columns %}
+                        <td>{{ custom_values.get((s.id, col.id), '') }}</td>
+                    {% endfor %}
+
                     <td>
                         <a href="#"
                         class="edit-btn"
@@ -134,24 +138,8 @@
                         </a>
                     </td>
 
-                    {% for column in custom_columns %}
-
-                    <td class="page2" style="display:none;">
-
-                        {{ custom_values.get((s.id,column.id),"") }}
-
-                    </td>
-
-                    {% endfor %}
-
-                    <td class="prevPageCell" style="display:none;">
-                        
-                    </td>
-
-                    <td class="nextPageCell" style="display:none;">
-                        
-                    </td>
-                </tr> {% endfor %} 
+                </tr> 
+                {% endfor %} 
             </tbody>
         </table>
     </div>
@@ -482,6 +470,11 @@
                     <label id="ts7"><input type="checkbox" data-column="6" checked class="columnToggle" > CPU</label>
                     <label id="ts8"><input type="checkbox" data-column="7" checked class="columnToggle" > Tarih</label>
 
+                    <!-- Dinamik Sütunlar için Tablo Ayarları Checkbox'ları -->
+                    {% for col in custom_columns %}
+                        <label><input type="checkbox" data-column="{{ loop.index0 + 8 }}" checked class="columnToggle"> {{ col.column_name }}</label>
+                    {% endfor %}
+
                 </div>
 
                 <div class="table-buttons">
@@ -496,7 +489,7 @@
                         
                     
 
-                    <button id="deleteColumnBtn" class="beautify" title="Sütun Düzenle" onclick="openColumnPanel()">
+                    <button id="editColumnPanelBtn" class="beautify" title="Sütun Düzenle" onclick="openColumnPanel()">
                         ✏️
                     </button>
 

@@ -197,12 +197,25 @@ button {
     transition:.3s;
 }
 
+/* Tablo sarmalayıcısı */
 .table-wrapper {
     overflow-x: auto;
+    position: relative;
+    max-width: 100%;
 }
 
-td:last-child{
-    white-space: nowrap;
+/* Tablo genel yapı */
+#serverTable {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+}
+
+/* Hücre ve Başlık Ortak Boyut Koruma */
+#serverTable th, 
+#serverTable td {
+    padding: 12px 16px;
+    white-space: nowrap; /* Sütunların küçülmesini ve yazının sıkışmasını önler */
 }
 
 table {
