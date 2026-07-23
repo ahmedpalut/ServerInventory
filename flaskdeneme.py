@@ -231,17 +231,6 @@ def sil(id):
 
     return redirect(url_for("index"))
 
-@app.route("/delete/<int:id>")
-def sil(id):
-    sql="delete from servers where id = %s"
-    values=(id,)
-    
-    cursor.execute(sql,values)
-    mydb.commit()
-    
-    flash("Sunucu silindi!")
-    
-    return redirect(url_for("index"))
 
 @app.route("/add", methods=["GET","POST"])
 def ekle():
