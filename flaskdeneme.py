@@ -212,17 +212,22 @@ def edit(id):
 
     return redirect(url_for("index"))
 
-@app.route("/deleteColumn/<int:id>", methods=["POST"])
-def deleteColumn(id):
+@app.route("/delete/<int:id>")
+def sil(id):
 
-    cursor.execute(
-        "DELETE FROM custom_columns WHERE id = %s",
-        (id,)
-    )
+    cursor.execute("""
+        DELETE FROM custom_values
+        WHERE server_id = %s
+    """, (id,))
+
+    cursor.execute("""
+        DELETE FROM servers
+        WHERE id = %s
+    """, (id,))
 
     mydb.commit()
 
-    flash("Sütun başarıyla silindi!")
+    flash("Sunucu silindi!")
 
     return redirect(url_for("index"))
 
