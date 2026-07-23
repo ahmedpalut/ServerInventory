@@ -86,9 +86,7 @@
     				<th id="th5" onclick="sortTable(5)">Açıklama <span class="sort-icon">↕</span></th>
     				<th id="th6" onclick="sortTable(6)">CPU <span class="sort-icon">↕</span></th>
     				<th id="th7" onclick="sortTable(7)">Tarih <span class="sort-icon">↕</span></th>
-    
-    				<!-- Dinamik Eklenen Sütun Başlıkları -->
-    				<!-- Dinamik Eklenen Sütun Başlıkları -->
+
 					{% for col in custom_columns %}
     					<th id="th_{{ loop.index0 + 8 }}">{{ col.column_name }} <span class="sort-icon">↕</span></th>
 					{% endfor %}
@@ -108,9 +106,8 @@
                     <td>{{ s.core_amount }}</td>
                     <td>{{ s.created_at }}</td>
 
-                    <!-- Dinamik Eklenen Sütunların Değerleri -->
                     {% for col in custom_columns %}
-                        <td>{{ custom_values.get((s.id, col.id), '') }}</td>
+                        <td>{{ s.custom_values.get(col.id, "") }}</td>
                     {% endfor %}
 
                     <td>
@@ -470,7 +467,6 @@
                     <label id="ts7"><input type="checkbox" data-column="6" checked class="columnToggle" > CPU</label>
                     <label id="ts8"><input type="checkbox" data-column="7" checked class="columnToggle" > Tarih</label>
 
-                    <!-- Dinamik Sütunlar için Tablo Ayarları Checkbox'ları -->
                     {% for col in custom_columns %}
                         <label><input type="checkbox" data-column="{{ loop.index0 + 8 }}" checked class="columnToggle"> {{ col.column_name }}</label>
                     {% endfor %}
