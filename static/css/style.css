@@ -197,42 +197,41 @@ button {
     transition:.3s;
 }
 
-/* Tablo sarmalayıcısının yatay kaydırma yapabilmesi için */
+/* Tablo sarmalayıcısı */
 .table-wrapper {
     overflow-x: auto;
     position: relative;
     max-width: 100%;
-    background-color: #0d1b2a; /* Koyu lacivert arka plan */
 }
 
-/* Tablo genel ayarları */
+/* Tablo genel yapı */
 #serverTable {
-    width: max-content; /* Sütunların küçülmesini engeller, orijinal boyutlarında kalır */
+    width: max-content;
     min-width: 100%;
     border-collapse: collapse;
-    color: #ffffff;
 }
 
-/* Başlık ve hücrelerin ortak görünümü */
+/* Hücre ve Başlık Ortak Boyut Koruma */
 #serverTable th, 
 #serverTable td {
     padding: 12px 16px;
-    white-space: nowrap; /* Yazıların alt satıra kayıp sıkışmasını önler */
+    white-space: nowrap; /* Sütunların küçülmesini ve yazının sıkışmasını önler */
 }
 
-/* Tablo Başlıkları (Lacivert Tema) */
+/* Tablo Başlıkları - Hafif Şeffaf/Beyazımsı Arka Plan ve Mavi Yazı */
 #serverTable th {
-    background-color: #1b263b; /* Koyu lacivert başlık arka planı */
-    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.15) !important; /* Hafif beyazlaşan şeffaf efekt */
+    color: #4da6ff !important; /* Mavi sütun isimleri */
     position: sticky;
     top: 0;
     z-index: 2;
+    cursor: pointer;
 }
 
-/* Hücre yazı rengi */
+/* Hücreler */
 #serverTable td {
-    color: #e0e1dd !important;
-    background-color: #0d1b2a; /* Genel satır arka planı (lacivert) */
+    color: #ffffff;
+    background-color: #0d1b2a; /* Lacivert tema uyumu */
 }
 
 /* --- İLK SÜTUN SABİTLEME (Sunucu Adı) --- */
@@ -241,12 +240,12 @@ button {
     position: sticky;
     left: 0;
     z-index: 3;
-    background-color: #1b263b !important; /* Kayarken arkası görünmesin diye lacivert arka plan */
+    background-color: rgba(13, 27, 42, 0.95) !important; /* Arkası görünmesin diye yarı şeffaf lacivert */
 }
 
-/* Eğer ilk sütun başlığı ise başlık rengiyle uyumlu olsun */
 #serverTable th:first-child {
     z-index: 4;
+    color: #4da6ff !important;
 }
 
 /* --- SON SÜTUN SABİTLEME (İşlemler) --- */
@@ -255,12 +254,12 @@ button {
     position: sticky;
     right: 0;
     z-index: 3;
-    background-color: #1b263b !important; /* Kayarken arkası görünmesin diye lacivert arka plan */
+    background-color: rgba(13, 27, 42, 0.95) !important; /* Arkası görünmesin diye yarı şeffaf lacivert */
 }
 
-/* Eğer son sütun başlığı ise başlık rengiyle uyumlu olsun */
 #serverTable th:last-child {
     z-index: 4;
+    color: #4da6ff !important;
 }
 
 table {
