@@ -314,7 +314,6 @@ function sortTable(column) {
     const tbody = table.tBodies[0];
     const rows = Array.from(tbody.rows);
 
-    // Sıralama yönünü tersine çevir
     sortDirection[column] = !sortDirection[column];
 
     rows.sort(function(a, b) {
@@ -337,14 +336,12 @@ function sortTable(column) {
         tbody.appendChild(row);
     });
 
-    // İkonları sıfırla (HTML'deki ID'lere tam uyumlu olacak şekilde düzeltildi)
     const headers = document.querySelectorAll("#serverTable th");
     headers.forEach((th, i) => {
         let span = th.querySelector(".sort-icon");
         if (span) span.innerText = "↕";
     });
 
-    // Aktif olan sütunun ikonunu güncelle
     let activeTh = document.getElementById("th" + column) || document.getElementById("th_" + column);
     if (activeTh) {
         let activeSpan = activeTh.querySelector(".sort-icon");

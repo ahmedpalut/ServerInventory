@@ -349,14 +349,35 @@ def search():
         "disk_gb": "servers.disk_gb",
         "ram_g": "servers.ram_g",
         "core_amount": "servers.core_amount",
-        "created_at": "servers.created_at"
+        "created_at": "servers.created_at",
+        
     }
+    
+    cursor.execute("""
+        SELECT *
+        FROM custom_columns
+    """)
 
-    selected_fields = [
-        allowed_fields[f]
-        for f in fields
-        if f in allowed_fields
-    ]
+    custom_columns = cursor.fetchall()
+    
+    for col in custom_columns:
+        allowed_fields[f"custom_{col['id']}"] = {
+            "type": "custom",
+            "id": col["id"]
+        }
+
+    selected_fields = []
+
+    for f in fields:
+        if f in allowed_fields:
+            selected_fields.append(allowed_fields[f])
+
+        elif f.startswith("custom_"):
+            column_id = int(f.split("_")[1])
+            selected_fields.append({
+                "type": "custom",
+                "id": column_id
+            })
 
     sql = """
         SELECT
@@ -375,7 +396,22 @@ def search():
 
         for field in selected_fields:
 
-            if field == "servers.disk_gb":
+            if isinstance(field, dict) and field["type"] == "custom":
+
+                conditions.append("""
+                    EXISTS (
+                        SELECT 1
+                        FROM custom_values cv
+                        WHERE cv.server_id = servers.id
+                        AND cv.column_id = %s
+                        AND cv.value LIKE %s
+                    )
+                """)
+
+                values.append(field["id"])
+                values.append(f"%{q}%")
+
+            elif field == "servers.disk_gb":
 
                 try:
                     limit = float(q)
@@ -384,11 +420,19 @@ def search():
                         limit *= 1024
 
                     if disk_compare == "equal":
-                        conditions.append("CAST(servers.disk_gb AS DECIMAL(10,2)) = CAST(%s AS DECIMAL(10,2))")
+                        conditions.append(
+                            "CAST(servers.disk_gb AS DECIMAL(10,2)) = CAST(%s AS DECIMAL(10,2))"
+                        )
+
                     elif disk_compare == "gte":
-                        conditions.append("CAST(servers.disk_gb AS DECIMAL(10,2)) >= CAST(%s AS DECIMAL(10,2))")
+                        conditions.append(
+                            "CAST(servers.disk_gb AS DECIMAL(10,2)) >= CAST(%s AS DECIMAL(10,2))"
+                        )
+
                     elif disk_compare == "lte":
-                        conditions.append("CAST(servers.disk_gb AS DECIMAL(10,2)) <= CAST(%s AS DECIMAL(10,2))")
+                        conditions.append(
+                            "CAST(servers.disk_gb AS DECIMAL(10,2)) <= CAST(%s AS DECIMAL(10,2))"
+                        )
 
                     values.append(limit)
 
@@ -396,6 +440,7 @@ def search():
                     pass
 
             else:
+
                 conditions.append(f"{field} LIKE %s")
                 values.append(f"%{q}%")
 

@@ -88,7 +88,7 @@
     				<th id="th7">Tarih <span class="sort-icon">↕</span></th>
 
 					{% for col in custom_columns %}
-    					<th id="th_{{ loop.index0 + 8 }}">{{ col.column_name }} <span class="sort-icon">↕</span></th>
+    					<th id="th{{ loop.index0 + 8 }}">{{ col.column_name }} <span class="sort-icon">↕</span></th>
 					{% endfor %}
 
     				<th id="th_last">İşlem</th>
@@ -412,6 +412,15 @@
                         <input type="checkbox" name="fields" value="created_at">
                         Tarih
                     </label>
+
+                    {% for col in custom_columns %}
+                        <label>
+                            <input type="checkbox" 
+                                name="fields" 
+                                value="custom_{{ col.id }}">
+                            {{ col.column_name }}
+                        </label>
+                    {% endfor %}
 
                 </div>
 
