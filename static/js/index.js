@@ -310,11 +310,16 @@ document.getElementById("searchBtn").onclick = function (e) {
 let sortDirection = {};
 
 function sortTable(column) {
+
     const table = document.getElementById("serverTable");
     const tbody = table.tBodies[0];
     const rows = Array.from(tbody.rows);
 
-    sortDirection[column] = !sortDirection[column];
+    if (sortDirection[column] === undefined) {
+        sortDirection[column] = true;
+    } else {
+        sortDirection[column] = !sortDirection[column];
+    }
 
     rows.sort(function(a, b) {
         let x = a.cells[column].innerText.trim();
@@ -324,7 +329,11 @@ function sortTable(column) {
         let ny = parseFloat(y);
 
         if (!isNaN(nx) && !isNaN(ny)) {
-            return sortDirection[column] ? nx - ny : ny - nx;
+            if (sortDirection[column]) {
+                return nx - ny;
+            } else {
+                return ny - nx;
+            }
         }
 
         return sortDirection[column]
@@ -336,17 +345,16 @@ function sortTable(column) {
         tbody.appendChild(row);
     });
 
-    // Tablodaki toplam sütun sayısına göre dinamik döngü
     const totalColumns = table.rows[0].cells.length;
     for (let i = 0; i < totalColumns; i++) {
-        let th = document.getElementById("th" + (i + 1));
+        let th = document.getElementById("th" + i);
         if (th) {
             let span = th.querySelector(".sort-icon");
             if (span) span.innerText = "↕";
         }
     }
 
-    let activeTh = document.getElementById("th" + (column + 1));
+    let activeTh = document.getElementById("th" + column);
     if (activeTh) {
         let activeSpan = activeTh.querySelector(".sort-icon");
         if (activeSpan) {

@@ -370,8 +370,8 @@ def search():
     values = []
 
     if q and selected_fields:
+
         conditions = []
-        values = []
 
         for field in selected_fields:
 
@@ -384,19 +384,11 @@ def search():
                         limit *= 1024
 
                     if disk_compare == "equal":
-                        conditions.append(
-                            "CAST(servers.disk_gb AS DECIMAL(10,2)) = CAST(%s AS DECIMAL(10,2))"
-                        )
-
+                        conditions.append("CAST(servers.disk_gb AS DECIMAL(10,2)) = CAST(%s AS DECIMAL(10,2))")
                     elif disk_compare == "gte":
-                        conditions.append(
-                            "CAST(servers.disk_gb AS DECIMAL(10,2)) >= CAST(%s AS DECIMAL(10,2))"
-                        )
-
+                        conditions.append("CAST(servers.disk_gb AS DECIMAL(10,2)) >= CAST(%s AS DECIMAL(10,2))")
                     elif disk_compare == "lte":
-                        conditions.append(
-                            "CAST(servers.disk_gb AS DECIMAL(10,2)) <= CAST(%s AS DECIMAL(10,2))"
-                        )
+                        conditions.append("CAST(servers.disk_gb AS DECIMAL(10,2)) <= CAST(%s AS DECIMAL(10,2))")
 
                     values.append(limit)
 
@@ -414,11 +406,32 @@ def search():
     servers = cursor.fetchall()
 
     cursor.execute("""
+        SELECT server_id, column_id, value
+        FROM custom_values
+    """)
+
+    rows = cursor.fetchall()
+
+    custom_values = {}
+
+    for row in rows:
+
+        server_id = row["server_id"]
+
+        if server_id not in custom_values:
+            custom_values[server_id] = {}
+
+        custom_values[server_id][row["column_id"]] = row["value"]
+
+    for server in servers:
+        server["custom_values"] = custom_values.get(server["id"], {})
+
+    cursor.execute("""
         SELECT COUNT(*) AS count
         FROM servers
         LEFT JOIN os_types
         ON servers.os_type_id = os_types.id
-        WHERE os_types.name like '%windows%'
+        WHERE os_types.name LIKE '%windows%'
     """)
     windows_amount = cursor.fetchone()["count"]
 
@@ -432,25 +445,12 @@ def search():
     """)
     custom_columns = cursor.fetchall()
 
-    cursor.execute("""
-        SELECT server_id, column_id, value
-        FROM custom_values
-    """)
-
-    rows = cursor.fetchall()
-
-    custom_values = {}
-
-    for row in rows:
-        custom_values[(row["server_id"], row["column_id"])] = row["value"]
-
     return render_template(
         "index.html",
         servers=servers,
         windows_amount=windows_amount,
         os_list=os_list,
-        custom_columns=custom_columns,
-        custom_values=custom_values
+        custom_columns=custom_columns
     )
     
 @app.route("/addcolumn", methods=["GET", "POST"])
@@ -503,6 +503,25 @@ def editcolumn(id):
     mydb.commit()
 
     flash("Sütun güncellendi!")
+
+    return redirect(url_for("index"))
+
+@app.route("/deleteColumn/<int:id>", methods=["POST"])
+def deleteColumn(id):
+
+    cursor.execute("""
+        DELETE FROM custom_values
+        WHERE column_id = %s
+    """, (id,))
+
+    cursor.execute("""
+        DELETE FROM custom_columns
+        WHERE id = %s
+    """, (id,))
+
+    mydb.commit()
+
+    flash("Sütun başarıyla silindi!")
 
     return redirect(url_for("index"))
 
