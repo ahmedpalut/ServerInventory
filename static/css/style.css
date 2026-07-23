@@ -198,7 +198,30 @@ button {
 }
 
 .table-wrapper {
-    overflow-x: auto;
+    width: 100%;
+    overflow-x: auto; /* Yatay kaydırma çubuğu ekler */
+    white-space: nowrap;
+}
+
+#serverTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#serverTable th:first-child,
+#serverTable td:first-child {
+    position: sticky;
+    left: 0;
+    background-color: #fff; /* Arka plan rengi tablonun altından yazı görünmesini engeller */
+    z-index: 2;
+}
+
+#serverTable th:last-child,
+#serverTable td:last-child {
+    position: sticky;
+    right: 0;
+    background-color: #fff;
+    z-index: 2;
 }
 
 td:last-child{
