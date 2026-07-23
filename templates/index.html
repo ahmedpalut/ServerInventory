@@ -372,17 +372,17 @@
                     </label>
 
                     <label id="sl3">
-                        <input type="checkbox" name="fields" value="ip_address">
+                        <input type="checkbox" name="fields" value="ip_address" checked>
                         IP Adresi
                     </label>
 
                     <label id="sl4">
-                        <input type="checkbox" name="fields" value="usage_project">
+                        <input type="checkbox" name="fields" value="usage_project" checked>
                         Açıklama
                     </label>
 
                     <label id="sl5">
-                        <input type="checkbox" name="fields" value="disk_gb">
+                        <input type="checkbox" name="fields" value="disk_gb" checked>
                         Disk Boyutu
                     </label>
 
@@ -399,17 +399,17 @@
                     </div>
 
                     <label>
-                        <input type="checkbox" name="fields" value="ram_g">
+                        <input type="checkbox" name="fields" value="ram_g" checked>
                         RAM
                     </label>
 
                     <label>
-                        <input type="checkbox" name="fields" value="core_amount">
+                        <input type="checkbox" name="fields" value="core_amount" checked>
                         CPU
                     </label>
 
                     <label id="sl6">
-                        <input type="checkbox" name="fields" value="created_at">
+                        <input type="checkbox" name="fields" value="created_at" checked>
                         Tarih
                     </label>
 
@@ -417,7 +417,7 @@
                         <label>
                             <input type="checkbox" 
                                 name="fields" 
-                                value="custom_{{ col.id }}">
+                                value="custom_{{ col.id }}" checked>
                             {{ col.column_name }}
                         </label>
                     {% endfor %}
