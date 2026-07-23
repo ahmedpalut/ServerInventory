@@ -472,6 +472,9 @@ transform:translateY(-20px);
     flex-direction:column;
     gap:12px;
     flex:1;
+
+    max-height:270px;
+    overflow-y:auto;
 }
 
 #aramalabel{
@@ -518,6 +521,7 @@ transform:translateY(-20px);
     justify-content:space-between;
     align-items:flex-start;
     gap:30px;
+    
 }
 
 @media (max-width:768px){
