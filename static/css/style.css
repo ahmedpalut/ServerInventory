@@ -218,50 +218,6 @@ button {
     white-space: nowrap; /* Sütunların küçülmesini ve yazının sıkışmasını önler */
 }
 
-/* Tablo Başlıkları - Hafif Şeffaf/Beyazımsı Arka Plan ve Mavi Yazı */
-#serverTable th {
-    background-color: rgba(255, 255, 255, 0.15) !important; /* Hafif beyazlaşan şeffaf efekt */
-    color: #4da6ff !important; /* Mavi sütun isimleri */
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    cursor: pointer;
-}
-
-/* Hücreler */
-#serverTable td {
-    color: #ffffff;
-    background-color: #0d1b2a; /* Lacivert tema uyumu */
-}
-
-/* --- İLK SÜTUN SABİTLEME (Sunucu Adı) --- */
-#serverTable th:first-child,
-#serverTable td:first-child {
-    position: sticky;
-    left: 0;
-    z-index: 3;
-    background-color: rgba(13, 27, 42, 0.95) !important; /* Arkası görünmesin diye yarı şeffaf lacivert */
-}
-
-#serverTable th:first-child {
-    z-index: 4;
-    color: #4da6ff !important;
-}
-
-/* --- SON SÜTUN SABİTLEME (İşlemler) --- */
-#serverTable th:last-child,
-#serverTable td:last-child {
-    position: sticky;
-    right: 0;
-    z-index: 3;
-    background-color: rgba(13, 27, 42, 0.95) !important; /* Arkası görünmesin diye yarı şeffaf lacivert */
-}
-
-#serverTable th:last-child {
-    z-index: 4;
-    color: #4da6ff !important;
-}
-
 table {
     width: 100%;
     border:1px solid rgba(255,255,255,.20);
