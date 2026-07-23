@@ -437,11 +437,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const headers = document.querySelectorAll("#serverTable th");
     
     headers.forEach((th) => {
-        // İşlem sütunu hariç başlıklara tıklama verelim
+        
         if (th.id !== "th_last") {
             th.style.cursor = "pointer";
             th.addEventListener("click", function () {
-                // th id'sinden index numarasını güvenle çekelim (Örn: "th3" -> 3, "th_8" -> 8)
+                
                 let colIndex;
                 if (th.id.startsWith("th_")) {
                     colIndex = parseInt(th.id.replace("th_", ""));
