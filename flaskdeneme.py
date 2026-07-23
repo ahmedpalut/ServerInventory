@@ -39,7 +39,13 @@ def index():
     custom_values = {}
 
     for row in rows:
-        custom_values[(row["server_id"], row["column_id"])] = row["value"]
+
+        server_id = row["server_id"]
+
+        if server_id not in custom_values:
+            custom_values[server_id] = {}
+
+        custom_values[server_id][row["column_id"]] = row["value"]
 
     cursor.execute("""
         SELECT
@@ -58,6 +64,9 @@ def index():
     """)
 
     servers = cursor.fetchall()
+    
+    for server in servers:
+        server["custom_values"] = custom_values.get(server["id"], {})
 
     windows_amount = sum(
         1 for s in servers
@@ -137,6 +146,64 @@ def edit(id):
         date,
         id
     )
+    
+    cursor.execute("""
+        SELECT id, data_type
+        FROM custom_columns
+    """)
+
+    custom_columns = cursor.fetchall()
+
+    for column in custom_columns:
+
+        value = request.form.get(f"custom_{column['id']}")
+
+        if column["data_type"] == "BOOLEAN":
+            value = "True" if value else "False"
+
+        cursor.execute("""
+            SELECT id
+            FROM custom_values
+            WHERE server_id=%s AND column_id=%s
+        """, (id, column["id"]))
+
+        exists = cursor.fetchone()
+
+        if value not in ("", None):
+
+            if exists:
+
+                cursor.execute("""
+                    UPDATE custom_values
+                    SET value=%s
+                    WHERE server_id=%s AND column_id=%s
+                """, (
+                    value,
+                    id,
+                    column["id"]
+                ))
+
+            else:
+
+                cursor.execute("""
+                    INSERT INTO custom_values
+                    (server_id, column_id, value)
+                    VALUES (%s, %s, %s)
+                """, (
+                    id,
+                    column["id"],
+                    value
+                ))
+
+        elif exists:
+
+            cursor.execute("""
+                DELETE FROM custom_values
+                WHERE server_id=%s AND column_id=%s
+            """, (
+                id,
+                column["id"]
+            ))
 
     cursor.execute(sql, values)
     mydb.commit()
