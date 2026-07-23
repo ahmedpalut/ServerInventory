@@ -202,44 +202,65 @@ button {
     overflow-x: auto;
     position: relative;
     max-width: 100%;
+    background-color: #0d1b2a; /* Koyu lacivert arka plan */
 }
 
-/* Tablo genel metin renginin düzgün okunması için */
+/* Tablo genel ayarları */
 #serverTable {
-    color: #ffffff; /* veya temanıza uygun koyu/açık bir renk */
+    width: max-content; /* Sütunların küçülmesini engeller, orijinal boyutlarında kalır */
+    min-width: 100%;
     border-collapse: collapse;
-    width: 100%;
+    color: #ffffff;
 }
 
-/* İlk Sütun (Sunucu Adı) Sabitleme */
+/* Başlık ve hücrelerin ortak görünümü */
+#serverTable th, 
+#serverTable td {
+    padding: 12px 16px;
+    white-space: nowrap; /* Yazıların alt satıra kayıp sıkışmasını önler */
+}
+
+/* Tablo Başlıkları (Lacivert Tema) */
+#serverTable th {
+    background-color: #1b263b; /* Koyu lacivert başlık arka planı */
+    color: #ffffff !important;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* Hücre yazı rengi */
+#serverTable td {
+    color: #e0e1dd !important;
+    background-color: #0d1b2a; /* Genel satır arka planı (lacivert) */
+}
+
+/* --- İLK SÜTUN SABİTLEME (Sunucu Adı) --- */
 #serverTable th:first-child,
 #serverTable td:first-child {
     position: sticky;
     left: 0;
     z-index: 3;
-    background-color: var(--card-bg, #1e1e1e); /* Tablonun arka plan rengiyle aynı olmalı */
+    background-color: #1b263b !important; /* Kayarken arkası görünmesin diye lacivert arka plan */
 }
 
-/* Son Sütun (İşlem) Sabitleme */
+/* Eğer ilk sütun başlığı ise başlık rengiyle uyumlu olsun */
+#serverTable th:first-child {
+    z-index: 4;
+}
+
+/* --- SON SÜTUN SABİTLEME (İşlemler) --- */
 #serverTable th:last-child,
 #serverTable td:last-child {
     position: sticky;
     right: 0;
     z-index: 3;
-    background-color: var(--card-bg, #1e1e1e); /* Tablonun arka plan rengiyle aynı olmalı */
+    background-color: #1b263b !important; /* Kayarken arkası görünmesin diye lacivert arka plan */
 }
 
-/* Başlıkların (th) ve hücrelerin (td) yazı rengi ve arka plan çakışmasını önlemek için */
-#serverTable th {
-    background-color: #2b2b2b; /* Başlık arka planınız */
-    color: #ffffff !important; /* Yazıların net beyaz ve okunabilir olması için */
-}
-
-#serverTable td {
-    color: #ffffff !important; /* Hücre yazı rengi okunurluğu */
-}
-td:last-child{
-    white-space: nowrap;
+/* Eğer son sütun başlığı ise başlık rengiyle uyumlu olsun */
+#serverTable th:last-child {
+    z-index: 4;
 }
 
 table {
