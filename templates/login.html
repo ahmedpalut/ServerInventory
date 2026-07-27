@@ -28,19 +28,12 @@
 
         <p>Hoş Geldiniz</p>
 
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <div style="color:#ff8080;margin-bottom:15px;text-align:center;">
-            {{ messages[0] }}
-        </div>
-        {% endif %}
-        {% endwith %}
-
         <form method="POST" action="/login">
 
             <label for="username">Kullanıcı Adı</label>
             <input type="text" id="username" name="username" placeholder="Kullanıcı Adı" required autocomplete="username">
 
+            <label for="password">Şifre</label>
             <div class="password-box">
                 <input type="password" id="password" name="password" placeholder="Şifre" required autocomplete="current-password">
                 <span id="toggle">
@@ -75,7 +68,7 @@
     </div>
 
     <script src="{{url_for('static', filename='js/TranslateFiles/loginTranslate.js')}}"></script>
-    <script src="{{url_for('static', filename='js/TranslateFiles/login.js')}}"></script>
+    <script src="{{url_for('static', filename='js/login.js')}}"></script>
 
 </body>
 

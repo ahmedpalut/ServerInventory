@@ -2,7 +2,6 @@ from flask import *
 import mysql.connector
 import os
 from dotenv import load_dotenv
-from datetime import date
 from ldap3 import Server, Connection, ALL, SIMPLE
 
 load_dotenv()
@@ -17,13 +16,11 @@ mydb = mysql.connector.connect(
 cursor=mydb.cursor(dictionary=True)
 
 app=Flask(__name__)
-app.secret_key="SunucuEnvanter"
+app.secret_key=os.getenv("SECRET_KEY")
 
-# Active Directory (LDAP) Ayarları
-AD_SERVER = os.getenv("LDAP_SERVER")  # veya AD sunucu IP adresi
-AD_DOMAIN = os.getenv("LDAP_DOMAIN")        # Kendi Domain adınızla değiştirin
+AD_SERVER = os.getenv("LDAP_SERVER") 
+AD_DOMAIN = os.getenv("LDAP_DOMAIN") 
 
-# --- GİRİŞ VE ÇIKIŞ ROTALARI ---
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -34,6 +31,8 @@ def login():
             user_dn = username
         else:
             user_dn = f"{username}@{AD_DOMAIN}"
+            
+        conn = None
 
         try:
             server = Server(AD_SERVER, get_info=ALL)
@@ -42,10 +41,21 @@ def login():
             if conn.bind():
                 session["user"] = username
                 flash("Giriş başarılı!")
+                conn.unbind()
                 return redirect(url_for("index"))
-        except Exception as e:
-            flash("Kullanıcı adı veya şifre hatalı!")
+            else:
+                flash("Giriş başarısız oldu.")    
+                return redirect(url_for("login"))
+            
+        except Exception:
+            flash("Bir hata meydana geldi") 
+            if conn:
+                conn.unbind()
             return redirect(url_for("login"))
+        
+        finally:
+            if conn:
+                conn.unbind()
 
     return render_template("login.html")
 
