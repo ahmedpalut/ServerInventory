@@ -1034,22 +1034,20 @@ margin-top:8px;
 }
 
 .column-dropdown-menu {
-    position: absolute;
-    top: 100%;
-    right: 0;
+    position: fixed; /* Tablo yüksekliğinden etkilenmemesi için fixed yaptık */
     background: #ffffff;
     color: #333333;
     border: 1px solid #ccc;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    border-radius: 4px;
-    z-index: 1000;
-    width: 170px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 6px;
+    z-index: 9999; /* En üstte görünmesini sağlar */
+    width: 180px;
     padding: 5px 0;
 }
 
 .column-dropdown-menu div:not(.col-search-box) {
-    padding: 7px 12px;
-    font-size: 12px;
+    padding: 8px 12px;
+    font-size: 13px;
     cursor: pointer;
     text-align: left;
 }

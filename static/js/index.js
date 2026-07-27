@@ -518,20 +518,32 @@ function restoreColumnOrder() {
 
 }
 
-// 1. Menüyü Açıp Kapatma (Sürükleme olayını tetiklememesi için stopPropagation önemli)
+// Menüyü açıp kapama (Sayfanın her yerinde kusursuz çalışması için)
 function toggleColumnMenu(event, colKey) {
     event.stopPropagation();
     
-    // Diğer açık menüleri kapat
+    // Açık olan diğer menüleri kapat
     document.querySelectorAll('.column-dropdown-menu').forEach(menu => {
-        if (menu.id !== 'menu_' + colKey) menu.style.display = 'none';
-        // Varsa açık arama kutularını da kapat
-        const searchBox = menu.querySelector('.col-search-box');
-        if (searchBox) searchBox.remove();
+        if (menu.id !== 'menu_' + colKey) {
+            menu.style.display = 'none';
+            const searchBox = menu.querySelector('.col-search-box');
+            if (searchBox) searchBox.remove();
+        }
     });
     
     const menu = document.getElementById('menu_' + colKey);
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    const btn = event.currentTarget;
+    
+    if (menu.style.display === 'block') {
+        menu.style.display = 'none';
+    } else {
+        // Butonun konumunu alıp menüyü tam altına yerleştiriyoruz
+        const rect = btn.getBoundingClientRect();
+        menu.style.position = 'fixed';
+        menu.style.top = (rect.bottom + 4) + 'px';
+        menu.style.left = rect.left + 'px';
+        menu.style.display = 'block';
+    }
 }
 
 // Boş bir yere tıklandığında menüleri kapat
