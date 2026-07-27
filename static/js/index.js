@@ -518,4 +518,92 @@ function restoreColumnOrder() {
 
 }
 
+// 1. Menüyü Açıp Kapatma (Sürükleme olayını tetiklememesi için stopPropagation önemli)
+function toggleColumnMenu(event, colKey) {
+    event.stopPropagation();
+    
+    // Diğer açık menüleri kapat
+    document.querySelectorAll('.column-dropdown-menu').forEach(menu => {
+        if (menu.id !== 'menu_' + colKey) menu.style.display = 'none';
+        // Varsa açık arama kutularını da kapat
+        const searchBox = menu.querySelector('.col-search-box');
+        if (searchBox) searchBox.remove();
+    });
+    
+    const menu = document.getElementById('menu_' + colKey);
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+
+// Boş bir yere tıklandığında menüleri kapat
+window.onclick = function() {
+    document.querySelectorAll('.column-dropdown-menu').forEach(menu => {
+        menu.style.display = 'none';
+    });
+};
+
+// 2. Sıralama Fonksiyonu (Küçükten Büyüğe / Büyükten Küçüğe)
+function sortTable(colKey, order) {
+    const table = document.getElementById("serverTable");
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.querySelectorAll("tr.serverRow"));
+
+    rows.sort((a, b) => {
+        let cellA = a.querySelector(`[data-col="${colKey}"]`) ? a.querySelector(`[data-col="${colKey}"]`).innerText.trim() : "";
+        let cellB = b.querySelector(`[data-col="${colKey}"]`) ? b.querySelector(`[data-col="${colKey}"]`).innerText.trim() : "";
+
+        let numA = parseFloat(cellA);
+        let numB = parseFloat(cellB);
+
+        if (!isNaN(numA) && !isNaN(numB)) {
+            return order === 'asc' ? numA - numB : numB - numA;
+        }
+
+        return order === 'asc' ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+// 3. Sağ Üstte Açılacak Sütun İçi Arama Kutusu
+function openColumnSearch(colKey, event) {
+    event.stopPropagation();
+    const menu = document.getElementById('menu_' + colKey);
+    
+    // Eğer daha önce arama kutusu eklenmemişse ekle
+    if (!menu.querySelector('.col-search-box')) {
+        const searchDiv = document.createElement('div');
+        searchDiv.className = 'col-search-box';
+        searchDiv.style.padding = '8px';
+        searchDiv.innerHTML = `<input type="text" placeholder="Kelime ara..." class="col-filter-input" style="width: 100%; padding: 4px; box-sizing: border-box;" onclick="event.stopPropagation()">`;
+        
+        menu.appendChild(searchDiv);
+
+        const input = searchDiv.querySelector('input');
+        input.oninput = function() {
+            let val = this.value.toLowerCase();
+            const rows = document.querySelectorAll("#serverTable tbody tr.serverRow");
+            rows.forEach(row => {
+                let cell = row.querySelector(`[data-col="${colKey}"]`);
+                if (cell) {
+                    let text = cell.innerText.toLowerCase();
+                    row.style.display = text.includes(val) ? "" : "none";
+                }
+            });
+        };
+    }
+}
+
+// 4. Sütun Silme Yönlendirmesi
+function deleteColumnPrompt(colKey) {
+    // Özel sütun mu yoksa standart sütun mü kontrolü
+    if (colKey.startsWith('custom_')) {
+        let realId = colKey.replace('custom_', '');
+        if (confirm("Bu sütunu silmek istediğinize emin misiniz?")) {
+            window.location.href = "/deleteColumn/" + realId;
+        }
+    } else {
+        alert("Bu varsayılan bir sütundur, silinemez!");
+    }
+}
+
 restoreColumnOrder();
