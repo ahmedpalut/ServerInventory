@@ -62,8 +62,10 @@ def login():
 @app.route("/logout")
 def logout():
     session.pop("user", None)
+
     flash("Oturum kapatıldı.")
     return redirect(url_for("login"))
+
 
 
 @app.route("/")
