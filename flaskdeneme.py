@@ -3,6 +3,7 @@ import mysql.connector
 import os
 from dotenv import load_dotenv
 from datetime import date
+from ldap3 import Server, Connection, ALL, SIMPLE
 
 load_dotenv()
 
@@ -18,8 +19,47 @@ cursor=mydb.cursor(dictionary=True)
 app=Flask(__name__)
 app.secret_key="SunucuEnvanter"
 
+# Active Directory (LDAP) Ayarları
+AD_SERVER = os.getenv("LDAP_SERVER")  # veya AD sunucu IP adresi
+AD_DOMAIN = os.getenv("LDAP_DOMAIN")        # Kendi Domain adınızla değiştirin
+
+# --- GİRİŞ VE ÇIKIŞ ROTALARI ---
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        
+        if "\\" in username:
+            user_dn = username
+        else:
+            user_dn = f"{username}@{AD_DOMAIN}"
+
+        try:
+            server = Server(AD_SERVER, get_info=ALL)
+            conn = Connection(server, user=user_dn, password=password, authentication=SIMPLE, raise_exceptions=True)
+            
+            if conn.bind():
+                session["user"] = username
+                flash("Giriş başarılı!")
+                return redirect(url_for("index"))
+        except Exception as e:
+            flash("Kullanıcı adı veya şifre hatalı!")
+            return redirect(url_for("login"))
+
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    flash("Oturum kapatıldı.")
+    return redirect(url_for("login"))
+
+
 @app.route("/")
 def index():
+    if "user" not in session:
+        return redirect(url_for("login"))
     
     cursor.execute("""
         SELECT *
@@ -87,6 +127,9 @@ def index():
 
 @app.route("/edit/<int:id>", methods=["POST"])
 def edit(id):
+    if "user" not in session:
+        return redirect(url_for("login"))
+
     name = request.form["ad"]
     disk = float(request.form["disk"])
     ram = int(request.form["ram"])
@@ -214,6 +257,8 @@ def edit(id):
 
 @app.route("/delete/<int:id>")
 def sil(id):
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     cursor.execute("""
         DELETE FROM custom_values
@@ -234,6 +279,8 @@ def sil(id):
 
 @app.route("/add", methods=["GET","POST"])
 def ekle():
+    if "user" not in session:
+        return redirect(url_for("login"))
     
     if request.method=="POST":
         name=request.form["ad"]
@@ -248,7 +295,6 @@ def ekle():
             created_at.replace(".","-")
         else:
             created_at=None
-        
         
         if request.form["server"]=="Yeni":
             os=request.form["isletim"]
@@ -265,7 +311,6 @@ def ekle():
             cursor.execute(os_sql,os_values)
             result=cursor.fetchone()
             os_type_id=result["id"]
-        
         
         disk_type=request.form["disktur"].upper()
         
@@ -332,6 +377,8 @@ def ekle():
 
 @app.route("/search")
 def search():
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     q = request.args.get("q", "").strip()
     fields = request.args.getlist("fields")
@@ -350,7 +397,6 @@ def search():
         "ram_g": "servers.ram_g",
         "core_amount": "servers.core_amount",
         "created_at": "servers.created_at",
-        
     }
     
     cursor.execute("""
@@ -500,6 +546,8 @@ def search():
     
 @app.route("/addcolumn", methods=["GET", "POST"])
 def addcolumn():
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     if request.method == "POST":
 
@@ -532,9 +580,10 @@ def addcolumn():
 
 @app.route("/editcolumn/<int:id>", methods=["POST"])
 def editcolumn(id):
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     column_name=request.form["columnName"].strip()
-
     data_type=request.form["dataType"]
 
     cursor.execute("""
@@ -553,6 +602,8 @@ def editcolumn(id):
 
 @app.route("/deleteColumn/<int:id>", methods=["POST"])
 def deleteColumn(id):
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     cursor.execute("""
         DELETE FROM custom_values
