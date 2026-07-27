@@ -303,6 +303,9 @@ def ekle():
         usage_project=request.form["aciklama"]
         created_at=request.form["tarih"]
         
+        if created_at=="":
+            created_at=None
+        
         if request.form["server"]=="Yeni":
             os=request.form["isletim"]
             os_sql="insert into os_types (name) values(%s)"
