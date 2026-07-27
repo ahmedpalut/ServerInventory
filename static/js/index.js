@@ -439,11 +439,6 @@ document.addEventListener("DOMContentLoaded", function () {
             th.addEventListener("click", function () {
                 
                 let colIndex;
-                if (th.id.startsWith("th_")) {
-                    colIndex = parseInt(th.id.replace("th_", ""));
-                } else {
-                    colIndex = parseInt(th.id.replace("th", ""));
-                }
 
                 if (!isNaN(colIndex) && typeof sortTable === "function") {
                     sortTable(colIndex);
@@ -452,3 +447,19 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+document.getElementById("columnForm").onsubmit = function () {
+
+    const select = document.getElementById("columnSelect");
+    const option = select.options[select.selectedIndex];
+    const originalType = option.dataset.type;
+
+    const newType = document.getElementById("columnType").value;
+
+    if (originalType !== newType) {
+        return confirm("Veri tipini değiştiriyorsunuz. Bu sütuna ait mevcut tüm değerler silinecek. Devam etmek istiyor musunuz?");
+    }
+
+    return true;
+
+};

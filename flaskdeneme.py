@@ -291,11 +291,6 @@ def ekle():
         usage_project=request.form["aciklama"]
         created_at=request.form["tarih"]
         
-        if created_at!="": 
-            created_at.replace(".","-")
-        else:
-            created_at=None
-        
         if request.form["server"]=="Yeni":
             os=request.form["isletim"]
             os_sql="insert into os_types (name) values(%s)"
@@ -587,6 +582,15 @@ def editcolumn(id):
     data_type=request.form["dataType"]
 
     cursor.execute("""
+        SELECT data_type
+        FROM custom_columns
+        WHERE id=%s
+    """, (id,))
+
+    current = cursor.fetchone()
+    old_data_type = current["data_type"]
+
+    cursor.execute("""
         UPDATE custom_columns
         SET
             column_name=%s,
@@ -594,9 +598,16 @@ def editcolumn(id):
         WHERE id=%s
     """,(column_name,data_type,id))
 
-    mydb.commit()
+    if old_data_type != data_type:
+        cursor.execute("""
+            DELETE FROM custom_values
+            WHERE column_id=%s
+        """, (id,))
+        flash("Sütun güncellendi, mevcut değerler silindi.")
+    else:
+        flash("Sütun güncellendi!")
 
-    flash("Sütun güncellendi!")
+    mydb.commit()
 
     return redirect(url_for("index"))
 
