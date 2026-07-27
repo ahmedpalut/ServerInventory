@@ -62,8 +62,10 @@ def login():
 @app.route("/logout")
 def logout():
     session.pop("user", None)
+
     flash("Oturum kapatıldı.")
     return redirect(url_for("login"))
+
 
 
 @app.route("/")
@@ -300,6 +302,9 @@ def ekle():
         ip_address=request.form["ip"]
         usage_project=request.form["aciklama"]
         created_at=request.form["tarih"]
+        
+        if created_at=="":
+            created_at=None
         
         if request.form["server"]=="Yeni":
             os=request.form["isletim"]
