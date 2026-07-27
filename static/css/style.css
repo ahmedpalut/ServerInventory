@@ -1009,11 +1009,12 @@ margin-top:8px;
     color:#ffffff;
 }
 
+/* Başlık sarmalayıcısı mutlaka relative olmalı ki menü ona göre konumlansın */
 .th-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     width: 100%;
 }
 
@@ -1033,26 +1034,31 @@ margin-top:8px;
     background: rgba(0, 0, 0, 0.1);
 }
 
+/* Açılır menü ayarları */
 .column-dropdown-menu {
-    position: fixed; /* Tablo yüksekliğinden etkilenmemesi için fixed yaptık */
+    position: absolute;
+    top: 100%; /* Butonun tam altından başlar */
+    right: 0;  /* Sağ kenara hizalanır, böylece dışarı taşmaz */
     background: #ffffff;
     color: #333333;
-    border: 1px solid #ccc;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
     border-radius: 6px;
-    z-index: 9999; /* En üstte görünmesini sağlar */
+    z-index: 99999;
     width: 180px;
-    padding: 5px 0;
+    padding: 6px 0;
+    margin-top: 4px; /* Buton ile menü arasında şık bir boşluk bırakır */
 }
 
 .column-dropdown-menu div:not(.col-search-box) {
-    padding: 8px 12px;
+    padding: 8px 14px;
     font-size: 13px;
     cursor: pointer;
     text-align: left;
+    white-space: nowrap;
 }
 
 .column-dropdown-menu div:not(.col-search-box):hover {
     background: #f1f5f9;
-    color: #000;
+    color: #0f172a;
 }

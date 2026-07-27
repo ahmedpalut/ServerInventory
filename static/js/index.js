@@ -518,42 +518,33 @@ function restoreColumnOrder() {
 
 }
 
-// Menüyü açıp kapama (Sayfanın her yerinde kusursuz çalışması için)
+// Menüyü açıp kapama
 function toggleColumnMenu(event, colKey) {
     event.stopPropagation();
     
-    // Açık olan diğer menüleri kapat
+    const targetMenuId = 'menu_' + colKey;
+    
+    // Diğer tüm açık menüleri kapat
     document.querySelectorAll('.column-dropdown-menu').forEach(menu => {
-        if (menu.id !== 'menu_' + colKey) {
+        if (menu.id !== targetMenuId) {
             menu.style.display = 'none';
-            const searchBox = menu.querySelector('.col-search-box');
-            if (searchBox) searchBox.remove();
         }
     });
     
-    const menu = document.getElementById('menu_' + colKey);
-    const btn = event.currentTarget;
-    
-    if (menu.style.display === 'block') {
-        menu.style.display = 'none';
-    } else {
-        // Butonun konumunu alıp menüyü tam altına yerleştiriyoruz
-        const rect = btn.getBoundingClientRect();
-        menu.style.position = 'fixed';
-        menu.style.top = (rect.bottom + 4) + 'px';
-        menu.style.left = rect.left + 'px';
-        menu.style.display = 'block';
+    const menu = document.getElementById(targetMenuId);
+    if (menu) {
+        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
     }
 }
 
 // Boş bir yere tıklandığında menüleri kapat
-window.onclick = function() {
+window.addEventListener('click', function() {
     document.querySelectorAll('.column-dropdown-menu').forEach(menu => {
         menu.style.display = 'none';
     });
-};
+});
 
-// 2. Sıralama Fonksiyonu (Küçükten Büyüğe / Büyükten Küçüğe)
+// Sıralama Fonksiyonu
 function sortTable(colKey, order) {
     const table = document.getElementById("serverTable");
     const tbody = table.tBodies[0];
@@ -576,12 +567,11 @@ function sortTable(colKey, order) {
     rows.forEach(row => tbody.appendChild(row));
 }
 
-// 3. Sağ Üstte Açılacak Sütun İçi Arama Kutusu
+// Sütun İçi Arama Fonksiyonu
 function openColumnSearch(colKey, event) {
     event.stopPropagation();
     const menu = document.getElementById('menu_' + colKey);
     
-    // Eğer daha önce arama kutusu eklenmemişse ekle
     if (!menu.querySelector('.col-search-box')) {
         const searchDiv = document.createElement('div');
         searchDiv.className = 'col-search-box';
