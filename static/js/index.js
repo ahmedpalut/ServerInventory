@@ -518,26 +518,41 @@ function restoreColumnOrder() {
 
 }
 
-// Menüyü açıp kapama
+// Excel tarzı akıllı menü açma
 function toggleColumnMenu(event, colKey) {
     event.stopPropagation();
     
     const targetMenuId = 'menu_' + colKey;
+    const menu = document.getElementById(targetMenuId);
+    const btn = event.currentTarget; // Tıklanan ok butonu
     
-    // Diğer tüm açık menüleri kapat
-    document.querySelectorAll('.column-dropdown-menu').forEach(menu => {
-        if (menu.id !== targetMenuId) {
-            menu.style.display = 'none';
+    // Diğer açık menüleri kapat
+    document.querySelectorAll('.column-dropdown-menu').forEach(m => {
+        if (m.id !== targetMenuId) {
+            m.style.display = 'none';
         }
     });
     
-    const menu = document.getElementById(targetMenuId);
-    if (menu) {
-        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+    if (!menu) return;
+
+    if (menu.style.display === 'block') {
+        menu.style.display = 'none';
+    } else {
+        // Butonun ekrandaki konumunu al
+        const rect = btn.getBoundingClientRect();
+        
+        menu.style.display = 'block';
+        
+        // Menüyü butonun hemen altına ve sağa hizalı yerleştir
+        let leftPos = rect.right - menu.offsetWidth; // Menü sağa taşmasın diye sağa yaslıyoruz
+        if (leftPos < 10) leftPos = rect.left; // Eğer sığmazsa sola yasla
+        
+        menu.style.top = (rect.bottom + 4) + 'px';
+        menu.style.left = leftPos + 'px';
     }
 }
 
-// Boş bir yere tıklandığında menüleri kapat
+// Boş bir yere tıklandığında menüyü kapat
 window.addEventListener('click', function() {
     document.querySelectorAll('.column-dropdown-menu').forEach(menu => {
         menu.style.display = 'none';
