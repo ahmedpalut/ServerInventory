@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunucu Envanteri - Giriş</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div id="toast">
+        {{ messages[0] }}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="container" style="margin-top: 100px;">
+        <div class="top-bar" style="justify-content: center;">
+            <h1>🖥️ Sunucu Envanteri Giriş</h1>
+        </div>
+        
+        <p style="text-align: center; margin-bottom: 25px; color: #cbd5e1;">Lütfen Active Directory (Windows) kullanıcı adı ve şifrenizle giriş yapın.</p>
+
+        <form action="/login" method="POST">
+            <label for="username">Kullanıcı Adı</label>
+            <input type="text" id="username" name="username" placeholder="domain\\kullaniciadi veya kullaniciadi" required autocomplete="username">
+
+            <label for="password">Şifre</label>
+            <input type="password" id="password" name="password" placeholder="Windows Şifreniz" required autocomplete="current-password">
+
+            <div class="buttons" style="justify-content: center;">
+                <button type="submit" class="add-btn" style="width: 100%; font-weight: bold; border: none; cursor: pointer;">Giriş Yap</button>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>
