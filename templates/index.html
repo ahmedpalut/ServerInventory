@@ -78,36 +78,36 @@
         <table id="serverTable">
             <thead>
                 <tr>
-                    <th id="th0">Sunucu <span class="sort-icon">↕</span></th>
-					<th id="th1">Disk Boyutu (GB) <span class="sort-icon">↕</span></th>
-					<th id="th2">İşletim Sistemi <span class="sort-icon">↕</span></th>
-    				<th id="th3">RAM <span class="sort-icon">↕</span></th>
-    				<th id="th4">IP <span class="sort-icon">↕</span></th>
-    				<th id="th5">Açıklama <span class="sort-icon">↕</span></th>
-    				<th id="th6">CPU <span class="sort-icon">↕</span></th>
-    				<th id="th7">Tarih <span class="sort-icon">↕</span></th>
+                    <th id="th0" data-col="name" draggable="true" class="draggable-th">Sunucu</th>
+                    <th id="th1" data-col="disk" draggable="true" class="draggable-th">Disk Boyutu (GB)</th>
+                    <th id="th2" data-col="os" draggable="true" class="draggable-th">İşletim Sistemi</th>
+                    <th id="th3" data-col="ram" draggable="true" class="draggable-th">RAM</th>
+                    <th id="th4" data-col="ip" draggable="true" class="draggable-th">IP</th>
+                    <th id="th5" data-col="desc" draggable="true" class="draggable-th">Açıklama</th>
+                    <th id="th6" data-col="cpu" draggable="true" class="draggable-th">CPU</th>
+                    <th id="th7" data-col="date" draggable="true" class="draggable-th">Tarih</th>
 
-					{% for col in custom_columns %}
-    					<th id="th{{ loop.index0 + 8 }}">{{ col.column_name }} <span class="sort-icon">↕</span></th>
-					{% endfor %}
+                    {% for col in custom_columns %}
+                        <th id="th{{ loop.index0 + 8 }}" data-col="custom_{{ col.id }}" draggable="true" class="draggable-th">{{ col.column_name }}</th>
+                    {% endfor %}
 
-    				<th id="th_last">İşlem</th>
+                    <th id="th_last">İşlem</th>
                 </tr>
             </thead>
             <tbody> 
                 {% for s in servers %} 
                 <tr class="serverRow">
-                    <td id="left">{{ s.name }}</td>
-                    <td>{{ s.disk_gb }}</td>
-                    <td>{{ s.os_name }}</td>
-                    <td>{{ s.ram_g }}</td>
-                    <td>{{ s.ip_address }}</td>
-                    <td>{{ s.usage_project }}</td>
-                    <td>{{ s.core_amount }}</td>
-                    <td>{{ s.created_at }}</td>
+                    <td id="left" data-col="name">{{ s.name }}</td>
+                    <td data-col="disk">{{ s.disk_gb }}</td>
+                    <td data-col="os">{{ s.os_name }}</td>
+                    <td data-col="ram">{{ s.ram_g }}</td>
+                    <td data-col="ip">{{ s.ip_address }}</td>
+                    <td data-col="desc">{{ s.usage_project }}</td>
+                    <td data-col="cpu">{{ s.core_amount }}</td>
+                    <td data-col="date">{{ s.created_at }}</td>
 
                     {% for col in custom_columns %}
-                        <td>{{ s.custom_values.get(col.id, "") }}</td>
+                        <td data-col="custom_{{ col.id }}">{{ s.custom_values.get(col.id, "") }}</td>
                     {% endfor %}
 
                     <td>
@@ -468,17 +468,17 @@
 
                 <div class="table-fields">
 
-                    <label id="ts1"><input type="checkbox" data-column="0" checked class="columnToggle" > Sunucu Adı</label>
-                    <label id="ts2"><input type="checkbox" data-column="1" checked class="columnToggle" > Disk Boyutu</label>
-                    <label id="ts3"><input type="checkbox" data-column="2" checked class="columnToggle" > İşletim Sistemi</label>
-                    <label id="ts4"><input type="checkbox" data-column="3" checked class="columnToggle" > RAM</label>
-                    <label id="ts5"><input type="checkbox" data-column="4" checked class="columnToggle" > IP</label>
-                    <label id="ts6"><input type="checkbox" data-column="5" checked class="columnToggle" > Açıklama</label>
-                    <label id="ts7"><input type="checkbox" data-column="6" checked class="columnToggle" > CPU</label>
-                    <label id="ts8"><input type="checkbox" data-column="7" checked class="columnToggle" > Tarih</label>
+                    <label id="ts1"><input type="checkbox" data-col="name" checked class="columnToggle"> Sunucu Adı</label>
+                    <label id="ts2"><input type="checkbox" data-col="disk" checked class="columnToggle"> Disk Boyutu</label>
+                    <label id="ts3"><input type="checkbox" data-col="os" checked class="columnToggle"> İşletim Sistemi</label>
+                    <label id="ts4"><input type="checkbox" data-col="ram" checked class="columnToggle"> RAM</label>
+                    <label id="ts5"><input type="checkbox" data-col="ip" checked class="columnToggle"> IP</label>
+                    <label id="ts6"><input type="checkbox" data-col="desc" checked class="columnToggle"> Açıklama</label>
+                    <label id="ts7"><input type="checkbox" data-col="cpu" checked class="columnToggle"> CPU</label>
+                    <label id="ts8"><input type="checkbox" data-col="date" checked class="columnToggle"> Tarih</label>
 
                     {% for col in custom_columns %}
-                        <label><input type="checkbox" data-column="{{ loop.index0 + 8 }}" checked class="columnToggle"> {{ col.column_name }}</label>
+                        <label><input type="checkbox" data-col="custom_{{ col.id }}" checked class="columnToggle"> {{ col.column_name }}</label>
                     {% endfor %}
 
                 </div>
