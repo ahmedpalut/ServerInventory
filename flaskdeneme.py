@@ -20,8 +20,8 @@ app=Flask(__name__)
 app.secret_key="SunucuEnvanter"
 
 # Active Directory (LDAP) Ayarları
-AD_SERVER = "ldap://sirket.local"  # Kendi AD sunucu adresinizle değiştirin
-AD_DOMAIN = "sirket.local"         # Kendi Domain adınızla değiştirin
+AD_SERVER = os.getenv("LDAP_SERVER")  # veya AD sunucu IP adresi
+AD_DOMAIN = os.getenv("LDAP_DOMAIN")        # Kendi Domain adınızla değiştirin
 
 # --- GİRİŞ VE ÇIKIŞ ROTALARI ---
 @app.route("/login", methods=["GET", "POST"])

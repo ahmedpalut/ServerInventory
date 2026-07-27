@@ -1,10 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from ldap3 import Server, Connection, ALL, SIMPLE, MODIFY_REPLACE
+import os
+from dotenv import load_dotenv
 # Diğer mevcut importlarınız burada kalabilir...
 
+load_dotenv()
+
 # Active Directory (LDAP) Ayarlarınız (Kendi ortamınıza göre düzenleyin)
-AD_SERVER = "ldap://sirket.local"  # veya AD sunucu IP adresi
-AD_DOMAIN = "sirket.local"         # Domain adınız
+AD_SERVER = os.getenv("LDAP_SERVER")  # veya AD sunucu IP adresi
+AD_DOMAIN = os.getenv("LDAP_DOMAIN")         # Domain adınız
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
