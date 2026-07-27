@@ -6,11 +6,7 @@ password = input("Şifre: ")
 success, conn = authenticate(username, password)
 
 if success:
-    print("✅ Giriş başarılı!\n")
-
-    print("Kullanıcılar:\n")
-    get_users(conn)
-
+    print("+ Giriş başarıl!!!")
     disconnect(conn)
 else:
     print("❌ Giriş başarısız!")
