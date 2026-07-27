@@ -772,3 +772,14 @@ select:hover{
     cursor: pointer;
     font-size: 22px;
 }
+
+input.custom-checkbox {
+    display: block;
+    width: 22px !important;
+    height: 22px;
+    margin-right: auto;
+    margin-top: 8px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    accent-color: #3b82f6;
+}
