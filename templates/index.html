@@ -18,22 +18,21 @@
     {% endif %}
     {% endwith %}
 
-    <div class="top-right">
-        <a href="/logout"
-        class="logout-btn"
-        onclick="return confirm('Çıkış yapmak istediğinize emin misiniz?')">
-
-            ⏻
-
-        </a>
-    </div>
 
     <div class="page-header">
         <h1 id="title">🖥️ Sunucu Envanteri</h1>
 
-        <button id="tableSettingsBtn" class="beautify">
-            ⚙️ Tablo Ayarları
-        </button>
+        <div class="header-buttons">
+            <button id="tableSettingsBtn" class="beautify">
+                ⚙️ Tablo Ayarları
+            </button>
+
+            <a href="/logout"
+            class="logout-btn"
+            onclick="return confirm('Çıkış yapmak istediğinize emin misiniz?')">
+                ⏻
+            </a>
+        </div>
     </div>
 
     <div class="cards">
