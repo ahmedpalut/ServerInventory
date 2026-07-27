@@ -307,49 +307,7 @@ document.getElementById("searchBtn").onclick = function (e) {
     window.location.href = url;
 };
 
-let sortDirection = {};
 
-function sortTable(column) {
-    const table = document.getElementById("serverTable");
-    const tbody = table.tBodies[0];
-    const rows = Array.from(tbody.rows);
-
-    sortDirection[column] = !sortDirection[column];
-
-    rows.sort(function(a, b) {
-        let x = a.cells[column].innerText.trim();
-        let y = b.cells[column].innerText.trim();
-
-        let nx = parseFloat(x);
-        let ny = parseFloat(y);
-
-        if (!isNaN(nx) && !isNaN(ny)) {
-            return sortDirection[column] ? nx - ny : ny - nx;
-        }
-
-        return sortDirection[column]
-            ? x.localeCompare(y, "tr")
-            : y.localeCompare(x, "tr");
-    });
-
-    rows.forEach(function(row) {
-        tbody.appendChild(row);
-    });
-
-    const headers = document.querySelectorAll("#serverTable th");
-    headers.forEach((th, i) => {
-        let span = th.querySelector(".sort-icon");
-        if (span) span.innerText = "↕";
-    });
-
-    let activeTh = document.getElementById("th" + column) || document.getElementById("th_" + column);
-    if (activeTh) {
-        let activeSpan = activeTh.querySelector(".sort-icon");
-        if (activeSpan) {
-            activeSpan.innerText = sortDirection[column] ? "▲" : "▼";
-        }
-    }
-}
 const diskCheckbox = document.querySelector(
     "input[name='fields'][value='disk_gb']"
 );
@@ -383,71 +341,6 @@ diskCheckbox.addEventListener("change", updateDiskOptions);
 
 updateDiskOptions();
 
-document.querySelectorAll(".columnToggle").forEach(function (checkbox) {
-
-    checkbox.addEventListener("change", function () {
-
-        const column = Number(this.dataset.column);
-
-        document.querySelectorAll("#serverTable tr").forEach(function (row) {
-
-            if (row.cells[column]) {
-                row.cells[column].style.display = checkbox.checked ? "" : "none";
-            }
-
-        });
-
-        localStorage.setItem(
-            "column_" + column,
-            checkbox.checked
-        );
-
-    });
-
-});
-
-document.querySelectorAll(".columnToggle").forEach(function (checkbox) {
-
-    const column = Number(checkbox.dataset.column);
-
-    const saved = localStorage.getItem("column_" + column);
-
-    if (saved !== null) {
-
-        checkbox.checked = (saved === "true");
-
-        document.querySelectorAll("#serverTable tr").forEach(function (row) {
-
-            if (row.cells[column]) {
-                row.cells[column].style.display =
-                    checkbox.checked ? "" : "none";
-            }
-
-        });
-
-    }
-
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    const headers = document.querySelectorAll("#serverTable th");
-    
-    headers.forEach((th) => {
-        
-        if (th.id !== "th_last") {
-            th.style.cursor = "pointer";
-            th.addEventListener("click", function () {
-                
-                let colIndex;
-
-                if (!isNaN(colIndex) && typeof sortTable === "function") {
-                    sortTable(colIndex);
-                }
-            });
-        }
-    });
-});
-
 document.getElementById("columnForm").onsubmit = function () {
 
     const select = document.getElementById("columnSelect");
@@ -463,3 +356,166 @@ document.getElementById("columnForm").onsubmit = function () {
     return true;
 
 };
+
+document.querySelectorAll(".columnToggle").forEach(function (checkbox) {
+
+    checkbox.addEventListener("change", function () {
+
+        const colKey = this.dataset.col;
+
+        document.querySelectorAll(`#serverTable [data-col="${colKey}"]`).forEach(function (cell) {
+            cell.style.display = checkbox.checked ? "" : "none";
+        });
+
+        localStorage.setItem("column_" + colKey, checkbox.checked);
+
+    });
+
+});
+
+document.querySelectorAll(".columnToggle").forEach(function (checkbox) {
+
+    const colKey = checkbox.dataset.col;
+    const saved = localStorage.getItem("column_" + colKey);
+
+    if (saved !== null) {
+
+        checkbox.checked = (saved === "true");
+
+        document.querySelectorAll(`#serverTable [data-col="${colKey}"]`).forEach(function (cell) {
+            cell.style.display = checkbox.checked ? "" : "none";
+        });
+
+    }
+
+});
+
+function getColumnOrder() {
+    return Array.from(
+        document.querySelectorAll("#serverTable thead th[data-col]")
+    ).map(function (th) {
+        return th.dataset.col;
+    });
+}
+
+function applyColumnOrder(order) {
+
+    const table = document.getElementById("serverTable");
+    const headerRow = table.tHead.rows[0];
+    const lastTh = document.getElementById("th_last");
+
+    order.forEach(function (colKey) {
+        const th = headerRow.querySelector(`th[data-col="${colKey}"]`);
+        if (th) headerRow.insertBefore(th, lastTh);
+    });
+
+    Array.from(table.tBodies[0].rows).forEach(function (row) {
+
+        const lastCell = row.cells[row.cells.length - 1];
+
+        order.forEach(function (colKey) {
+            const cell = row.querySelector(`[data-col="${colKey}"]`);
+            if (cell) row.insertBefore(cell, lastCell);
+        });
+
+    });
+
+}
+
+let draggedKey = null;
+
+document.querySelectorAll(".draggable-th").forEach(function (th) {
+
+    th.addEventListener("dragstart", function () {
+        draggedKey = th.dataset.col;
+        th.classList.add("dragging");
+    });
+
+    th.addEventListener("dragend", function () {
+        th.classList.remove("dragging");
+        draggedKey = null;
+        saveColumnOrder();
+    });
+
+    th.addEventListener("dragover", function (e) {
+        e.preventDefault();
+
+        if (!draggedKey || draggedKey === th.dataset.col) return;
+
+        const order = getColumnOrder();
+
+        const fromIndex = order.indexOf(draggedKey);
+
+        if (fromIndex === -1) return;
+
+        const rect = th.getBoundingClientRect();
+        const isAfter = e.clientX > rect.left + rect.width / 2;
+
+        order.splice(fromIndex, 1);
+
+        let insertIndex = order.indexOf(th.dataset.col);
+
+        if (isAfter) insertIndex += 1;
+
+        order.splice(insertIndex, 0, draggedKey);
+
+        applyColumnOrder(order);
+
+    });
+
+});
+
+function saveColumnOrder() {
+
+    const order = Array.from(
+        document.querySelectorAll("#serverTable thead th[data-col]")
+    ).map(function (th) {
+        return th.dataset.col;
+    });
+
+    localStorage.setItem("columnOrder", JSON.stringify(order));
+
+}
+
+function restoreColumnOrder() {
+
+    const saved = localStorage.getItem("columnOrder");
+
+    if (!saved) return;
+
+    let order;
+
+    try {
+        order = JSON.parse(saved);
+    } catch (e) {
+        return;
+    }
+
+    const table = document.getElementById("serverTable");
+    const headerRow = table.tHead.rows[0];
+    const lastTh = document.getElementById("th_last");
+
+    order.forEach(function (colKey) {
+
+        const th = headerRow.querySelector(`th[data-col="${colKey}"]`);
+
+        if (th) {
+            headerRow.insertBefore(th, lastTh);
+        }
+
+        Array.from(table.tBodies[0].rows).forEach(function (row) {
+
+            const cell = row.querySelector(`[data-col="${colKey}"]`);
+            const lastCell = row.cells[row.cells.length - 1];
+
+            if (cell) {
+                row.insertBefore(cell, lastCell);
+            }
+
+        });
+
+    });
+
+}
+
+restoreColumnOrder();

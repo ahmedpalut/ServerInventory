@@ -783,3 +783,16 @@ input.custom-checkbox {
     cursor: pointer;
     accent-color: #3b82f6;
 }
+
+.draggable-th.dragging {
+    opacity: 0.4;
+}
+
+.draggable-th {
+    cursor: grab;
+    transition: background-color .15s;
+}
+
+.draggable-th:not(.dragging):hover {
+    background: #1d4ed8;
+}
