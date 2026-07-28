@@ -518,48 +518,80 @@ function restoreColumnOrder() {
 
 }
 
-// Excel tarzı akıllı menü açma
+let activeColumn = null; // Şu an hangi sütun menüsünün açık olduğunu tutar
+
 function toggleColumnMenu(event, colKey) {
     event.stopPropagation();
+    activeColumn = colKey; // Tıklanan sütunu kaydet
     
-    const targetMenuId = 'menu_' + colKey;
-    const menu = document.getElementById(targetMenuId);
-    const btn = event.currentTarget; // Tıklanan ok butonu
+    const menu = document.getElementById('sharedColumnMenu');
+    const btn = event.currentTarget;
     
-    // Diğer açık menüleri kapat
-    document.querySelectorAll('.column-dropdown-menu').forEach(m => {
-        if (m.id !== targetMenuId) {
-            m.style.display = 'none';
-        }
-    });
-    
-    if (!menu) return;
-
     if (menu.style.display === 'block') {
         menu.style.display = 'none';
     } else {
-        // Butonun ekrandaki konumunu al
+        // Butonun ekrandaki yerini hesapla
         const rect = btn.getBoundingClientRect();
+        
+        // Önceki aramadan kalan input kutusu varsa temizle
+        const oldSearch = menu.querySelector('.col-search-box');
+        if (oldSearch) oldSearch.remove();
         
         menu.style.display = 'block';
         
-        // Menüyü butonun hemen altına ve sağa hizalı yerleştir
-        let leftPos = rect.right - menu.offsetWidth; // Menü sağa taşmasın diye sağa yaslıyoruz
-        if (leftPos < 10) leftPos = rect.left; // Eğer sığmazsa sola yasla
+        // Butonun tam altına yerleştir
+        let leftPos = rect.right - menu.offsetWidth;
+        if (leftPos < 10) leftPos = rect.left;
         
         menu.style.top = (rect.bottom + 4) + 'px';
         menu.style.left = leftPos + 'px';
     }
 }
 
-// Boş bir yere tıklandığında menüyü kapat
+// Sıralama Yap
+function executeSort(order) {
+    if (!activeColumn) return;
+    sortTable(activeColumn, order);
+    document.getElementById('sharedColumnMenu').style.display = 'none';
+}
+
+// Sütun İçi Arama Kutusunu Aç
+function openSharedSearch(event) {
+    event.stopPropagation();
+    const menu = document.getElementById('sharedColumnMenu');
+    
+    if (!menu.querySelector('.col-search-box')) {
+        const searchDiv = document.createElement('div');
+        searchDiv.className = 'col-search-box';
+        searchDiv.innerHTML = `<input type="text" placeholder="Aranacak kelime..." class="col-filter-input" onclick="event.stopPropagation()">`;
+        
+        menu.appendChild(searchDiv);
+        
+        const input = searchDiv.querySelector('input');
+        input.focus();
+        
+        // Yazdıkça satırları filtrele (Satırlar azalsa bile panel etkilenmez)
+        input.oninput = function() {
+            let val = this.value.toLowerCase();
+            const rows = document.querySelectorAll("#serverTable tbody tr.serverRow");
+            rows.forEach(row => {
+                let cell = row.querySelector(`[data-col="${activeColumn}"]`);
+                if (cell) {
+                    let text = cell.innerText.toLowerCase();
+                    row.style.display = text.includes(val) ? "" : "none";
+                }
+            });
+        };
+    }
+}
+
+// Boş bir yere tıklandığında paneli kapat
 window.addEventListener('click', function() {
-    document.querySelectorAll('.column-dropdown-menu').forEach(menu => {
-        menu.style.display = 'none';
-    });
+    const menu = document.getElementById('sharedColumnMenu');
+    if (menu) menu.style.display = 'none';
 });
 
-// Sıralama Fonksiyonu
+// Sıralama Mantığı
 function sortTable(colKey, order) {
     const table = document.getElementById("serverTable");
     const tbody = table.tBodies[0];
@@ -580,34 +612,6 @@ function sortTable(colKey, order) {
     });
 
     rows.forEach(row => tbody.appendChild(row));
-}
-
-// Sütun İçi Arama Fonksiyonu
-function openColumnSearch(colKey, event) {
-    event.stopPropagation();
-    const menu = document.getElementById('menu_' + colKey);
-    
-    if (!menu.querySelector('.col-search-box')) {
-        const searchDiv = document.createElement('div');
-        searchDiv.className = 'col-search-box';
-        searchDiv.style.padding = '8px';
-        searchDiv.innerHTML = `<input type="text" placeholder="Kelime ara..." class="col-filter-input" style="width: 100%; padding: 4px; box-sizing: border-box;" onclick="event.stopPropagation()">`;
-        
-        menu.appendChild(searchDiv);
-
-        const input = searchDiv.querySelector('input');
-        input.oninput = function() {
-            let val = this.value.toLowerCase();
-            const rows = document.querySelectorAll("#serverTable tbody tr.serverRow");
-            rows.forEach(row => {
-                let cell = row.querySelector(`[data-col="${colKey}"]`);
-                if (cell) {
-                    let text = cell.innerText.toLowerCase();
-                    row.style.display = text.includes(val) ? "" : "none";
-                }
-            });
-        };
-    }
 }
 
 // 4. Sütun Silme Yönlendirmesi

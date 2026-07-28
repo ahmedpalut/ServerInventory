@@ -82,162 +82,122 @@
             <button id="langButton"> TR / EN </button> 
         </div>
     </div>
+	<div class="table-wrapper">
+        <table id="serverTable">
+            <thead>
+                <tr>
+                    <th id="th0" data-col="name" draggable="true" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Sunucu</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'name')">▼</button>
+                        </div>
+                    </th>
+                    <th id="th1" data-col="disk" draggable="true" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Disk Boyutu (GB)</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'disk')">▼</button>
+                        </div>
+                    </th>
+                    <th id="th2" data-col="os" draggable="true" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>İşletim Sistemi</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'os')">▼</button>
+                        </div>
+                    </th>
+                    <th id="th3" data-col="ram" draggable="true" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>RAM</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'ram')">▼</button>
+                        </div>
+                    </th>
+                    <th id="th4" data-col="ip" draggable="true" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>IP</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'ip')">▼</button>
+                        </div>
+                    </th>
+                    <th id="th5" data-col="desc" draggable="true" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Açıklama</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'desc')">▼</button>
+                        </div>
+                    </th>
+                    <th id="th6" data-col="cpu" draggable="true" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>CPU</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'cpu')">▼</button>
+                        </div>
+                    </th>
+                    <th id="th7" data-col="date" draggable="true" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Tarih</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'date')">▼</button>
+                        </div>
+                    </th>
 
-    <div class="table-wrapper">
-		<table id="serverTable">
-			<thead>
-				<tr>
-					<th id="th0" data-col="name" draggable="true" class="draggable-th">
-						<div class="th-wrapper">
-							<span>Sunucu</span>
-							<button class="column-menu-btn" onclick="toggleColumnMenu(event, 'name')">▼</button>
-							<div id="menu_name" class="column-dropdown-menu" style="display:none;">
-								<div onclick="sortTable('name', 'asc')">⬆️ Küçükten Büyüğe</div>
-								<div onclick="sortTable('name', 'desc')">⬇️ Büyükten Küçüğe</div>
-								<div onclick="openColumnSearch('name', event)">🔍 Sütunda Ara</div>
-							</div>
-						</div>
-					</th>
-					<th id="th1" data-col="disk" draggable="true" class="draggable-th">
-						<div class="th-wrapper">
-							<span>Disk Boyutu (GB)</span>
-							<button class="column-menu-btn" onclick="toggleColumnMenu(event, 'disk')">▼</button>
-							<div id="menu_disk" class="column-dropdown-menu" style="display:none;">
-								<div onclick="sortTable('disk', 'asc')">⬆️ Küçükten Büyüğe</div>
-								<div onclick="sortTable('disk', 'desc')">⬇️ Büyükten Küçüğe</div>
-								<div onclick="openColumnSearch('disk', event)">🔍 Sütunda Ara</div>
-							</div>
-						</div>
-					</th>
-					<th id="th2" data-col="os" draggable="true" class="draggable-th">
-						<div class="th-wrapper">
-							<span>İşletim Sistemi</span>
-							<button class="column-menu-btn" onclick="toggleColumnMenu(event, 'os')">▼</button>
-							<div id="menu_os" class="column-dropdown-menu" style="display:none;">
-								<div onclick="sortTable('os', 'asc')">⬆️ Küçükten Büyüğe</div>
-								<div onclick="sortTable('os', 'desc')">⬇️ Büyükten Küçüğe</div>
-								<div onclick="openColumnSearch('os', event)">🔍 Sütunda Ara</div>
-							</div>
-						</div>
-					</th>
-					<th id="th3" data-col="ram" draggable="true" class="draggable-th">
-						<div class="th-wrapper">
-							<span>RAM</span>
-							<button class="column-menu-btn" onclick="toggleColumnMenu(event, 'ram')">▼</button>
-							<div id="menu_ram" class="column-dropdown-menu" style="display:none;">
-								<div onclick="sortTable('ram', 'asc')">⬆️ Küçükten Büyüğe</div>
-								<div onclick="sortTable('ram', 'desc')">⬇️ Büyükten Küçüğe</div>
-								<div onclick="openColumnSearch('ram', event)">🔍 Sütunda Ara</div>
-							</div>
-						</div>
-					</th>
-					<th id="th4" data-col="ip" draggable="true" class="draggable-th">
-						<div class="th-wrapper">
-							<span>IP</span>
-							<button class="column-menu-btn" onclick="toggleColumnMenu(event, 'ip')">▼</button>
-							<div id="menu_ip" class="column-dropdown-menu" style="display:none;">
-								<div onclick="sortTable('ip', 'asc')">⬆️ Küçükten Büyüğe</div>
-								<div onclick="sortTable('ip', 'desc')">⬇️ Büyükten Küçüğe</div>
-								<div onclick="openColumnSearch('ip', event)">🔍 Sütunda Ara</div>
-							</div>
-						</div>
-					</th>
-					<th id="th5" data-col="desc" draggable="true" class="draggable-th">
-						<div class="th-wrapper">
-							<span>Açıklama</span>
-							<button class="column-menu-btn" onclick="toggleColumnMenu(event, 'desc')">▼</button>
-							<div id="menu_desc" class="column-dropdown-menu" style="display:none;">
-								<div onclick="sortTable('desc', 'asc')">⬆️ Küçükten Büyüğe</div>
-								<div onclick="sortTable('desc', 'desc')">⬇️ Büyükten Küçüğe</div>
-								<div onclick="openColumnSearch('desc', event)">🔍 Sütunda Ara</div>
-							</div>
-						</div>
-					</th>
-					<th id="th6" data-col="cpu" draggable="true" class="draggable-th">
-						<div class="th-wrapper">
-							<span>CPU</span>
-							<button class="column-menu-btn" onclick="toggleColumnMenu(event, 'cpu')">▼</button>
-							<div id="menu_cpu" class="column-dropdown-menu" style="display:none;">
-								<div onclick="sortTable('cpu', 'asc')">⬆️ Küçükten Büyüğe</div>
-								<div onclick="sortTable('cpu', 'desc')">⬇️ Büyükten Küçüğe</div>
-								<div onclick="openColumnSearch('cpu', event)">🔍 Sütunda Ara</div>
-							</div>
-						</div>
-					</th>
-					<th id="th7" data-col="date" draggable="true" class="draggable-th">
-						<div class="th-wrapper">
-							<span>Tarih</span>
-							<button class="column-menu-btn" onclick="toggleColumnMenu(event, 'date')">▼</button>
-							<div id="menu_date" class="column-dropdown-menu" style="display:none;">
-								<div onclick="sortTable('date', 'asc')">⬆️ Küçükten Büyüğe</div>
-								<div onclick="sortTable('date', 'desc')">⬇️ Büyükten Küçüğe</div>
-								<div onclick="openColumnSearch('date', event)">🔍 Sütunda Ara</div>
-							</div>
-						</div>
-					</th>
+                    {% for col in custom_columns %}
+                        <th id="th{{ loop.index0 + 8 }}" data-col="custom_{{ col.id }}" draggable="true" class="draggable-th">
+                            <div class="th-wrapper">
+                                <span>{{ col.column_name }}</span>
+                                <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'custom_{{ col.id }}')">▼</button>
+                            </div>
+                        </th>
+                    {% endfor %}
 
-					{% for col in custom_columns %}
-						<th id="th{{ loop.index0 + 8 }}" data-col="custom_{{ col.id }}" draggable="true" class="draggable-th">
-							<div class="th-wrapper">
-								<span>{{ col.column_name }}</span>
-								<button class="column-menu-btn" onclick="toggleColumnMenu(event, 'custom_{{ col.id }}')">▼</button>
-								<div id="menu_custom_{{ col.id }}" class="column-dropdown-menu" style="display:none;">
-									<div onclick="sortTable('custom_{{ col.id }}', 'asc')">⬆️ Küçükten Büyüğe</div>
-									<div onclick="sortTable('custom_{{ col.id }}', 'desc')">⬇️ Büyükten Küçüğe</div>
-									<div onclick="openColumnSearch('custom_{{ col.id }}', event)">🔍 Sütunda Ara</div>
-									<div onclick="deleteColumnPrompt('custom_{{ col.id }}')">🗑️ Sütunu Sil</div>
-								</div>
-							</div>
-						</th>
-					{% endfor %}
+                    <th id="th_last">İşlem</th>
+                </tr>
+            </thead>
+            <tbody> 
+                {% for s in servers %} 
+                <tr class="serverRow">
+                    <td id="left" data-col="name">{{ s.name }}</td>
+                    <td data-col="disk">{{ s.disk_gb }}</td>
+                    <td data-col="os">{{ s.os_name }}</td>
+                    <td data-col="ram">{{ s.ram_g }}</td>
+                    <td data-col="ip">{{ s.ip_address }}</td>
+                    <td data-col="desc">{{ s.usage_project }}</td>
+                    <td data-col="cpu">{{ s.core_amount }}</td>
+                    <td data-col="date">{{ s.created_at }}</td>
 
-					<th id="th_last">İşlem</th>
-				</tr>
-			</thead>
-			<tbody> 
-				{% for s in servers %} 
-				<tr class="serverRow">
-					<td id="left" data-col="name">{{ s.name }}</td>
-					<td data-col="disk">{{ s.disk_gb }}</td>
-					<td data-col="os">{{ s.os_name }}</td>
-					<td data-col="ram">{{ s.ram_g }}</td>
-					<td data-col="ip">{{ s.ip_address }}</td>
-					<td data-col="desc">{{ s.usage_project }}</td>
-					<td data-col="cpu">{{ s.core_amount }}</td>
-					<td data-col="date">{{ s.created_at }}</td>
+                    {% for col in custom_columns %}
+                        <td data-col="custom_{{ col.id }}">{{ s.custom_values.get(col.id, "") }}</td>
+                    {% endfor %}
 
-					{% for col in custom_columns %}
-						<td data-col="custom_{{ col.id }}">{{ s.custom_values.get(col.id, "") }}</td>
-					{% endfor %}
+                    <td>
+                        <a href="#"
+                        class="edit-btn"
+                        data-custom='{{ s.custom_values | tojson }}'
+                        onclick='openPanel(
+                            "{{ s.id }}",
+                            "{{ s.name }}",
+                            "{{ s.disk_gb }}",
+                            "{{ s.os_name }}",
+                            "{{ s.ram_g }}",
+                            "{{ s.ip_address }}",
+                            "{{ s.usage_project }}",
+                            "{{ s.core_amount }}",
+                            "{{ s.created_at }}",
+                            JSON.parse(this.dataset.custom)
+                        ); return false;'>
+                            ✏️
+                        </a>
 
-					<td>
-						<a href="#"
-						class="edit-btn"
-						data-custom='{{ s.custom_values | tojson }}'
-						onclick='openPanel(
-							"{{ s.id }}",
-							"{{ s.name }}",
-							"{{ s.disk_gb }}",
-							"{{ s.os_name }}",
-							"{{ s.ram_g }}",
-							"{{ s.ip_address }}",
-							"{{ s.usage_project }}",
-							"{{ s.core_amount }}",
-							"{{ s.created_at }}",
-							JSON.parse(this.dataset.custom)
-						); return false;'>
-							✏️
-						</a>
+                        <a href="/delete/{{ s.id }}" class="delete-btn"
+                        onclick="return confirm('Bu sunucuyu silmek istediğinize emin misiniz?')">
+                            🗑️
+                        </a>
+                    </td>
+                </tr> 
+                {% endfor %} 
+            </tbody>
+        </table>
+    </div>
 
-						<a href="/delete/{{ s.id }}" class="delete-btn"
-						onclick="return confirm('Bu sunucuyu silmek istediğinize emin misiniz?')">
-							🗑️
-						</a>
-					</td>
-				</tr> 
-				{% endfor %} 
-			</tbody>
-		</table>
+    <!-- SAYFANIN EN ALTINDA (VEYA HTML İÇİNDE HERHANGİ BİR YERDE) TEK BİR ORTAK PANEL -->
+    <div id="sharedColumnMenu" class="column-dropdown-menu" style="display:none;">
+        <div onclick="executeSort('asc')">⬆️ Küçükten Büyüğe</div>
+        <div onclick="executeSort('desc')">⬇️ Büyükten Küçüğe</div>
+        <div onclick="openSharedSearch(event)">🔍 Sütunda Ara</div>
     </div>
 
     <div id="editOverlay"></div>
