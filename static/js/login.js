@@ -19,3 +19,25 @@ const password = document.getElementById("password");
         }
 
     });
+
+
+const username = document.getElementById("username");
+const rememberMe = document.getElementById("rememberMe");
+const form = document.querySelector("form");
+
+const savedUsername = localStorage.getItem("rememberedUsername");
+
+if (savedUsername) {
+    username.value = savedUsername;
+    rememberMe.checked = true;
+}
+
+form.addEventListener("submit", function () {
+
+    if (rememberMe.checked) {
+        localStorage.setItem("rememberedUsername", username.value);
+    } else {
+        localStorage.removeItem("rememberedUsername");
+    }
+
+});

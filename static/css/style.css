@@ -791,6 +791,12 @@ select:hover{
     display: none;
 }
 
+.rememberMe{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
 #columndeletelay{
     position: fixed;
     inset: 0;

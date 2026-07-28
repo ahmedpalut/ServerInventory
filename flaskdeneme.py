@@ -2,7 +2,7 @@ from flask import *
 import mysql.connector
 import os
 from dotenv import load_dotenv
-from ldap3 import Server, Connection, ALL, SIMPLE
+from ldap3 import Server, Connection, ALL, SIMPLE, NONE
 
 load_dotenv()
 
@@ -35,7 +35,7 @@ def login():
         conn = None
 
         try:
-            server = Server(AD_SERVER, get_info=ALL)
+            server = Server(AD_SERVER, get_info=NONE)
             conn = Connection(server, user=user_dn, password=password, authentication=SIMPLE, raise_exceptions=True)
             
             if conn.bind():
@@ -61,7 +61,7 @@ def login():
 
 @app.route("/logout")
 def logout():
-    session.pop("user", None)
+    session.clear()
 
     flash("Oturum kapatıldı.")
     return redirect(url_for("login"))
