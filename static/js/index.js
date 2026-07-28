@@ -627,4 +627,12 @@ function deleteColumnPrompt(colKey) {
     }
 }
 
+// Sayfa kaydırıldığında açık olan ortak paneli otomatik kapat
+window.addEventListener('scroll', function() {
+    const menu = document.getElementById('sharedColumnMenu');
+    if (menu && menu.style.display === 'block') {
+        menu.style.display = 'none';
+    }
+}, { passive: true });
+
 restoreColumnOrder();
