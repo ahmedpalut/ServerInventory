@@ -518,7 +518,7 @@ function restoreColumnOrder() {
 
 }
 
-let activeColumn = null; // Şu an hangi sütun menüsünün açık olduğunu tutar
+let activeColumn = null;
 
 function toggleColumnMenu(event, colKey) {
     window.scrollTo({
@@ -526,7 +526,7 @@ function toggleColumnMenu(event, colKey) {
         behavior: "smooth" 
     });
     event.stopPropagation();
-    activeColumn = colKey; // Tıklanan sütunu kaydet
+    activeColumn = colKey; 
     
     const menu = document.getElementById('sharedColumnMenu');
     const btn = event.currentTarget;
@@ -534,16 +534,13 @@ function toggleColumnMenu(event, colKey) {
     if (menu.style.display === 'block') {
         menu.style.display = 'none';
     } else {
-        // Butonun ekrandaki yerini hesapla
         const rect = btn.getBoundingClientRect();
         
-        // Önceki aramadan kalan input kutusu varsa temizle
         const oldSearch = menu.querySelector('.col-search-box');
         if (oldSearch) oldSearch.remove();
         
         menu.style.display = 'block';
         
-        // Butonun tam altına yerleştir
         let leftPos = rect.right - menu.offsetWidth;
         if (leftPos < 10) leftPos = rect.left;
         
@@ -552,14 +549,12 @@ function toggleColumnMenu(event, colKey) {
     }
 }
 
-// Sıralama Yap
 function executeSort(order) {
     if (!activeColumn) return;
     sortTable(activeColumn, order);
     document.getElementById('sharedColumnMenu').style.display = 'none';
 }
 
-// Sütun İçi Arama Kutusunu Aç
 function openSharedSearch(event) {
     event.stopPropagation();
     
@@ -575,7 +570,6 @@ function openSharedSearch(event) {
         const input = searchDiv.querySelector('input');
         input.focus();
         
-        // Yazdıkça satırları filtrele (Satırlar azalsa bile panel etkilenmez)
         input.oninput = function() {
             let val = this.value.toLowerCase();
             const rows = document.querySelectorAll("#serverTable tbody tr.serverRow");
@@ -590,13 +584,11 @@ function openSharedSearch(event) {
     }
 }
 
-// Boş bir yere tıklandığında paneli kapat
 window.addEventListener('click', function() {
     const menu = document.getElementById('sharedColumnMenu');
     if (menu) menu.style.display = 'none';
 });
 
-// Sıralama Mantığı
 function sortTable(colKey, order) {
     const table = document.getElementById("serverTable");
     const tbody = table.tBodies[0];
@@ -619,9 +611,7 @@ function sortTable(colKey, order) {
     rows.forEach(row => tbody.appendChild(row));
 }
 
-// 4. Sütun Silme Yönlendirmesi
 function deleteColumnPrompt(colKey) {
-    // Özel sütun mu yoksa standart sütun mü kontrolü
     if (colKey.startsWith('custom_')) {
         let realId = colKey.replace('custom_', '');
         if (confirm("Bu sütunu silmek istediğinize emin misiniz?")) {
@@ -632,7 +622,6 @@ function deleteColumnPrompt(colKey) {
     }
 }
 
-// Sayfa kaydırıldığında açık olan ortak paneli otomatik kapat
 window.addEventListener('scroll', function() {
     const menu = document.getElementById('sharedColumnMenu');
     if (menu && menu.style.display === 'block') {
