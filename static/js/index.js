@@ -174,7 +174,7 @@ function openPanel(
 
 function closePanel() {
     document.body.classList.remove("modal-open");
-    document.getElementById("editPanel").style.right = "-420px";
+    document.getElementById("editPanel").style.right = "-100%";
     document.getElementById("editOverlay").style.display = "none";
 }
 

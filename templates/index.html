@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sunucu Envanteri</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 
 <body>
@@ -18,14 +19,30 @@
     {% endif %}
     {% endwith %}
 
-
     <div class="page-header">
-        <h1 id="title">🖥️ Sunucu Envanteri</h1>
+        <div class="header-left">
+            <h1 id="title">🖥️ Sunucu Envanteri</h1>
+
+            <div class="user-info">
+                <i class="fa-solid fa-user"></i>
+
+                {{ username }}
+
+                {% if is_admin %}
+                    - Admin
+                {% else %}
+                    - Ziyaretçi
+                {% endif %}
+            </div>
+        </div>
 
         <div class="header-buttons">
-            <button id="tableSettingsBtn" class="beautify">
-                ⚙️ Tablo Ayarları
-            </button>
+
+            {% if is_admin %}
+                <button id="tableSettingsBtn" class="beautify">
+                    ⚙️ Tablo Ayarları
+                </button>
+            {% endif %}
 
             <a href="/logout"
             class="logout-btn"
@@ -78,8 +95,11 @@
         </form>
         
         <div> 
-            <a href="/add" class="add-btn" id="addBtn">➕ Yeni Sunucu</a> 
-            <button id="langButton"> TR / EN </button> 
+            {% if is_admin %}
+                <a href="/add" class="add-btn" id="addBtn">➕ Yeni Sunucu</a> 
+            {% endif %}
+                <button id="langButton"> TR / EN </button> 
+            
         </div>
     </div>
 	<div class="table-wrapper">
@@ -164,28 +184,33 @@
                     {% endfor %}
 
                     <td>
-                        <a href="#"
-                        class="edit-btn"
-                        data-custom='{{ s.custom_values | tojson }}'
-                        onclick='openPanel(
-                            "{{ s.id }}",
-                            "{{ s.name }}",
-                            "{{ s.disk_gb }}",
-                            "{{ s.os_name }}",
-                            "{{ s.ram_g }}",
-                            "{{ s.ip_address }}",
-                            "{{ s.usage_project }}",
-                            "{{ s.core_amount }}",
-                            "{{ s.created_at }}",
-                            JSON.parse(this.dataset.custom)
-                        ); return false;'>
-                            ✏️
-                        </a>
+                        {% if is_admin %}
+                            <a href="#"
+                            class="edit-btn"
+                            data-custom='{{ s.custom_values | tojson }}'
+                            onclick='openPanel(
+                                "{{ s.id }}",
+                                "{{ s.name }}",
+                                "{{ s.disk_gb }}",
+                                "{{ s.os_name }}",
+                                "{{ s.ram_g }}",
+                                "{{ s.ip_address }}",
+                                "{{ s.usage_project }}",
+                                "{{ s.core_amount }}",
+                                "{{ s.created_at }}",
+                                JSON.parse(this.dataset.custom)
+                            ); return false;'>
+                                ✏️
+                            </a>
 
-                        <a href="/delete/{{ s.id }}" class="delete-btn"
-                        onclick="return confirm('Bu sunucuyu silmek istediğinize emin misiniz?')">
-                            🗑️
-                        </a>
+                            <a href="/delete/{{ s.id }}" class="delete-btn"
+                            onclick="return confirm('Bu sunucuyu silmek istediğinize emin misiniz?')">
+                                🗑️
+                            </a>
+                        {% else %}
+                            Yetki Yok
+
+                        {% endif %}
                     </td>
                 </tr> 
                 {% endfor %} 
@@ -193,7 +218,6 @@
         </table>
     </div>
 
-    <!-- SAYFANIN EN ALTINDA (VEYA HTML İÇİNDE HERHANGİ BİR YERDE) TEK BİR ORTAK PANEL -->
     <div id="sharedColumnMenu" class="column-dropdown-menu" style="display:none;">
         <div onclick="executeSort('asc')">⬆️ Küçükten Büyüğe</div>
         <div onclick="executeSort('desc')">⬇️ Büyükten Küçüğe</div>

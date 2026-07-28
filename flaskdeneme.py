@@ -2,7 +2,7 @@ from flask import *
 import mysql.connector
 import os
 from dotenv import load_dotenv
-from ldap3 import Server, Connection, ALL, SIMPLE, NONE
+from ldap3 import Server, Connection, SUBTREE, SIMPLE, NONE
 
 load_dotenv()
 
@@ -24,40 +24,92 @@ AD_DOMAIN = os.getenv("LDAP_DOMAIN")
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
+
         username = request.form.get("username")
         password = request.form.get("password")
-        
+
         if "\\" in username:
             user_dn = username
         else:
             user_dn = f"{username}@{AD_DOMAIN}"
-            
+
         conn = None
 
         try:
             server = Server(AD_SERVER, get_info=NONE)
-            conn = Connection(server, user=user_dn, password=password, authentication=SIMPLE, raise_exceptions=True)
-            
+            conn = Connection(
+                server,
+                user=user_dn,
+                password=password,
+                authentication=SIMPLE,
+                raise_exceptions=True
+            )
+
             if conn.bind():
+
+                search_base = ",".join(
+                    [f"DC={x}" for x in AD_DOMAIN.split(".")]
+                )
+
+                conn.search(
+                    search_base=search_base,
+                    search_filter=f"(sAMAccountName={username})",
+                    search_scope=SUBTREE,
+                    attributes=["memberOf"]
+                )
+
+                role = "Visitor"
+
+                print(f"\n=== {username} kullanıcısının grupları ===")
+
+                if conn.entries:
+
+                    groups = conn.entries[0]["memberOf"]
+
+                    for group in groups:
+                        print(group)
+
+                        group = str(group)
+
+                        if "CN=Test Admin," in group:
+                            role = "Admin"
+
+                        elif "CN=Domain Admins," in group:
+                            role = "Admin"
+
+                else:
+                    print("Grup bilgisi bulunamadı.")
+
+                print("========================================\n")
+
                 session["user"] = username
+                session["role"] = role
+                session["is_admin"] = (role == "Admin")
+
                 flash("Giriş başarılı!")
+
                 conn.unbind()
                 return redirect(url_for("index"))
+
             else:
-                flash("Giriş başarısız oldu.")    
+                flash("Kullanıcı adı veya şifre hatalı.")
                 return redirect(url_for("login"))
-            
-        except Exception:
-            flash("Bir hata meydana geldi") 
+
+        except Exception as e:
+            print(e)
+            flash("Bir hata meydana geldi.")
+
             if conn:
                 conn.unbind()
+
             return redirect(url_for("login"))
-        
+
         finally:
             if conn:
                 conn.unbind()
 
     return render_template("login.html")
+
 
 @app.route("/logout")
 def logout():
@@ -70,9 +122,6 @@ def logout():
 
 @app.route("/")
 def index():
-    if "user" not in session:
-        return redirect(url_for("login"))
-    
     cursor.execute("""
         SELECT *
         FROM custom_columns
@@ -134,13 +183,13 @@ def index():
         windows_amount=windows_amount,
         os_list=os_list,
         custom_columns=custom_columns,
-        custom_values=custom_values
+        custom_values=custom_values,
+        is_admin=session.get("is_admin", False),
+        username=session.get("user")
     )
 
 @app.route("/edit/<int:id>", methods=["POST"])
 def edit(id):
-    if "user" not in session:
-        return redirect(url_for("login"))
 
     name = request.form["ad"]
     disk = float(request.form["disk"])
@@ -269,8 +318,6 @@ def edit(id):
 
 @app.route("/delete/<int:id>")
 def sil(id):
-    if "user" not in session:
-        return redirect(url_for("login"))
 
     cursor.execute("""
         DELETE FROM custom_values
@@ -291,8 +338,6 @@ def sil(id):
 
 @app.route("/add", methods=["GET","POST"])
 def ekle():
-    if "user" not in session:
-        return redirect(url_for("login"))
     
     if request.method=="POST":
         name=request.form["ad"]
@@ -387,8 +432,6 @@ def ekle():
 
 @app.route("/search")
 def search():
-    if "user" not in session:
-        return redirect(url_for("login"))
 
     q = request.args.get("q", "").strip()
     fields = request.args.getlist("fields")
@@ -556,8 +599,8 @@ def search():
     
 @app.route("/addcolumn", methods=["GET", "POST"])
 def addcolumn():
-    if "user" not in session:
-        return redirect(url_for("login"))
+    if not admin_required():
+        return render_template("index.html")
 
     if request.method == "POST":
 
@@ -590,8 +633,6 @@ def addcolumn():
 
 @app.route("/editcolumn/<int:id>", methods=["POST"])
 def editcolumn(id):
-    if "user" not in session:
-        return redirect(url_for("login"))
 
     column_name=request.form["columnName"].strip()
     data_type=request.form["dataType"]
@@ -628,8 +669,6 @@ def editcolumn(id):
 
 @app.route("/deleteColumn/<int:id>", methods=["POST"])
 def deleteColumn(id):
-    if "user" not in session:
-        return redirect(url_for("login"))
 
     cursor.execute("""
         DELETE FROM custom_values
@@ -646,6 +685,9 @@ def deleteColumn(id):
     flash("Sütun başarıyla silindi!")
 
     return redirect(url_for("index"))
+
+def admin_required():
+    return session.get("role") == "Admin"
 
 
 if __name__=="__main__":
