@@ -521,6 +521,10 @@ function restoreColumnOrder() {
 let activeColumn = null; // Şu an hangi sütun menüsünün açık olduğunu tutar
 
 function toggleColumnMenu(event, colKey) {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth" 
+    });
     event.stopPropagation();
     activeColumn = colKey; // Tıklanan sütunu kaydet
     
@@ -558,6 +562,7 @@ function executeSort(order) {
 // Sütun İçi Arama Kutusunu Aç
 function openSharedSearch(event) {
     event.stopPropagation();
+    
     const menu = document.getElementById('sharedColumnMenu');
     
     if (!menu.querySelector('.col-search-box')) {
