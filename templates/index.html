@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sunucu Envanteri</title>
+    <title>{{translations.title_i}}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
@@ -21,7 +21,9 @@
 
     <div class="page-header">
         <div class="header-left">
-            <h1 id="title">🖥️ Sunucu Envanteri</h1>
+            <h1 id="title">
+                {{translations.title}}
+            </h1>
 
             <div class="user-info">
                 <i class="fa-solid fa-user"></i>
@@ -29,9 +31,9 @@
                 {{ username }}
 
                 {% if is_admin %}
-                    - Admin
+                    - {{translations.admin}}
                 {% else %}
-                    - Ziyaretçi
+                    - {{translations.visitor}}
                 {% endif %}
             </div>
         </div>
@@ -40,13 +42,13 @@
 
             {% if is_admin %}
                 <button id="tableSettingsBtn" class="beautify">
-                    ⚙️ Tablo Ayarları
+                    {{translations.table_settings}}
                 </button>
             {% endif %}
 
             <a href="/logout"
             class="logout-btn"
-            onclick="return confirm('Çıkış yapmak istediğinize emin misiniz?')">
+            onclick="return confirm('{{translations.logout_confirm}}')">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>
@@ -56,17 +58,17 @@
 
         <div class="card">
             <h2>{{ servers|length }}</h2>
-            <p id="card1">Toplam Sunucu</p>
+            <p id="card1">{{translations.total_server}}</p>
         </div>
 
         <div class="card">
             <h2>{{ windows_amount }}</h2>
-            <p id="card2">Windows Sunucu</p>
+            <p id="card2">{{translations.windows_server}}</p>
         </div>
 
         <div class="card">
             <h2>GIG</h2>
-            <p id="card3">IT Envanteri</p>
+            <p id="card3">{{translations.inventory}}</p>
         </div>
 
     </div>
@@ -77,28 +79,31 @@
                 <input type="text"
                     id="searchInput"
                     name="q"
-                    placeholder="🔍 Sunucu Ara..."
+                    placeholder="{{translations.search_placeholder}}"
                     value="{{ request.args.get('q','') }}">
 
-                <button type="submit" id="searchBtn" class="beautify">
+                <button type="submit" id="searchBtn" class="beautify" data-lang="search">
                     {% if request.path == "/search" %}
-                        ⬅️ Geri Dön
+                        {{translations.back}}
                     {% else %}
-                        🔍 Ara
+                        {{translations.search}}
                     {% endif %}
                 </button>
 
                 <button type="button" id="searchSettingsBtn" class="beautify">
-                    ⚙️ Arama Ayarları
+                    {{translations.search_settings}}
                 </button>
             </div>
         </form>
         
         <div> 
             {% if is_admin %}
-                <a href="/add" class="add-btn" id="addBtn">➕ Yeni Sunucu</a> 
+                <a href="/add" class="add-btn" id="addBtn">{{translations.new_server}}</a> 
             {% endif %}
-                <button id="langButton"> TR / EN </button> 
+                <a href="/change_language/{{ 'en' if lang == 'tr' else 'tr' }}"
+                    id="langButton">
+                        {{ 'EN' if lang == 'tr' else 'TR' }}
+                </a>
             
         </div>
     </div>
@@ -108,49 +113,49 @@
                 <tr>
                     <th id="th0" data-col="name" draggable="true" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Sunucu</span>
+                            <span>{{translations.server}}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'name')">▼</button>
                         </div>
                     </th>
                     <th id="th1" data-col="disk" draggable="true" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Disk Boyutu (GB)</span>
+                            <span>{{translations.disk}}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'disk')">▼</button>
                         </div>
                     </th>
                     <th id="th2" data-col="os" draggable="true" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>İşletim Sistemi</span>
+                            <span>{{translations.os}}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'os')">▼</button>
                         </div>
                     </th>
                     <th id="th3" data-col="ram" draggable="true" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>RAM</span>
+                            <span>{{translations.ram}}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'ram')">▼</button>
                         </div>
                     </th>
                     <th id="th4" data-col="ip" draggable="true" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>IP</span>
+                            <span>{{translations.ip}}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'ip')">▼</button>
                         </div>
                     </th>
                     <th id="th5" data-col="desc" draggable="true" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Açıklama</span>
+                            <span>{{translations.description}}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'desc')">▼</button>
                         </div>
                     </th>
                     <th id="th6" data-col="cpu" draggable="true" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>CPU</span>
+                            <span>{{translations.cpu}}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'cpu')">▼</button>
                         </div>
                     </th>
                     <th id="th7" data-col="date" draggable="true" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Tarih</span>
+                            <span>{{translations.date}}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'date')">▼</button>
                         </div>
                     </th>
@@ -165,7 +170,7 @@
                     {% endfor %}
                     
                     {% if is_admin %}
-                        <th id="th_last">İşlem</th>
+                        <th id="th_last">{{translations.operation}}</th>
                     {% endif %}
                 </tr>
             </thead>
@@ -207,7 +212,7 @@
                             </a>
 
                             <a href="/delete/{{ s.id }}" class="delete-btn"
-                            onclick="return confirm('Bu sunucuyu silmek istediğinize emin misiniz?')">
+                            onclick="return confirm('{{translations.are_u_sure_delete}}')">
                                 🗑️
                             </a>
                     </td>
@@ -219,9 +224,9 @@
     </div>
 
     <div id="sharedColumnMenu" class="column-dropdown-menu" style="display:none;">
-        <div onclick="executeSort('asc')">⬆️ Küçükten Büyüğe</div>
-        <div onclick="executeSort('desc')">⬇️ Büyükten Küçüğe</div>
-        <div onclick="openSharedSearch(event)">🔍 Sütunda Ara</div>
+        <div onclick="executeSort('asc')">{{translations.asc}}</div>
+        <div onclick="executeSort('desc')">{{translations.desc}}</div>
+        <div onclick="openSharedSearch(event)">{{translations.search_column}}</div>
     </div>
 
     <div id="editOverlay"></div>
@@ -229,60 +234,60 @@
     <div id="editPanel">
         <span onclick="closePanel()" id="closeBtn">✖</span>
 
-        <h2 id="editSunucuDuzenle">Sunucu Düzenle</h2>
+        <h2 id="editSunucuDuzenle">{{translations.edit}}</h2>
 
         <form id="editForm" method="POST">
-            <label id="esl1">Sunucu Adı</label><br>
+            <label id="esl1">{{translations.e_server}}</label><br>
             <input type="text" name="ad" id="p_name"><br><br>
 
-            <label id="esl2">Disk Boyutu</label><br>
+            <label id="esl2">{{translations.e_disk}}</label><br>
             <input type="number" name="disk" id="p_disk" step="any"><br><br>
 
-            <label id="esl3">Disk Boyut Türü (GB/TB)</label><br>
+            <label id="esl3">{{translations.e_disk_type}}</label><br>
             <select name="disktur" id="p_disktur" class="beautifySelect">
                 <option value="GB">GB</option>
                 <option value="TB">TB</option>
             </select>
 
-            <label id="esl4">İşletim Sistemi</label><br>
+            <label id="esl4">{{translations.os}}</label><br>
 
             <select name="server" id="server" class="beautifySelect">
-                <option value="" id="esl41">Sunucu Seçin</option>
+                <option value="" id="esl41">{{translations.select_server}}</option>
 
                 {% for os in os_list %}
                     <option value="{{ os.name }}">{{ os.name }}</option>
                 {% endfor %}
 
-                <option value="Yeni" id="esl42">Yeni</option>
+                <option value="Yeni" id="esl42">{{translations.new}}</option>
             </select>
 
             <div id="serverekle" style="display:none; margin-top:10px;">
                 <input
                     type="text"
                     name="isletim"
-                    placeholder="Yeni işletim sistemi"
+                    placeholder="{{translations.new_os}}"
                     id="yeniIsletim">
             </div>
             <br><br>
 
-            <label>RAM (GB)</label><br>
+            <label>{{translations.ram}}</label><br>
             <input type="number" name="ram" id="p_ram" ><br><br>
 
-            <label>IP</label><br>
+            <label>{{translations.ip}}</label><br>
             <input type="text" name="ip" id="p_ip"><br><br>
 
-            <label id="esl5">Açıklama</label><br>
+            <label id="esl5">{{translations.description}}</label><br>
             <input type="text" name="project" id="p_project"><br><br>
 
-            <label>CPU</label><br>
+            <label>{{translations.cpu}}</label><br>
             <input type="number" name="cpu" id="p_cpu"><br><br>
 
-            <label id="esl6">Tarih</label><br>
+            <label id="esl6">{{translations.date}}</label><br>
             <input type="date" name="date" id="p_date"><br><br>
 
             <hr> <br>
 
-            <h3>-Özel Alanlar-</h3>
+            <h3>{{translations.special_areas}}</h3>
 
             {% for column in custom_columns %}
 
@@ -321,7 +326,7 @@
 
             {% endfor %}
 
-            <button type="submit" class="add-btn" id="saveEditBtn">Kaydet</button>
+            <button type="submit" class="add-btn" id="saveEditBtn">{{translations.save}}</button>
         </form>
     </div>
 
@@ -331,11 +336,11 @@
 
             <span onclick="closeColumnPanel()" id="closeColumnBtn">✖</span>
 
-            <h2>Sütun Düzenle</h2>
+            <h2>{{translations.e_column}}</h2>
 
             <form id="columnForm" method="POST">
 
-                <label>Sütun Seçin</label><br>
+                <label>{{translations.select_column}}</label><br>
 
                 <select
                     id="columnSelect"
@@ -355,7 +360,7 @@
 
                 <br><br>
 
-                <label>Sütun Adı</label><br>
+                <label>{{translations.col_name}}</label><br>
 
                 <input
                     type="text"
@@ -364,7 +369,7 @@
 
                 <br><br>
 
-                <label>Veri Tipi</label><br>
+                <label>{{translations.data_type}}</label><br>
 
                 <select
                     id="columnType"
@@ -385,7 +390,7 @@
                     class="add-btn bold"
                     type="submit">
 
-                    Kaydet
+                    {{translations.save}}
 
                 </button>
 
@@ -399,11 +404,11 @@
 
             <span  id="closeDeleteColumnBtn">✖</span>
 
-            <h2>Sütun Sil</h2> <br>
+            <h2>{{translations.delete_column}}</h2> <br>
 
             <form id="columnDeleteForm" method="POST">
 
-                <label>Sütun Seçin</label><br>
+                <label>{{translations.select_column}}</label><br>
 
                 <select
                     id="columnDeleteSelect"
@@ -427,7 +432,7 @@
                     class="delete-btn bold"
                     type="submit">
 
-                    Sil
+                    {{translations.delete}}
 
                 </button>
 
@@ -439,35 +444,35 @@
     <div id="searchSettingsOverlay">
         <div id="searchSettingsPanel">
             <span id="closeSearchSettings">✖</span>
-            <h2 id="aramalabel">Arama Ayarları</h2>
+            <h2 id="aramalabel">{{translations.search_settings_i}}</h2>
             <br>
-            <h3 id="aranacakalan">Aranacak Alanlar</h3>
+            <h3 id="aranacakalan">{{translations.search_fields}}</h3>
             <div class="search-options">
 
                 <div class="search-fields">
                     <label id="sl1">
                         <input type="checkbox" name="fields" value="name" checked>
-                        Sunucu Adı 
+                        {{translations.e_server}} 
                     </label>
 
                     <label id="sl2">
                         <input type="checkbox" name="fields" value="os_name" checked>
-                        İşletim Sistemi
+                        {{translations.os}}
                     </label>
 
                     <label id="sl3">
                         <input type="checkbox" name="fields" value="ip_address" checked>
-                        IP Adresi
+                        {{translations.ip_address}}
                     </label>
 
                     <label id="sl4">
                         <input type="checkbox" name="fields" value="usage_project" checked>
-                        Açıklama
+                        {{translations.description}}
                     </label>
 
                     <label id="sl5">
                         <input type="checkbox" name="fields" value="disk_gb" checked>
-                        Disk Boyutu
+                        {{translations.e_disk}}
                     </label>
 
                     <div id="diskUnitOptions">
@@ -484,17 +489,17 @@
 
                     <label>
                         <input type="checkbox" name="fields" value="ram_g" checked>
-                        RAM
+                        {{translations.ram}}
                     </label>
 
                     <label>
                         <input type="checkbox" name="fields" value="core_amount" checked>
-                        CPU
+                        {{translations.cpu}}
                     </label>
 
                     <label id="sl6">
                         <input type="checkbox" name="fields" value="created_at" checked>
-                        Tarih
+                        {{translations.date}}
                     </label>
 
                     {% for col in custom_columns %}
@@ -509,24 +514,24 @@
                 </div>
 
                 <div class="search-buttons">
-                    <button type="button" id="selectAllBtn" class="beautify">Tümünü Seç</button>
-                    <button type="button" id="clearAllBtn" class="beautify">Temizle</button>
+                    <button type="button" id="selectAllBtn" class="beautify">{{translations.select_all}}</button>
+                    <button type="button" id="clearAllBtn" class="beautify"> {{translations.clear_all}}</button>
 
                     <div id="diskCompareOptions">
 
                         <label id="ssr1">
                             <input type="radio" name="disk_compare" value="equal">
-                            Tam eşleşme
+                            {{translations.equals}}
                         </label>
 
                         <label id="ssr2">
                             <input type="radio" name="disk_compare" value="gte" checked>
-                            En az (≥)
+                            {{translations.min}}
                         </label>
 
                         <label id="ssr3">
                             <input type="radio" name="disk_compare" value="lte">
-                            En fazla (≤)
+                            {{translations.max}}
                         </label>
 
                     </div>
@@ -544,21 +549,21 @@
 
             <span id="closeTableSettings">✖</span>
 
-            <h2 id="tableLabel">Tablo Ayarları</h2>
+            <h2 id="tableLabel">{{translations.table_settings_i}}</h2>
             <br>
 
             <div class="table-options">
 
                 <div class="table-fields">
 
-                    <label id="ts1"><input type="checkbox" data-col="name" checked class="columnToggle"> Sunucu Adı</label>
-                    <label id="ts2"><input type="checkbox" data-col="disk" checked class="columnToggle"> Disk Boyutu</label>
-                    <label id="ts3"><input type="checkbox" data-col="os" checked class="columnToggle"> İşletim Sistemi</label>
-                    <label id="ts4"><input type="checkbox" data-col="ram" checked class="columnToggle"> RAM</label>
-                    <label id="ts5"><input type="checkbox" data-col="ip" checked class="columnToggle"> IP</label>
-                    <label id="ts6"><input type="checkbox" data-col="desc" checked class="columnToggle"> Açıklama</label>
-                    <label id="ts7"><input type="checkbox" data-col="cpu" checked class="columnToggle"> CPU</label>
-                    <label id="ts8"><input type="checkbox" data-col="date" checked class="columnToggle"> Tarih</label>
+                    <label id="ts1"><input type="checkbox" data-col="name" checked class="columnToggle">{{translations.e_server}}</label>
+                    <label id="ts2"><input type="checkbox" data-col="disk" checked class="columnToggle"> {{translations.e_disk}}</label>
+                    <label id="ts3"><input type="checkbox" data-col="os" checked class="columnToggle"> {{translations.os}}</label>
+                    <label id="ts4"><input type="checkbox" data-col="ram" checked class="columnToggle">{{translations.ram}}</label>
+                    <label id="ts5"><input type="checkbox" data-col="ip" checked class="columnToggle"> {{translations.ip}}</label>
+                    <label id="ts6"><input type="checkbox" data-col="desc" checked class="columnToggle"> {{translations.description}}</label>
+                    <label id="ts7"><input type="checkbox" data-col="cpu" checked class="columnToggle"> {{translations.cpu}}</label>
+                    <label id="ts8"><input type="checkbox" data-col="date" checked class="columnToggle"> {{translations.date}}</label>
 
                     {% for col in custom_columns %}
                         <label><input type="checkbox" data-col="custom_{{ col.id }}" checked class="columnToggle"> {{ col.column_name }}</label>
@@ -568,17 +573,17 @@
 
                 <div class="table-buttons">
 
-                    <a href="/addcolumn" class="add-btn" id="addColumnBtn" title="Sütun Ekle">
+                    <a href="/addcolumn" class="add-btn" id="addColumnBtn" title="{{translations.add_column}}">
                         ➕
                     </a>
 
-                    <button class="delete-btn" id="deleteColumnBtn" title="Sütun Sil">
+                    <button class="delete-btn" id="deleteColumnBtn" title="{{translations.delete_column}}">
                         ➖
                     </button> 
                         
                     
 
-                    <button id="editColumnPanelBtn" class="beautify" title="Sütun Düzenle" onclick="openColumnPanel()">
+                    <button id="editColumnPanelBtn" class="beautify" title="{{translations.e_column}}" onclick="openColumnPanel()">
                         ✏️
                     </button>
 
@@ -588,6 +593,11 @@
 
         </div>
     </div>
+
+    <script>
+        console.log("TEST");
+        console.log("{{ translations }}");
+    </script>
 
     <script src="{{url_for('static', filename='js/index.js')}}"></script>
 </body>

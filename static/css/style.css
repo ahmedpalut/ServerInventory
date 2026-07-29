@@ -194,6 +194,7 @@ h1 {
     cursor:pointer;
     font-weight: bold;
     padding:12px 20px;
+    font-weight: normal;
 }
 
 #langButton:hover{

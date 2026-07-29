@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Yeni Sütun Ekle</title>
+    <title>{{translations.add_new_column}}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
@@ -18,19 +18,20 @@
 
     <div class="container">
         <div class="top-bar">
-            <h1 id="title">Yeni Sütun Ekle</h1>
+            <h1 id="title">{{translations.add_new_column}}</h1>
 
-            <button type="button" id="langButton">
-                TR / EN
-            </button>
+            <a href="/change_language/{{ 'en' if lang == 'tr' else 'tr' }}"
+                id="langButton">
+                    {{ 'EN' if lang == 'tr' else 'TR' }}
+            </a>
         </div>
             
             <form action="/addcolumn" method="POST"> 
 
-                <label id="colNameLabel">Sütun Adı</label>
+                <label id="colNameLabel">{{translations.col_name}}</label>
                 <input type="text" name="colName" required>
 
-                <label id="dataTypeLabel">Veri Tipi</label>
+                <label id="dataTypeLabel">{{translations.data_type}}</label>
                 <select name="dataType" class="beautifySelect">
                     <option value="TEXT">TEXT</option>
                     <option value="INTEGER">INTEGER</option>
@@ -40,9 +41,9 @@
                 </select>
 
                 <div class="buttons">
-                    <button type="submit" id="saveColumnBtn">Ekle</button>
+                    <button type="submit" id="saveColumnBtn">{{translations.add}}</button>
 
-                    <a href="/" id="cancelColumnBtn">İptal</a>
+                    <a href="/" id="cancelColumnBtn">{{translations.cancel}}</a>
                 </div>
             </form>    
     </div>

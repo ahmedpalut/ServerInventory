@@ -13,7 +13,6 @@ const deleteColumnBtn = document.getElementById("deleteColumnBtn");
 const columnOverlay = document.getElementById("columnOverlay");
 const columnDeleteForm = document.getElementById("columnDeleteForm");
 const editOverlay = document.getElementById("editOverlay");
-const diskUnitOptions = document.getElementById("diskUnitOptions");
 const diskOptions = document.getElementById("diskUnitOptions");
 const select = document.getElementById("server");
 const serverekle = document.getElementById("serverekle");
@@ -655,17 +654,6 @@ function sortTable(colKey, order) {
     });
 
     rows.forEach(row => tbody.appendChild(row));
-}
-
-function deleteColumnPrompt(colKey) {
-    if (colKey.startsWith('custom_')) {
-        let realId = colKey.replace('custom_', '');
-        if (confirm("Bu sütunu silmek istediğinize emin misiniz?")) {
-            window.location.href = "/deleteColumn/" + realId;
-        }
-    } else {
-        alert("Bu varsayılan bir sütundur, silinemez!");
-    }
 }
 
 window.addEventListener('scroll', function() {

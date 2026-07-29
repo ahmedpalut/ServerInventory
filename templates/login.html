@@ -51,11 +51,10 @@
                 </div>
                 
 
-                <button type="button" id="langButton">
-
-                    TR / EN
-
-                </button>
+                <a href="/change_language/{{ 'en' if lang == 'tr' else 'tr' }}"
+                    id="langButton">
+                        {{ 'EN' if lang == 'tr' else 'TR' }}
+                </a>
 
             </div>
 

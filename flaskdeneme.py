@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from ldap3 import Server, Connection, SUBTREE, SIMPLE, NONE
 from functools import wraps
+import json
 
 load_dotenv()
 
@@ -22,12 +23,27 @@ app.secret_key=os.getenv("SECRET_KEY")
 AD_SERVER = os.getenv("LDAP_SERVER") 
 AD_DOMAIN = os.getenv("LDAP_DOMAIN") 
 
+def get_translation(lang="tr"):
+    with open(f"static/js/translations/{lang}.json", encoding="utf-8") as file:
+        return json.load(file)
+    
+@app.route("/change_language/<lang>")
+def change_language(lang):
+
+    if lang in ["tr", "en"]:
+        session["lang"] = lang
+
+    return redirect(request.referrer or url_for("index"))
+
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        lang = session.get("lang","tr")
+
+        translations = get_translation(lang)
 
         if not session.get("is_admin"):
-            flash("Bu işlem için yetkiniz yok.")
+            flash(translations["permission"])
             return redirect(url_for("index"))
 
         return f(*args, **kwargs)
@@ -36,6 +52,9 @@ def admin_required(f):
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    lang = session.get("lang","tr")
+
+    translations = get_translation(lang)
     if request.method == "POST":
 
         username = request.form.get("username")
@@ -101,18 +120,17 @@ def login():
                 session["role"] = role
                 session["is_admin"] = (role == "Admin")
 
-                flash("Giriş başarılı!")
+                flash(translations["login_s"])
 
-                conn.unbind()
                 return redirect(url_for("index"))
 
             else:
-                flash("Kullanıcı adı veya şifre hatalı.")
+                flash(translations["name_error"])
                 return redirect(url_for("login"))
 
         except Exception as e:
             print(e)
-            flash("Bir hata meydana geldi.")
+            flash(translations["error"])
 
             if conn:
                 conn.unbind()
@@ -123,14 +141,20 @@ def login():
             if conn:
                 conn.unbind()
 
-    return render_template("login.html")
+    return render_template(
+        "login.html",
+        translations=translations,
+        lang=lang)
 
 
 @app.route("/logout")
 def logout():
+    lang = session.get("lang","tr")
+
+    translations = get_translation(lang)
     session.clear()
 
-    flash("Oturum kapatıldı.")
+    flash(translations["logout_s"])
     return redirect(url_for("login"))
 
 
@@ -139,6 +163,10 @@ def logout():
 def index():
     if "user" not in session:
         return redirect(url_for("login"))
+    
+    lang = session.get("lang","tr")
+
+    translations = get_translation(lang)
     
     cursor.execute("""
         SELECT *
@@ -203,12 +231,18 @@ def index():
         custom_columns=custom_columns,
         custom_values=custom_values,
         is_admin=session.get("is_admin", False),
-        username=session.get("user")
+        username=session.get("user"),
+        translations=translations,
+        lang=lang
     )
 
 @app.route("/edit/<int:id>", methods=["POST"])
 @admin_required
 def edit(id):
+    
+    lang = session.get("lang","tr")
+
+    translations = get_translation(lang)
 
     name = request.form["ad"]
     disk = float(request.form["disk"])
@@ -331,13 +365,16 @@ def edit(id):
     cursor.execute(sql, values)
     mydb.commit()
     
-    flash("Sunucu güncellendi!")
+    flash(translations["server_updated"])
 
     return redirect(url_for("index"))
 
 @app.route("/delete/<int:id>")
 @admin_required
 def sil(id):
+    lang = session.get("lang","tr")
+
+    translations = get_translation(lang)
 
     cursor.execute("""
         DELETE FROM custom_values
@@ -351,7 +388,7 @@ def sil(id):
 
     mydb.commit()
 
-    flash("Sunucu silindi!")
+    flash(translations["delete_server_s"])
 
     return redirect(url_for("index"))
 
@@ -359,6 +396,10 @@ def sil(id):
 @app.route("/add", methods=["GET","POST"])
 @admin_required
 def ekle():
+    lang = session.get("lang","tr")
+
+    translations = get_translation(lang)
+    
     
     if request.method=="POST":
         name=request.form["ad"]
@@ -433,7 +474,7 @@ def ekle():
                 
         mydb.commit()
                 
-        flash("Sunucu başarıyla eklendi!")
+        flash(translations["server_added"])
         
         return redirect(url_for("index"))
     
@@ -448,11 +489,19 @@ def ekle():
 
     custom_columns = cursor.fetchall()
         
-    return render_template("add.html",os_list=os_list,custom_columns=custom_columns)
+    return render_template(
+        "add.html",
+        os_list=os_list,
+        custom_columns=custom_columns,
+        translations=translations,
+        lang=lang)
 
 
 @app.route("/search")
 def search():
+    lang = session.get("lang","tr")
+
+    translations = get_translation(lang)
 
     q = request.args.get("q", "").strip()
     fields = request.args.getlist("fields")
@@ -618,12 +667,17 @@ def search():
         custom_columns=custom_columns,
         username=session.get("user"),
         role=session.get("role"),
-        is_admin=session.get("is_admin")
+        is_admin=session.get("is_admin"),
+        translations=translations,
+        lang=lang
     )
     
 @app.route("/addcolumn", methods=["GET", "POST"])
 @admin_required
 def addcolumn():
+    lang = session.get("lang","tr")
+
+    translations = get_translation(lang)
 
     if request.method == "POST":
 
@@ -637,7 +691,7 @@ def addcolumn():
         """, (column_name,))
 
         if cursor.fetchone():
-            flash("Bu isimde bir sütun zaten mevcut!")
+            flash(translations["col_already_exists"])
             return redirect(url_for("addcolumn"))
 
         cursor.execute("""
@@ -648,15 +702,21 @@ def addcolumn():
 
         mydb.commit()
 
-        flash("Yeni sütun başarıyla eklendi!")
+        flash(translations["added_new_column"])
         return redirect(url_for("index"))
 
-    return render_template("addcolumn.html")
+    return render_template(
+        "addcolumn.html",
+        translations=translations,
+        lang=lang)
 
 
 @app.route("/editcolumn/<int:id>", methods=["POST"])
 @admin_required
 def editcolumn(id):
+    lang = session.get("lang","tr")
+
+    translations = get_translation(lang)
 
     column_name=request.form["columnName"].strip()
     data_type=request.form["dataType"]
@@ -683,9 +743,9 @@ def editcolumn(id):
             DELETE FROM custom_values
             WHERE column_id=%s
         """, (id,))
-        flash("Sütun güncellendi, mevcut değerler silindi.")
+        flash(translations["update_column_override"])
     else:
-        flash("Sütun güncellendi!")
+        flash(translations["update_column"])
 
     mydb.commit()
 
@@ -694,6 +754,9 @@ def editcolumn(id):
 @app.route("/deleteColumn/<int:id>", methods=["POST"])
 @admin_required
 def deleteColumn(id):
+    lang = session.get("lang","tr")
+
+    translations = get_translation(lang)
 
     cursor.execute("""
         DELETE FROM custom_values
@@ -707,12 +770,9 @@ def deleteColumn(id):
 
     mydb.commit()
 
-    flash("Sütun başarıyla silindi!")
+    flash(translations["f_delete_column"])
 
     return redirect(url_for("index"))
-
-def check_admin():
-    return session.get("role") == "Admin"
 
 
 if __name__=="__main__":

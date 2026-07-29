@@ -1,0 +1,99 @@
+{
+    "title": "🖥️ Sunucu Envanteri",
+    "title_i": "Sunucu Envanteri",
+    "admin": "Admin",
+    "visitor": "Ziyaretçi",
+
+    "table_settings": "⚙️ Tablo Ayarları",
+    "table_settings_i": "Tablo Ayarları",
+    "logout_confirm": "Çıkış yapmak istediğinize emin misiniz?",
+
+    "total_server": "Toplam Sunucu",
+    "windows_server": "Windows Sunucu",
+    "inventory": "IT Envanteri",
+
+    "search_placeholder": "🔍 Sunucu Ara...",
+    "search": "🔍 Ara",
+    "back": "⬅️ Geri Dön",
+    "search_settings": "⚙️ Arama Ayarları",
+    "search_settings_i": "Arama Ayarları",
+
+    "new_server": "➕ Yeni Sunucu",
+
+    "server": "Sunucu",
+    "disk": "Disk Boyutu (GB)",
+    "os": "İşletim Sistemi",
+    "ram": "RAM",
+    "ip": "IP",
+    "description": "Açıklama",
+    "cpu": "CPU",
+    "date": "Tarih",
+    "operation": "İşlem",
+
+    "edit": "Sunucu Düzenle",
+    "save": "Kaydet",
+    "cancel": "İptal",
+
+    "add": "Ekle",
+    "delete": "Sil",
+
+    "login": "Giriş Yap",
+    "welcome": "Hoş Geldiniz",
+    "username": "Kullanıcı Adı",
+    "password": "Şifre",
+    "remember": "Beni Hatırla",
+
+    "language": "TR / EN",
+
+    "asc": "⬆️ Küçükten Büyüğe",
+    "desc": "⬇️ Büyükten Küçüğe",
+    "search_column":"🔍 Sütunda Ara",
+
+    "e_server": "Sunucu Adı",
+    "e_disk": "Disk Boyutu",
+    "e_disk_type": "Disk Boyut Türü (GB/TB)",
+    "select_server": "Sunucu Seçin",
+    "new": "Yeni",
+
+    "special_areas": "-Özel Alanlar-",
+
+    "e_column": "Sütun Düzenle",
+    "select_column": "Sütun Seçin",
+    "col_name": "Sütun Adı",
+    "data_type": "Veri Tipi",
+    
+    "delete_column": "Sütun Sil",
+    "add_column": "Sütun Ekle",
+
+    "search_fields": "Aranacak Alanlar",
+
+    "ip_address": "IP Adresi",
+
+    "select_all": "Tümünü Seç",
+    "clear_all": "Temizle",
+
+    "equals": "Tam eşleşme",
+    "min": "En az (≥)",
+    "max": "En fazla (≤)",
+
+    "add_new_server": "Yeni Sunucu Ekle",
+    "new_os": "Yeni İşletim Sistemi",
+
+    "are_u_sure_delete": "Bu sunucuyu silmek istediğinizden emin misiniz?",
+
+    "add_new_column": "Yeni Sütun Ekle",
+
+    "update_column_override": "Sütun güncellendi, mevcut değerler silindi.",
+    "update_column": "Sütun güncellendi!",
+    "f_delete_column": "Sütun başarıyla silindi",
+    "permission":"Bu işlem için yetkiniz yok.",
+    "login_s":"Giriş başarılı!",
+    "name_error": "Kullanıcı adı veya şifre hatalı.",
+    "error": "Bir hata meydana geldi.",
+    "logout_s": "Oturum kapatıldı.",
+    "server_updated": "Sunucu güncellendi!",
+    "delete_server_s": "Sunucu silindi!",
+    "server_added": "Sunucu başarıyla eklendi!",
+    "col_already_exists": "Bu isimde bir sütun zaten mevcut!",
+    "added_new_column": "Yeni sütun başarıyla eklendi!"
+}
