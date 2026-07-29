@@ -23,6 +23,7 @@ const searchForm = document.getElementById("searchForm");
 const searchInput = document.getElementById("searchInput");
 const diskCompareOptions = document.getElementById("diskCompareOptions");
 let activeColumn = null;
+let columnSearchActive = false;
 
 if(deleteColumnBtn){
     deleteColumnBtn.onclick = function(){
@@ -271,6 +272,8 @@ document.getElementById("selectAllBtn").onclick = function () {
         box.checked = true;
     });
 
+    updateDiskOptions();
+
 };
 
 document.getElementById("clearAllBtn").onclick = function () {
@@ -279,16 +282,7 @@ document.getElementById("clearAllBtn").onclick = function () {
         box.checked = false;
     });
 
-    document.querySelectorAll("input[name='disk_compare']").forEach(function(radio){
-        radio.checked = false;
-    });
-
-    document.querySelectorAll("input[name='disk_unit']").forEach(function(radio){
-        radio.checked = false;
-    });
-
-    diskOptions.style.display = "none";
-    diskCompareOptions.style.display = "none";  
+    updateDiskOptions();
 
 };
 
@@ -296,12 +290,34 @@ document.getElementById("searchBtn").onclick = function (e) {
 
     e.preventDefault();
 
+    if(columnSearchActive){
+
+        document.querySelectorAll("#serverTable tbody tr.serverRow")
+        .forEach(row=>{
+            row.style.display="";
+        });
+
+        columnSearchActive=false;
+        updateSearchButton();
+
+        return;
+    }
+
     if (window.location.pathname === "/search") {
         window.location.href = "/";
         return;
     }
 
     let q = searchInput.value.trim();
+
+    const selectedFields = document.querySelectorAll(
+        "input[name='fields']:checked"
+    );
+
+    if (selectedFields.length === 0) {
+        alert("Lütfen en az bir arama alanı seçin.");
+        return;
+    }
 
     if (q === "") {
         window.location.href = "/";
@@ -584,16 +600,34 @@ function openSharedSearch(event) {
         
         input.oninput = function() {
             let val = this.value.toLowerCase();
+            columnSearchActive = val.length > 0;
             const rows = document.querySelectorAll("#serverTable tbody tr.serverRow");
             rows.forEach(row => {
                 let cell = row.querySelector(`[data-col="${activeColumn}"]`);
                 if (cell) {
                     let text = cell.innerText.toLowerCase();
-                    row.style.display = text.includes(val) ? "" : "none";
+                    row.style.display =
+                        text.includes(val) ? "" : "none";
                 }
             });
+
+            updateSearchButton();
+
         };
     }
+}
+
+function updateSearchButton(){
+
+    const btn = document.getElementById("searchBtn");
+
+    if(columnSearchActive){
+        btn.innerHTML = "⬅️ Geri Dön";
+    }
+    else{
+        btn.innerHTML = "🔍 Ara";
+    }
+
 }
 
 window.addEventListener('click', function() {

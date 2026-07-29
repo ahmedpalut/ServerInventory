@@ -3,6 +3,7 @@ import mysql.connector
 import os
 from dotenv import load_dotenv
 from ldap3 import Server, Connection, SUBTREE, SIMPLE, NONE
+from functools import wraps
 
 load_dotenv()
 
@@ -20,6 +21,18 @@ app.secret_key=os.getenv("SECRET_KEY")
 
 AD_SERVER = os.getenv("LDAP_SERVER") 
 AD_DOMAIN = os.getenv("LDAP_DOMAIN") 
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+
+        if not session.get("is_admin"):
+            flash("Bu işlem için yetkiniz yok.")
+            return redirect(url_for("index"))
+
+        return f(*args, **kwargs)
+
+    return decorated_function
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -81,6 +94,8 @@ def login():
                     print("Grup bilgisi bulunamadı.")
 
                 print("========================================\n")
+                
+                session.clear()
 
                 session["user"] = username
                 session["role"] = role
@@ -192,6 +207,7 @@ def index():
     )
 
 @app.route("/edit/<int:id>", methods=["POST"])
+@admin_required
 def edit(id):
 
     name = request.form["ad"]
@@ -320,6 +336,7 @@ def edit(id):
     return redirect(url_for("index"))
 
 @app.route("/delete/<int:id>")
+@admin_required
 def sil(id):
 
     cursor.execute("""
@@ -340,6 +357,7 @@ def sil(id):
 
 
 @app.route("/add", methods=["GET","POST"])
+@admin_required
 def ekle():
     
     if request.method=="POST":
@@ -604,9 +622,8 @@ def search():
     )
     
 @app.route("/addcolumn", methods=["GET", "POST"])
+@admin_required
 def addcolumn():
-    if not admin_required():
-        return render_template("index.html")
 
     if request.method == "POST":
 
@@ -638,6 +655,7 @@ def addcolumn():
 
 
 @app.route("/editcolumn/<int:id>", methods=["POST"])
+@admin_required
 def editcolumn(id):
 
     column_name=request.form["columnName"].strip()
@@ -674,6 +692,7 @@ def editcolumn(id):
     return redirect(url_for("index"))
 
 @app.route("/deleteColumn/<int:id>", methods=["POST"])
+@admin_required
 def deleteColumn(id):
 
     cursor.execute("""
@@ -692,7 +711,7 @@ def deleteColumn(id):
 
     return redirect(url_for("index"))
 
-def admin_required():
+def check_admin():
     return session.get("role") == "Admin"
 
 

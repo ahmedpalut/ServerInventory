@@ -47,7 +47,7 @@
             <a href="/logout"
             class="logout-btn"
             onclick="return confirm('Çıkış yapmak istediğinize emin misiniz?')">
-                ⏻
+                <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>
     </div>
@@ -163,8 +163,10 @@
                             </div>
                         </th>
                     {% endfor %}
-
-                    <th id="th_last">İşlem</th>
+                    
+                    {% if is_admin %}
+                        <th id="th_last">İşlem</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody> 
@@ -183,8 +185,9 @@
                         <td data-col="custom_{{ col.id }}">{{ s.custom_values.get(col.id, "") }}</td>
                     {% endfor %}
 
+                    {% if is_admin %}
                     <td>
-                        {% if is_admin %}
+                        
                             <a href="#"
                             class="edit-btn"
                             data-custom='{{ s.custom_values | tojson }}'
@@ -207,11 +210,8 @@
                             onclick="return confirm('Bu sunucuyu silmek istediğinize emin misiniz?')">
                                 🗑️
                             </a>
-                        {% else %}
-                            Yetki Yok
-
-                        {% endif %}
                     </td>
+                    {% endif %}
                 </tr> 
                 {% endfor %} 
             </tbody>
@@ -590,7 +590,6 @@
     </div>
 
     <script src="{{url_for('static', filename='js/index.js')}}"></script>
-    <script src="{{url_for('static', filename='js/TranslateFiles/indexTranslate.js')}}"></script>
 </body>
 
 </html>
