@@ -21,6 +21,7 @@ function openDeleteColumnPanel(){
 
 }
 
+
 function closeDeleteColumnPanel(){
 
     document.body.classList.remove("modal-open");
