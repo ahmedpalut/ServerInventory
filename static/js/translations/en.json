@@ -15,6 +15,7 @@
     "search": "🔍 Search",
     "back": "⬅️ Back",
     "search_settings": "⚙️ Search Settings",
+    "search_settings_i": "Search Settings",
 
     "new_server": "➕ New Server",
 
@@ -75,7 +76,7 @@
     "max": "Maximum (≤)",
 
     "add_new_server": "Add New Server",
-    "new_os": "New Operation System",
+    "new_os": "New Operating  System",
 
     "are_u_sure_delete": "Are you sure you want to delete this server?",
 
@@ -86,8 +87,8 @@
     "f_delete_column": "Column deleted successfully!",
     "permission":"You don't have permission for this action.",
     "login_s":"Login successful!",
-    "name_error": "User name or password is incorrect.",
-    "error": "An error occured.",
+    "name_error": "Username or password is incorrect.",
+    "error": "An error occurred.",
     "logout_s": "Logged out.",
     "server_updated": "Server updated!",
     "delete_server_s": "Server deleted!",

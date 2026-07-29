@@ -73,7 +73,7 @@ body {
 ::-webkit-scrollbar-thumb{
     background-color: #ffffff;
     border-radius: 10px;
-    border: 2px solid 1e293b;
+    border: 2px solid #1e293b;
 }
 
  ::-webkit-scrollbar-thumb:hover{
@@ -665,7 +665,6 @@ transform:translateY(-20px);
     display:none;
     margin-top:20px;
 
-    display:flex;
     flex-direction:column;
     gap:8px;
 }

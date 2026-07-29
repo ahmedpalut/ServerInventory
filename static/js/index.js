@@ -21,6 +21,7 @@ const checkboxes = document.querySelectorAll('input[name="fields"]');
 const searchForm = document.getElementById("searchForm");
 const searchInput = document.getElementById("searchInput");
 const diskCompareOptions = document.getElementById("diskCompareOptions");
+const columnForm = document.getElementById("columnForm");
 let activeColumn = null;
 let columnSearchActive = false;
 
@@ -240,14 +241,21 @@ if(tableSettingsOverlay){
     };
 }
 
-searchSettingsBtn.onclick = function () {
-    overlay.style.display = "flex";
-    document.body.classList.add("modal-open");
-};
-
-tablePanel.onclick=function(e){
-    e.stopPropagation();
+if(searchSettingsBtn){
+    searchSettingsBtn.onclick = function () {
+        overlay.style.display = "flex";
+        document.body.classList.add("modal-open");
+    };
 }
+
+
+if(tablePanel){
+    tablePanel.onclick=function(e){
+        e.stopPropagation();
+    }
+}
+
+
 
 closeBtn.onclick = function () {
     overlay.style.display = "none";
@@ -370,21 +378,25 @@ if(diskCheckbox){
 
 updateDiskOptions();
 
-document.getElementById("columnForm").onsubmit = function () {
+if(columnForm){
+    columnForm.onsubmit = function () {
 
-    const select = document.getElementById("columnSelect");
-    const option = select.options[select.selectedIndex];
-    const originalType = option.dataset.type;
+        const select = document.getElementById("columnSelect");
+        const option = select.options[select.selectedIndex];
+        const originalType = option.dataset.type;
 
-    const newType = document.getElementById("columnType").value;
+        const newType = document.getElementById("columnType").value;
 
-    if (originalType !== newType) {
-        return confirm("Veri tipini değiştiriyorsunuz. Bu sütuna ait mevcut tüm değerler silinecek. Devam etmek istiyor musunuz?");
-    }
+        if (originalType !== newType) {
+            return confirm("Veri tipini değiştiriyorsunuz. Bu sütuna ait mevcut tüm değerler silinecek. Devam etmek istiyor musunuz?");
+        }
 
-    return true;
+        return true;
 
-};
+    };
+}
+
+
 
 document.querySelectorAll(".columnToggle").forEach(function (checkbox) {
 

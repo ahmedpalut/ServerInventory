@@ -1,7 +1,8 @@
 const password = document.getElementById("password");
-    const toggle = document.getElementById("toggle");
-    const icon = toggle.querySelector("i");
+const toggle = document.getElementById("toggle");
+const icon = toggle.querySelector("i");
 
+if(password && toggle){
     toggle.addEventListener("click", function () {
 
         if (password.type === "password") {
@@ -18,7 +19,10 @@ const password = document.getElementById("password");
 
         }
 
-    });
+    }); 
+}
+
+
 
 
 const username = document.getElementById("username");
