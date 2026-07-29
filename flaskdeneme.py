@@ -122,6 +122,9 @@ def logout():
 
 @app.route("/")
 def index():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    
     cursor.execute("""
         SELECT *
         FROM custom_columns
@@ -594,7 +597,10 @@ def search():
         servers=servers,
         windows_amount=windows_amount,
         os_list=os_list,
-        custom_columns=custom_columns
+        custom_columns=custom_columns,
+        username=session.get("user"),
+        role=session.get("role"),
+        is_admin=session.get("is_admin")
     )
     
 @app.route("/addcolumn", methods=["GET", "POST"])

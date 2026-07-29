@@ -6,7 +6,29 @@ const tableSettingsOverlay=document.getElementById("tableSettingsOverlay");
 const tableSettingsBtn=document.getElementById("tableSettingsBtn");
 const tableCloseBtn=document.getElementById("closeTableSettings");
 const tablePanel=document.getElementById("tableSettingsPanel");
+const closeDeleteColumnBtn = document.getElementById("closeDeleteColumnBtn");
+const columnDeletePanel = document.getElementById("columnDeletePanel");
+const columndeletelay = document.getElementById("columndeletelay");
+const deleteColumnBtn = document.getElementById("deleteColumnBtn");
+const columnOverlay = document.getElementById("columnOverlay");
+const columnDeleteForm = document.getElementById("columnDeleteForm");
+const editOverlay = document.getElementById("editOverlay");
+const diskUnitOptions = document.getElementById("diskUnitOptions");
+const diskOptions = document.getElementById("diskUnitOptions");
+const select = document.getElementById("server");
+const serverekle = document.getElementById("serverekle");
+const diskCheckbox = document.querySelector("input[name='fields'][value='disk_gb']");
+const checkboxes = document.querySelectorAll('input[name="fields"]');
+const searchForm = document.getElementById("searchForm");
+const searchInput = document.getElementById("searchInput");
+const diskCompareOptions = document.getElementById("diskCompareOptions");
+let activeColumn = null;
 
+if(deleteColumnBtn){
+    deleteColumnBtn.onclick = function(){
+        openDeleteColumnPanel();
+    };
+}
 
 function openDeleteColumnPanel(){
 
@@ -25,20 +47,22 @@ function closeDeleteColumnPanel(){
 
     document.body.classList.remove("modal-open");
 
-    document.getElementById("columnDeletePanel").style.right="-420px";
+    columnDeletePanel.style.right="-420px";
 
-    document.getElementById("columndeletelay").style.display="none";
-
-}
-
-document.getElementById("columndeletelay").onclick=function(){
-
-    closeDeleteColumnPanel();
+    columndeletelay.style.display="none";
 
 }
 
-document.getElementById("closeDeleteColumnBtn").onclick=function(){
-    closeDeleteColumnPanel();
+if(columndeletelay){
+    columndeletelay.onclick = function(){
+        closeDeleteColumnPanel();
+    }
+}
+
+if (closeDeleteColumnBtn) {
+    closeDeleteColumnBtn.onclick = function(){
+        closeDeleteColumnPanel();
+    };
 }
 
 function openColumnPanel(){
@@ -49,7 +73,7 @@ function openColumnPanel(){
 
     document.getElementById("columnPanel").style.right="0";
 
-    document.getElementById("columnOverlay").style.display="block";
+    columnOverlay.style.display="block";
     tableSettingsOverlay.style.display="none";
 
 }
@@ -60,21 +84,21 @@ function closeColumnPanel(){
 
     document.getElementById("columnPanel").style.right="-420px";
 
-    document.getElementById("columnOverlay").style.display="none";
+    columnOverlay.style.display="none";
 
 }
 
-document.getElementById("columnOverlay").onclick=function(){
-
-    closeColumnPanel();
-
+if(columnOverlay){
+    columnOverlay.onclick=function(){
+        closeColumnPanel();
+    };
 }
 
-document.getElementById("columnDeleteForm").onsubmit = function () {
-
-    return confirm("Bu sütun silinecek. Devam etmek istiyor musunuz?");
-
-};
+    if(columnDeleteForm){
+        columnDeleteForm.onsubmit = function () {
+            return confirm("Bu sütun silinecek. Devam etmek istiyor musunuz?");
+        };
+}
 
 function fillDeleteColumn(){
 
@@ -169,46 +193,52 @@ function openPanel(
         "/edit/" + id;
 
     document.getElementById("editPanel").style.right = "0";
-    document.getElementById("editOverlay").style.display = "block";
+    editOverlay.style.display = "block";
 }
 
 function closePanel() {
     document.body.classList.remove("modal-open");
     document.getElementById("editPanel").style.right = "-100%";
-    document.getElementById("editOverlay").style.display = "none";
+    editOverlay.style.display = "none";
 }
 
-document.getElementById("editOverlay").onclick = function(){
-    closePanel();
+if(editOverlay){
+    editOverlay.onclick = function(){
+        closePanel();
+    };
+}   
+
+if(select && serverekle){
+    select.addEventListener("change", function () {
+        if (this.value === "Yeni") {
+            serverekle.style.display = "block";
+        }
+        else {
+            serverekle.style.display = "none";
+        }
+    });
 }
 
-const select = document.getElementById("server");
-const serverekle =
-    document.getElementById("serverekle");
+if(tableSettingsBtn){
+    tableSettingsBtn.onclick = function(){
+        tableSettingsOverlay.style.display="flex";
+        document.body.classList.add("modal-open");
+    };
+}
 
-select.addEventListener("change", function () {
-    if (this.value === "Yeni") {
-        serverekle.style.display = "block";
-    }
-    else {
-        serverekle.style.display = "none";
-    }
-});
+if(tableCloseBtn){
+    tableCloseBtn.onclick = function(){
+        tableSettingsOverlay.style.display="none";
+        document.body.classList.remove("modal-open");
+    };
+}
 
-tableSettingsBtn.onclick = function(){
-    tableSettingsOverlay.style.display="flex";
-    document.body.classList.add("modal-open");
-};
-
-tableCloseBtn.onclick = function(){
-    tableSettingsOverlay.style.display="none";
-    document.body.classList.remove("modal-open");
-};
-
-tableSettingsOverlay.onclick=function(){
-    tableSettingsOverlay.style.display="none";
-    document.body.classList.remove("modal-open");
-};
+if(tableSettingsOverlay){
+    tableSettingsOverlay.onclick=function(){
+        tableSettingsOverlay.style.display="none";
+        document.body.classList.remove("modal-open");
+    };
+}
 
 searchSettingsBtn.onclick = function () {
     overlay.style.display = "flex";
@@ -233,9 +263,7 @@ panel.onclick = function (e) {
     e.stopPropagation();
 };
 
-const checkboxes = document.querySelectorAll(
-    'input[name="fields"]'
-);
+
 
 document.getElementById("selectAllBtn").onclick = function () {
 
@@ -263,9 +291,6 @@ document.getElementById("clearAllBtn").onclick = function () {
     diskCompareOptions.style.display = "none";  
 
 };
-
-const searchForm = document.getElementById("searchForm");
-const searchInput = document.getElementById("searchInput");
 
 document.getElementById("searchBtn").onclick = function (e) {
 
@@ -307,20 +332,6 @@ document.getElementById("searchBtn").onclick = function (e) {
     window.location.href = url;
 };
 
-
-const diskCheckbox = document.querySelector(
-    "input[name='fields'][value='disk_gb']"
-);
-
-const diskUnitOptions = document.getElementById("diskUnitOptions");
-
-
-
-const diskOptions = document.getElementById("diskUnitOptions");
-
-const diskCompareOptions =
-    document.getElementById("diskCompareOptions");
-
 function updateDiskOptions(){
 
     if(diskCheckbox.checked){
@@ -337,7 +348,10 @@ function updateDiskOptions(){
 
 }
 
-diskCheckbox.addEventListener("change", updateDiskOptions);
+if(diskCheckbox){
+    diskCheckbox.addEventListener("change", updateDiskOptions);
+    updateDiskOptions();
+}
 
 updateDiskOptions();
 
@@ -517,8 +531,6 @@ function restoreColumnOrder() {
     });
 
 }
-
-let activeColumn = null;
 
 function toggleColumnMenu(event, colKey) {
     window.scrollTo({
