@@ -18,7 +18,6 @@ const select = document.getElementById("server");
 const serverekle = document.getElementById("serverekle");
 const diskCheckbox = document.querySelector("input[name='fields'][value='disk_gb']");
 const checkboxes = document.querySelectorAll('input[name="fields"]');
-const searchForm = document.getElementById("searchForm");
 const searchInput = document.getElementById("searchInput");
 const diskCompareOptions = document.getElementById("diskCompareOptions");
 const columnForm = document.getElementById("columnForm");
@@ -297,14 +296,17 @@ document.getElementById("searchBtn").onclick = function (e) {
 
     e.preventDefault();
 
-    if(columnSearchActive){
+    if (columnSearchActive) {
 
-        document.querySelectorAll("#serverTable tbody tr.serverRow")
-        .forEach(row=>{
-            row.style.display="";
+        const rows = document.querySelectorAll("#serverTable tbody tr.serverRow");
+
+        rows.forEach(row => {
+            row.style.display = "";
         });
 
-        columnSearchActive=false;
+        document.getElementById("serverCount").textContent = rows.length;
+
+        columnSearchActive = false;
         updateSearchButton();
 
         return;
@@ -612,18 +614,33 @@ function openSharedSearch(event) {
         input.oninput = function() {
             let val = this.value.toLowerCase();
             columnSearchActive = val.length > 0;
+
             const rows = document.querySelectorAll("#serverTable tbody tr.serverRow");
+
+            let visibleCount = 0;
+
             rows.forEach(row => {
                 let cell = row.querySelector(`[data-col="${activeColumn}"]`);
+
                 if (cell) {
                     let text = cell.innerText.toLowerCase();
-                    row.style.display =
-                        text.includes(val) ? "" : "none";
+
+                    if (text.includes(val)) {
+                        row.style.display = "";
+                        visibleCount++;
+                    } else {
+                        row.style.display = "none";
+                    }
                 }
             });
 
-            updateSearchButton();
+            if (val === "") {
+                document.getElementById("serverCount").textContent = rows.length;
+            } else {
+                document.getElementById("serverCount").textContent = visibleCount;
+            }
 
+            updateSearchButton();
         };
     }
 }

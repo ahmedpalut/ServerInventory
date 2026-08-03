@@ -57,7 +57,7 @@
     <div class="cards">
 
         <div class="card">
-            <h2>{{ servers|length }}</h2>
+            <h2 id="serverCount">{{ servers|length }}</h2>
             <p id="card1">{{translations.total_server}}</p>
         </div>
 
@@ -593,11 +593,6 @@
 
         </div>
     </div>
-
-    <script>
-        console.log("TEST");
-        console.log("{{ translations }}");
-    </script>
 
     <script src="{{url_for('static', filename='js/index.js')}}"></script>
 </body>
