@@ -26,16 +26,16 @@
 
         <h1>🖥️ GIG Server Inventory</h1>
 
-        <p>Hoş Geldiniz</p>
+        <p>{{translations.welcome}}</p>
 
         <form method="POST" action="/login">
 
-            <label for="username">Kullanıcı Adı</label>
-            <input type="text" id="username" name="username" placeholder="Kullanıcı Adı" required autocomplete="username">
+            <label for="username">{{translations.username}}</label>
+            <input type="text" id="username" name="username" placeholder="{{translations.username}}" required autocomplete="username">
 
-            <label for="password">Şifre</label>
+            <label for="password">{{translations.password}}</label>
             <div class="password-box">
-                <input type="password" id="password" name="password" placeholder="Şifre" required autocomplete="current-password">
+                <input type="password" id="password" name="password" placeholder="{{translations.password}}" required autocomplete="current-password">
                 <span id="toggle">
                     <i class="fa-solid fa-eye"></i>
                 </span>
@@ -46,7 +46,7 @@
                 <div class="rememberMe">
 
                         <input type="checkbox" id="rememberMe" name="rememberMe">
-                        <label for="rememberMe">Beni Hatırla</label>
+                        <label for="rememberMe">{{translations.remember}}</label>
 
                 </div>
                 
@@ -59,7 +59,7 @@
             </div>
 
             <div class="buttons" style="justify-content: center;">
-                <button type="submit" class="add-btn login-btn" style="width: 100%; font-weight: bold; border: none; cursor: pointer;">Giriş Yap</button>
+                <button type="submit" class="add-btn login-btn" style="width: 100%; font-weight: bold; border: none; cursor: pointer;">{{translations.login}}</button>
             </div>
 
         </form>

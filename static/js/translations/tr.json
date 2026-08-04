@@ -47,7 +47,7 @@
 
     "asc": "⬆️ Küçükten Büyüğe",
     "desc": "⬇️ Büyükten Küçüğe",
-    "search_column":"🔍 Sütunda Ara",
+    "search_column":"🔍 Bu Sütunda Ara",
 
     "e_server": "Sunucu Adı",
     "e_disk": "Disk Boyutu",
