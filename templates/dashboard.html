@@ -7,6 +7,7 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body>
@@ -31,6 +32,10 @@
         </div>
 
         <div class="header-buttons">
+
+            <button class="pdf-btn" onclick="downloadPDF()">
+                <i class="fa-solid fa-file-pdf"></i> Raporu PDF İndir
+            </button>
 
             <a href="/logout" class="logout-btn" onclick="return confirm('{{translations.logout_confirm}}')">
                 <i class="fa-solid fa-right-from-bracket"></i>
@@ -57,20 +62,75 @@
 
     </nav>
 
+    <div class="kpi-cards">
+        <div class="kpi-card">
+            <div class="kpi-icon"><i class="fa-solid fa-hard-drive"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Toplam Disk Kapasitesi</span>
+                <h3 class="kpi-value">{{ total_disk_str }}</h3>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon"><i class="fa-solid fa-memory"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Toplam RAM Kapasitesi</span>
+                <h3 class="kpi-value">{{ total_ram_str }}</h3>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon"><i class="fa-solid fa-microchip"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Toplam CPU Core</span>
+                <h3 class="kpi-value">{{ total_cpu }} Core</h3>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon"><i class="fa-solid fa-layer-group"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">OS Dağılım Oranı</span>
+                <h3 class="kpi-value">%{{ win_percent }} Win / %{{ other_percent }} Diğer</h3>
+            </div>
+        </div>
+    </div>
+
     <div class="dashboard-grid">
 
         <div class="dashboard-card">
-
             <h2>Toplam Sunucu ({{ total_servers }})</h2>
-
-            <canvas id="osChart"></canvas>
-
+            <div class="chart-container">
+                <canvas id="osChart"></canvas>
+            </div>
         </div>
 
         <div class="dashboard-card">
             <h2>Disk Dağılımı</h2>
             <div class="chart-container">
                 <canvas id="diskChart"></canvas>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <h2>CPU Dağılımı</h2>
+            <div class="chart-container">
+                <canvas id="cpuChart"></canvas>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <h2>RAM Dağılımı</h2>
+            <div class="chart-container">
+                <canvas id="ramChart"></canvas>
+            </div>
+        </div>
+
+        <div class="dashboard-card date-card">
+            <span class="undated-text">Tarihsiz Sunucu: {{ no_date }}</span>
+            <h2>Sunucu Eklenme Tarihi</h2>
+            <div class="chart-container">
+                <canvas id="dateChart"></canvas>
             </div>
         </div>
 
@@ -81,10 +141,62 @@
     <script>
         const labels = JSON.parse('{{ labels | tojson | safe }}');
         const values = JSON.parse('{{ values | tojson | safe }}');
+        const otherInfoText = "{{ other_info_text }}";
         const diskLabels = JSON.parse('{{ disk_labels | safe }}');
         const diskValues = JSON.parse('{{ disk_values | safe }}');
+        const ramLabels = JSON.parse('{{ ram_labels | safe }}');
+        const ramValues = JSON.parse('{{ ram_values | safe }}');
+        const cpuLabels = JSON.parse('{{ cpu_labels | safe }}');
+        const cpuValues = JSON.parse('{{ cpu_values | safe }}');
+        const dateLabels = JSON.parse('{{ date_labels | safe }}');
+        const dateValues = JSON.parse('{{ date_values | safe }}');
 
-        const ctx = document.getElementById("osChart");
+        if (dateLabels[dateLabels.length - 1] === "Tarihsiz") {
+            dateLabels.pop();
+            dateValues.pop();
+        }
+
+        new Chart(document.getElementById("osChart"), {
+            type: "doughnut",
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "right",
+                        align: "center",
+                        labels: {
+                            color: "#ffffff",
+                            padding: 10,
+                            boxWidth: 14,
+                            font: {
+                                size: 12,
+                                weight: "bold"
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function (context) {
+                                const item = context[0];
+                                const label = item.label || item.chart.data.labels[item.dataIndex];
+                                if (label === "Diğer" && otherInfoText) {
+                                    return ["", "İçerik:"].concat(otherInfoText.split(", "));
+                                }
+                                return [];
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
         new Chart(document.getElementById("diskChart"), {
             type: "bar",
@@ -99,68 +211,106 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-
                 animation: {
                     duration: 2000,
-                    delay: (context) => {
-                        return context.dataIndex * 200;
-                    },
+                    delay: (context) => context.dataIndex * 200,
                     easing: "easeOutBounce"
                 },
-
                 plugins: {
-                    legend: {
-                        display: false
-                    }
+                    legend: { display: false }
                 },
-
                 scales: {
-                    x: {
-                        ticks: {
-                            color: "#ffffff"
-                        }
-                    },
-
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            color: "#ffffff",
-                            precision: 0
-                        }
-                    }
+                    x: { ticks: { color: "#ffffff" } },
+                    y: { beginAtZero: true, ticks: { color: "#ffffff", precision: 0 } }
                 }
             }
         });
 
-        new Chart(ctx, {
-            type: "doughnut",
+        new Chart(document.getElementById("cpuChart"), {
+            type: "bar",
             data: {
-                labels: labels,
+                labels: cpuLabels,
                 datasets: [{
-                    data: values,
-                    borderWidth: 2
+                    label: "Sunucu Sayısı",
+                    data: cpuValues,
+                    borderRadius: 8
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
-
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1500,
+                    easing: "easeOutBounce"
+                },
                 plugins: {
-                    legend: {
-                        position: "bottom",
-                        labels: {
-                            color: "#ffffff",
-                            padding: 20,
-                            font: {
-                                size: 14,
-                                weight: "bold"
-                            }
-                        }
-                    }
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { ticks: { color: "#ffffff" } },
+                    y: { beginAtZero: true, ticks: { color: "#ffffff", precision: 0 } }
+                }
+            }
+        });
+
+        new Chart(document.getElementById("ramChart"), {
+            type: "bar",
+            data: {
+                labels: ramLabels,
+                datasets: [{
+                    label: "Sunucu Sayısı",
+                    data: ramValues,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1500,
+                    easing: "easeOutBounce"
+                },
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { ticks: { color: "#ffffff" } },
+                    y: { beginAtZero: true, ticks: { color: "#ffffff", precision: 0 } }
+                }
+            }
+        });
+
+        new Chart(document.getElementById("dateChart"), {
+            type: "line",
+            data: {
+                labels: dateLabels,
+                datasets: [{
+                    label: "Eklenen Sunucu",
+                    data: dateValues,
+                    tension: 0.4,
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1500,
+                    easing: "easeOutQuart"
+                },
+                plugins: {
+                    legend: { labels: { color: "#ffffff" } }
+                },
+                scales: {
+                    x: { ticks: { color: "#ffffff" } },
+                    y: { beginAtZero: true, ticks: { color: "#ffffff", precision: 0 } }
                 }
             }
         });
     </script>
+
+    <script src="{{url_for('static', filename='js/dashboard.js')}}"></script>
+
 </body>
 
 </html>
