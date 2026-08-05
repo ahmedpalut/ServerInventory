@@ -4,7 +4,8 @@
     "admin": "Admin",
     "visitor": "Visitor",
 
-    "table_settings": "⚙️ Table Settings",
+    "table_settings": "⚙️ Column Settings",
+    "table_settings_i": "Column Settings",
     "logout_confirm": "Are you sure you want to logout?",
 
     "total_server": "Total Servers",
@@ -94,5 +95,9 @@
     "delete_server_s": "Server deleted!",
     "server_added": "Server added successfully!",
     "col_already_exists": "A column with the same name already exists",
-    "added_new_column": "New column added successfully!"
+    "added_new_column": "New column added successfully!",
+
+    "pages": "Pages",
+    "dashboard": "Dashboard",
+    "database": "Database"
 }

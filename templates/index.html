@@ -54,6 +54,28 @@
         </div>
     </div>
 
+    <nav class="navbar">
+
+        <a href="{{ url_for('index') }}"
+        class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+            <i class="fa-solid fa-server"></i>
+            {{ translations.inventory }}
+        </a>
+
+        <a href="{{ url_for('dashboard') }}"
+        class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-chart-line"></i>
+            {{ translations.dashboard }}
+        </a>
+
+        <a href="{{ url_for('database') }}"
+        class="nav-item {% if request.endpoint == 'database' %}active{% endif %}">
+            <i class="fa-solid fa-database"></i>
+            {{ translations.database }}
+        </a>
+
+    </nav>
+
     <div class="cards">
 
         <div class="card">
@@ -62,14 +84,15 @@
         </div>
 
         <div class="card">
+            <h2>GIG</h2>
+            <p id="card3">{{translations.inventory}}</p>
+        </div>
+
+        <div class="card">
             <h2>{{ windows_amount }}</h2>
             <p id="card2">{{translations.windows_server}}</p>
         </div>
 
-        <div class="card">
-            <h2>GIG</h2>
-            <p id="card3">{{translations.inventory}}</p>
-        </div>
 
     </div>
 

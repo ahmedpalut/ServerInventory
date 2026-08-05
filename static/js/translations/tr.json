@@ -4,8 +4,8 @@
     "admin": "Admin",
     "visitor": "Ziyaretçi",
 
-    "table_settings": "⚙️ Tablo Ayarları",
-    "table_settings_i": "Tablo Ayarları",
+    "table_settings": "⚙️ Sütun Ayarları",
+    "table_settings_i": "Sütun Ayarları",
     "logout_confirm": "Çıkış yapmak istediğinize emin misiniz?",
 
     "total_server": "Toplam Sunucu",
@@ -95,5 +95,9 @@
     "delete_server_s": "Sunucu silindi!",
     "server_added": "Sunucu başarıyla eklendi!",
     "col_already_exists": "Bu isimde bir sütun zaten mevcut!",
-    "added_new_column": "Yeni sütun başarıyla eklendi!"
+    "added_new_column": "Yeni sütun başarıyla eklendi!",
+
+    "pages": "Sayfalar",
+    "dashboard": "Dashboard",
+    "database": "Veritabanı"
 }

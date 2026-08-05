@@ -86,10 +86,6 @@ body {
     font-size: 22px;
 }
 
-h1 {
-    margin-bottom: 25px;
-}
-
 .page-header{
     display:flex;
     justify-content:space-between;
@@ -113,6 +109,12 @@ h1 {
     display:flex;
     align-items:center;
     gap:12px;
+}
+
+#title{
+    margin:0;
+    line-height:1;
+    transform:translateY(-2px);
 }
 
 .beautify{
@@ -1151,4 +1153,79 @@ margin-bottom:25px;
     border: 1px solid #cbd5e1;
     border-radius: 4px;
     outline: none;
+}
+
+.navbar{
+    display:flex;
+    gap:12px;
+
+    margin-bottom:25px;
+    padding:10px;
+
+    background:rgba(255,255,255,.10);
+    backdrop-filter:blur(20px);
+
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:18px;
+}
+
+.nav-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+
+    padding:12px 18px;
+
+    color:white;
+    text-decoration:none;
+
+    background:transparent;
+
+    border-radius:12px;
+
+    transition:.25s;
+}
+
+.nav-item:hover{
+    background:rgba(255,255,255,.15);
+}
+
+.nav-item.active{
+    background:#2563eb;
+}
+
+.dashboard-grid{
+    display:grid;
+    grid-template-columns:450px 1fr;
+    gap:25px;
+}
+
+.dashboard-card{
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.20);
+    backdrop-filter:blur(20px);
+    border-radius:20px;
+    padding:25px;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+.dashboard-card h2{
+    margin:0 0 25px;
+    color:white;
+    font-size:24px;
+    text-align:center;
+}
+
+#osChart{
+    width:320px !important;
+    height:320px !important;
+}
+
+.chart-container {
+    height: 350px;
+    position: relative;
+    width: 100%;
 }

@@ -235,6 +235,102 @@ def index():
         translations=translations,
         lang=lang
     )
+    
+@app.route("/dashboard")
+def dashboard():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    cursor.execute("""
+        SELECT
+            o.name AS os_name,
+            COUNT(*) AS total
+        FROM servers s
+        LEFT JOIN os_types o
+            ON s.os_type_id = o.id
+        GROUP BY o.name
+        ORDER BY total DESC
+    """)
+
+    os_stats = cursor.fetchall()
+
+    labels = [row["os_name"] or "Unknown" for row in os_stats]
+    values = [row["total"] for row in os_stats]
+    
+    cursor.execute("""
+        SELECT disk_gb
+        FROM servers
+    """)
+
+    disk_data = cursor.fetchall()
+
+    disk_labels = [
+        "0-100 GB",
+        "100-250 GB",
+        "250-500 GB",
+        "500 GB-1 TB",
+        "1-2 TB",
+        "2-5 TB",
+        "5-10 TB",
+        "10+ TB"
+    ]
+
+    disk_values = [0] * len(disk_labels)
+
+    for row in disk_data:
+        disk = row["disk_gb"] or 0
+
+        if disk < 100:
+            disk_values[0] += 1
+        elif disk < 250:
+            disk_values[1] += 1
+        elif disk < 500:
+            disk_values[2] += 1
+        elif disk < 1024:
+            disk_values[3] += 1
+        elif disk < 2048:
+            disk_values[4] += 1
+        elif disk < 5120:
+            disk_values[5] += 1
+        elif disk < 10240:
+            disk_values[6] += 1
+        else:
+            disk_values[7] += 1
+
+    return render_template(
+        "dashboard.html",
+        translations=translations,
+        lang=lang,
+        username=session.get("user"),
+        is_admin=session.get("is_admin"),
+        labels=labels,
+        values=values,
+        disk_labels=json.dumps(disk_labels),
+        disk_values=json.dumps(disk_values),
+        total_servers=sum(values)
+    )
+
+
+@app.route("/database")
+def database():
+
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    return render_template(
+        "database.html",
+        translations=translations,
+        lang=lang,
+        username=session.get("user"),
+        role=session.get("role"),
+        is_admin=session.get("is_admin")
+    )
 
 @app.route("/edit/<int:id>", methods=["POST"])
 @admin_required

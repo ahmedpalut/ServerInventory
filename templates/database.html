@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veritabanı</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body>
+
+    <div class="page-header">
+        <div class="header-left">
+            <h1 id="title">
+                {{translations.title}}
+            </h1>
+
+            <div class="user-info">
+                <i class="fa-solid fa-user"></i>
+
+                {{ username }}
+
+                {% if is_admin %}
+                    - {{translations.admin}}
+                {% else %}
+                    - {{translations.visitor}}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="header-buttons">
+
+            <a href="/logout"
+            class="logout-btn"
+            onclick="return confirm('{{translations.logout_confirm}}')">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </a>
+        </div>
+    </div>
+
+    <nav class="navbar">
+
+        <a href="{{ url_for('index') }}"
+        class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+            <i class="fa-solid fa-server"></i>
+            {{ translations.inventory }}
+        </a>
+
+        <a href="{{ url_for('dashboard') }}"
+        class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-chart-line"></i>
+            {{ translations.dashboard }}
+        </a>
+
+        <a href="{{ url_for('database') }}"
+        class="nav-item {% if request.endpoint == 'database' %}active{% endif %}">
+            <i class="fa-solid fa-database"></i>
+            {{ translations.database }}
+        </a>
+
+    </nav>
+</body>
+</html>

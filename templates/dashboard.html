@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="page-header">
+        <div class="header-left">
+            <h1 id="title">
+                {{translations.title}}
+            </h1>
+
+            <div class="user-info">
+                <i class="fa-solid fa-user"></i>
+
+                {{ username }}
+
+                {% if is_admin %}
+                - {{translations.admin}}
+                {% else %}
+                - {{translations.visitor}}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="header-buttons">
+
+            <a href="/logout" class="logout-btn" onclick="return confirm('{{translations.logout_confirm}}')">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </a>
+        </div>
+    </div>
+
+    <nav class="navbar">
+
+        <a href="{{ url_for('index') }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+            <i class="fa-solid fa-server"></i>
+            {{ translations.inventory }}
+        </a>
+
+        <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-chart-line"></i>
+            {{ translations.dashboard }}
+        </a>
+
+        <a href="{{ url_for('database') }}" class="nav-item {% if request.endpoint == 'database' %}active{% endif %}">
+            <i class="fa-solid fa-database"></i>
+            {{ translations.database }}
+        </a>
+
+    </nav>
+
+    <div class="dashboard-grid">
+
+        <div class="dashboard-card">
+
+            <h2>Toplam Sunucu ({{ total_servers }})</h2>
+
+            <canvas id="osChart"></canvas>
+
+        </div>
+
+        <div class="dashboard-card">
+            <h2>Disk Dağılımı</h2>
+            <div class="chart-container">
+                <canvas id="diskChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const labels = JSON.parse('{{ labels | tojson | safe }}');
+        const values = JSON.parse('{{ values | tojson | safe }}');
+        const diskLabels = JSON.parse('{{ disk_labels | safe }}');
+        const diskValues = JSON.parse('{{ disk_values | safe }}');
+
+        const ctx = document.getElementById("osChart");
+
+        new Chart(document.getElementById("diskChart"), {
+            type: "bar",
+            data: {
+                labels: diskLabels,
+                datasets: [{
+                    label: "Sunucu Sayısı",
+                    data: diskValues,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                animation: {
+                    duration: 2000,
+                    delay: (context) => {
+                        return context.dataIndex * 200;
+                    },
+                    easing: "easeOutBounce"
+                },
+
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+
+                scales: {
+                    x: {
+                        ticks: {
+                            color: "#ffffff"
+                        }
+                    },
+
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: "#ffffff",
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+
+        new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            color: "#ffffff",
+                            padding: 20,
+                            font: {
+                                size: 14,
+                                weight: "bold"
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
