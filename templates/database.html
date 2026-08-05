@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,19 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
+
 <body>
+
+    <div class="db-status-banner {% if is_connected %}status-online{% else %}status-offline{% endif %}">
+        <div class="status-indicator">
+            <i class="fa-solid {% if is_connected %}fa-circle-check{% else %}fa-triangle-exclamation{% endif %}"></i>
+            <span>Veritabanı Durumu: <strong>{{ db_status }}</strong></span>
+        </div>
+        {% if not is_connected %}
+        <p class="status-warning">MySQL servisi durduruldu veya erişilemiyor. Lütfen Görev Yöneticisinden MySQL
+            hizmetini başlatın.</p>
+        {% endif %}
+    </div>
 
     <div class="page-header">
         <div class="header-left">
@@ -21,18 +34,16 @@
                 {{ username }}
 
                 {% if is_admin %}
-                    - {{translations.admin}}
+                - {{translations.admin}}
                 {% else %}
-                    - {{translations.visitor}}
+                - {{translations.visitor}}
                 {% endif %}
             </div>
         </div>
 
         <div class="header-buttons">
 
-            <a href="/logout"
-            class="logout-btn"
-            onclick="return confirm('{{translations.logout_confirm}}')">
+            <a href="/logout" class="logout-btn" onclick="return confirm('{{translations.logout_confirm}}')">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>
@@ -40,24 +51,54 @@
 
     <nav class="navbar">
 
-        <a href="{{ url_for('index') }}"
-        class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+        <a href="{{ url_for('index') }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
             <i class="fa-solid fa-server"></i>
             {{ translations.inventory }}
         </a>
 
-        <a href="{{ url_for('dashboard') }}"
-        class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+        <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
             <i class="fa-solid fa-chart-line"></i>
             {{ translations.dashboard }}
         </a>
 
-        <a href="{{ url_for('database') }}"
-        class="nav-item {% if request.endpoint == 'database' %}active{% endif %}">
+        <a href="{{ url_for('database') }}" class="nav-item {% if request.endpoint == 'database' %}active{% endif %}">
             <i class="fa-solid fa-database"></i>
             {{ translations.database }}
         </a>
 
     </nav>
+
+    {% if is_connected %}
+    <div class="kpi-cards">
+        <div class="kpi-card">
+            <div class="kpi-icon"><i class="fa-solid fa-database"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Veritabanı Boyutu</span>
+                <h3 class="kpi-value">{{ db_size }}</h3>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon"><i class="fa-solid fa-table"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Toplam Tablo</span>
+                <h3 class="kpi-value">{{ table_count }} Tablo</h3>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon"><i class="fa-solid fa-server"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">Kayıtlı Sunucu</span>
+                <h3 class="kpi-value">{{ server_count }} Sunucu</h3>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    
+
+    
 </body>
+
 </html>

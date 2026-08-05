@@ -134,6 +134,27 @@
             </div>
         </div>
 
+        <div class="dashboard-card date-card">
+            <h2>En Yüksek Kapasiteli Sunucular (Top 3)</h2>
+            <div class="top-servers-grid">
+                {% for server in top_servers %}
+                <div class="top-server-item">
+                    <div class="top-server-header">
+                        <i class="fa-solid fa-server"></i>
+                        <span class="top-server-name">{{ server.name }}</span>
+                        <span class="top-server-os">{{ server.os_name or 'Bilinmeyen' }}</span>
+                    </div>
+                    <div class="top-server-specs">
+                        <span><i class="fa-solid fa-memory"></i> {{ server.ram_g }} GB RAM</span>
+                        <span><i class="fa-solid fa-microchip"></i> {{ server.core_amount }} CPU</span>
+                        <span><i class="fa-solid fa-hard-drive"></i> {{ server.disk_gb }} GB Disk</span>
+                        <span><i class="fa-solid fa-network-wired"></i> {{ server.ip_address or '-' }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

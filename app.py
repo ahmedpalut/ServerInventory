@@ -8,14 +8,18 @@ import json
 
 load_dotenv()
 
-mydb = mysql.connector.connect(
-    host=os.getenv("DB_HOST"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD"),
-    database=os.getenv("DB_NAME"),
-)
-
-cursor = mydb.cursor(dictionary=True)
+def get_db():
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME"),
+            connect_timeout=2
+        )
+        return conn, conn.cursor(dictionary=True), True
+    except Exception:
+        return None, None, False
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
@@ -31,10 +35,8 @@ def get_translation(lang="tr"):
 
 @app.route("/change_language/<lang>")
 def change_language(lang):
-
     if lang in ["tr", "en"]:
         session["lang"] = lang
-
     return redirect(request.referrer or url_for("index"))
 
 
@@ -42,25 +44,19 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         lang = session.get("lang", "tr")
-
         translations = get_translation(lang)
-
         if not session.get("is_admin"):
             flash(translations["permission"])
             return redirect(url_for("index"))
-
         return f(*args, **kwargs)
-
     return decorated_function
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     lang = session.get("lang", "tr")
-
     translations = get_translation(lang)
     if request.method == "POST":
-
         username = request.form.get("username")
         password = request.form.get("password")
 
@@ -70,7 +66,6 @@ def login():
             user_dn = f"{username}@{AD_DOMAIN}"
 
         conn = None
-
         try:
             server = Server(AD_SERVER, get_info=NONE)
             conn = Connection(
@@ -82,9 +77,7 @@ def login():
             )
 
             if conn.bind():
-
                 search_base = ",".join([f"DC={x}" for x in AD_DOMAIN.split(".")])
-
                 conn.search(
                     search_base=search_base,
                     search_filter=f"(sAMAccountName={username})",
@@ -93,50 +86,27 @@ def login():
                 )
 
                 role = "Visitor"
-
-                print(f"\n=== {username} kullanıcısının grupları ===")
-
                 if conn.entries:
-
                     groups = conn.entries[0]["memberOf"]
-
                     for group in groups:
-                        print(group)
-
                         group = str(group)
-
-                        if "CN=Test Admin," in group:
+                        if "CN=Test Admin," in group or "CN=Domain Admins," in group:
                             role = "Admin"
-
-                        elif "CN=Domain Admins," in group:
-                            role = "Admin"
-
-                else:
-                    print("Grup bilgisi bulunamadı.")
-
-                print("========================================\n")
 
                 session.clear()
-
                 session["user"] = username
                 session["role"] = role
                 session["is_admin"] = role == "Admin"
-
                 flash(translations["login_s"])
-
                 return redirect(url_for("index"))
-
             else:
                 flash(translations["name_error"])
                 return redirect(url_for("login"))
 
         except Exception as e:
-            print(e)
             flash(translations["error"])
-
             if conn:
                 conn.unbind()
-
             return redirect(url_for("login"))
 
         finally:
@@ -149,10 +119,8 @@ def login():
 @app.route("/logout")
 def logout():
     lang = session.get("lang", "tr")
-
     translations = get_translation(lang)
     session.clear()
-
     flash(translations["logout_s"])
     return redirect(url_for("login"))
 
@@ -163,81 +131,93 @@ def index():
         return redirect(url_for("login"))
 
     lang = session.get("lang", "tr")
-
     translations = get_translation(lang)
 
-    cursor.execute(
-        """
-        SELECT *
-        FROM custom_columns
-        ORDER BY column_name
-        """
-    )
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        return render_template(
+            "index.html",
+            servers=[],
+            windows_amount=0,
+            os_list=[],
+            custom_columns=[],
+            custom_values={},
+            is_admin=session.get("is_admin", False),
+            username=session.get("user"),
+            translations=translations,
+            lang=lang,
+        )
 
-    custom_columns = cursor.fetchall()
+    try:
+        cursor.execute("SELECT * FROM custom_columns ORDER BY column_name")
+        custom_columns = cursor.fetchall()
 
-    cursor.execute(
-        """
-    SELECT server_id,column_id,value
-    FROM custom_values
-    """
-    )
+        cursor.execute("SELECT server_id, column_id, value FROM custom_values")
+        rows = cursor.fetchall()
 
-    rows = cursor.fetchall()
+        custom_values = {}
+        for row in rows:
+            server_id = row["server_id"]
+            if server_id not in custom_values:
+                custom_values[server_id] = {}
+            custom_values[server_id][row["column_id"]] = row["value"]
 
-    custom_values = {}
+        cursor.execute(
+            """
+            SELECT
+                s.id,
+                s.name,
+                s.disk_gb,
+                s.ram_g,
+                s.core_amount,
+                s.ip_address,
+                s.usage_project,
+                s.created_at,
+                o.name AS os_name
+            FROM servers s
+            LEFT JOIN os_types o ON s.os_type_id = o.id
+            """
+        )
+        servers = cursor.fetchall()
 
-    for row in rows:
+        for server in servers:
+            server["custom_values"] = custom_values.get(server["id"], {})
 
-        server_id = row["server_id"]
+        windows_amount = sum(
+            1 for s in servers if s["os_name"] and "windows" in s["os_name"].lower()
+        )
 
-        if server_id not in custom_values:
-            custom_values[server_id] = {}
+        cursor.execute("SELECT name FROM os_types ORDER BY name")
+        os_list = cursor.fetchall()
+        conn.close()
 
-        custom_values[server_id][row["column_id"]] = row["value"]
-
-    cursor.execute(
-        """
-        SELECT
-            s.id,
-            s.name,
-            s.disk_gb,
-            s.ram_g,
-            s.core_amount,
-            s.ip_address,
-            s.usage_project,
-            s.created_at,
-            o.name AS os_name
-        FROM servers s
-        LEFT JOIN os_types o
-        ON s.os_type_id = o.id
-    """
-    )
-
-    servers = cursor.fetchall()
-
-    for server in servers:
-        server["custom_values"] = custom_values.get(server["id"], {})
-
-    windows_amount = sum(
-        1 for s in servers if s["os_name"] and "windows" in s["os_name"].lower()
-    )
-
-    cursor.execute("SELECT name FROM os_types ORDER BY name")
-    os_list = cursor.fetchall()
-
-    return render_template(
-        "index.html",
-        servers=servers,
-        windows_amount=windows_amount,
-        os_list=os_list,
-        custom_columns=custom_columns,
-        custom_values=custom_values,
-        is_admin=session.get("is_admin", False),
-        username=session.get("user"),
-        translations=translations,
-        lang=lang,
-    )
+        return render_template(
+            "index.html",
+            servers=servers,
+            windows_amount=windows_amount,
+            os_list=os_list,
+            custom_columns=custom_columns,
+            custom_values=custom_values,
+            is_admin=session.get("is_admin", False),
+            username=session.get("user"),
+            translations=translations,
+            lang=lang,
+        )
+    except Exception:
+        if conn:
+            conn.close()
+        return render_template(
+            "index.html",
+            servers=[],
+            windows_amount=0,
+            os_list=[],
+            custom_columns=[],
+            custom_values={},
+            is_admin=session.get("is_admin", False),
+            username=session.get("user"),
+            translations=translations,
+            lang=lang,
+        )
 
 
 @app.route("/dashboard")
@@ -247,838 +227,872 @@ def dashboard():
 
     lang = session.get("lang", "tr")
     translations = get_translation(lang)
-    
-    cursor.execute(
-        """
-        SELECT 
-            COALESCE(SUM(disk_gb), 0) AS total_disk,
-            COALESCE(SUM(ram_g), 0) AS total_ram,
-            COALESCE(SUM(core_amount), 0) AS total_cpu
-        FROM servers
-        """
-    )
-    totals = cursor.fetchone()
 
-    total_disk_gb = totals["total_disk"]
-    if total_disk_gb >= 1024:
-        total_disk_str = f"{round(total_disk_gb / 1024, 1)} TB"
-    else:
-        total_disk_str = f"{round(total_disk_gb, 1)} GB"
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        return render_template(
+            "dashboard.html",
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            is_admin=session.get("is_admin"),
+            is_connected=False,
+            db_status="Bağlantı Kesildi (Offline)",
+            db_size="0 MB",
+            table_count=0,
+            server_count=0,
+            labels=[],
+            values=[],
+            other_info_text="",
+            disk_labels="[]",
+            disk_values="[]",
+            total_servers=0,
+            ram_labels="[]",
+            ram_values="[]",
+            cpu_labels="[]",
+            cpu_values="[]",
+            date_labels="[]",
+            date_values="[]",
+            no_date=0,
+            total_disk_str="0 GB",
+            total_ram_str="0 GB",
+            total_cpu=0,
+            win_percent=0,
+            other_percent=0,
+            top_servers=[]
+        )
 
-    total_ram_gb = totals["total_ram"]
-    if total_ram_gb >= 1024:
-        total_ram_str = f"{round(total_ram_gb / 1024, 1)} TB"
-    else:
-        total_ram_str = f"{total_ram_gb} GB"
+    try:
+        cursor.execute(
+            """
+            SELECT 
+                COALESCE(SUM(disk_gb), 0) AS total_disk,
+                COALESCE(SUM(ram_g), 0) AS total_ram,
+                COALESCE(SUM(core_amount), 0) AS total_cpu
+            FROM servers
+            """
+        )
+        totals = cursor.fetchone()
 
-    total_cpu = totals["total_cpu"]
-
-    cursor.execute(
-        """
-        SELECT 
-            SUM(CASE WHEN LOWER(o.name) LIKE '%windows%' THEN 1 ELSE 0 END) AS windows_count,
-            COUNT(*) AS total_count
-        FROM servers s
-        LEFT JOIN os_types o ON s.os_type_id = o.id
-        """
-    )
-    os_counts = cursor.fetchone()
-    total_count = os_counts["total_count"] or 0
-    windows_count = os_counts["windows_count"] or 0
-
-    if total_count > 0:
-        win_percent = round((windows_count / total_count) * 100)
-        other_percent = 100 - win_percent
-    else:
-        win_percent = 0
-        other_percent = 0
-
-    cursor.execute(
-        """
-        SELECT
-            o.name AS os_name,
-            COUNT(*) AS total
-        FROM servers s
-        LEFT JOIN os_types o
-            ON s.os_type_id = o.id
-        GROUP BY o.name
-        ORDER BY total DESC
-    """
-    )
-
-    os_stats = cursor.fetchall()
-
-    TOP_N = 5
-    labels = []
-    values = []
-    other_total = 0
-    other_details = []
-
-    for i, row in enumerate(os_stats):
-        os_name = row["os_name"] or "Bilinmeyen"
-        total = row["total"]
-
-        if i < TOP_N:
-            labels.append(os_name)
-            values.append(total)
+        total_disk_gb = totals["total_disk"]
+        if total_disk_gb >= 1024:
+            total_disk_str = f"{round(total_disk_gb / 1024, 1)} TB"
         else:
-            other_total += total
-            other_details.append(f"{os_name}: {total}")
+            total_disk_str = f"{round(total_disk_gb, 1)} GB"
 
-    if other_total > 0:
-        labels.append("Diğer")
-        values.append(other_total)
-
-    other_info_text = ", ".join(other_details)
-
-    cursor.execute(
-        """
-        SELECT core_amount
-        FROM servers
-    """
-    )
-
-    cpu_servers = cursor.fetchall()
-
-    cpu_labels = ["1-2 Core", "4-8 Core", "8-16 Core", "16+ Core"]
-    cpu_values = [0] * len(cpu_labels)
-
-    for server in cpu_servers:
-        cpu = server["core_amount"] or 0
-        if cpu <= 2:
-            cpu_values[0] += 1
-        elif cpu <= 8:
-            cpu_values[1] += 1
-        elif cpu <= 16:
-            cpu_values[2] += 1
+        total_ram_gb = totals["total_ram"]
+        if total_ram_gb >= 1024:
+            total_ram_str = f"{round(total_ram_gb / 1024, 1)} TB"
         else:
-            cpu_values[3] += 1
+            total_ram_str = f"{total_ram_gb} GB"
 
-    cursor.execute(
-        """
-        SELECT ram_g
-        FROM servers
-        """
-    )
+        total_cpu = totals["total_cpu"]
 
-    ram_servers = cursor.fetchall()
+        cursor.execute(
+            """
+            SELECT 
+                SUM(CASE WHEN LOWER(o.name) LIKE '%windows%' THEN 1 ELSE 0 END) AS windows_count,
+                COUNT(*) AS total_count
+            FROM servers s
+            LEFT JOIN os_types o ON s.os_type_id = o.id
+            """
+        )
+        os_counts = cursor.fetchone()
+        total_count = os_counts["total_count"] or 0
+        windows_count = os_counts["windows_count"] or 0
 
-    ram_labels = ["0-4 GB", "4-16 GB", "16-32 GB", "32-64 GB", "64+ GB"]
-    ram_values = [0] * len(ram_labels)
-
-    for server in ram_servers:
-        ram = server["ram_g"] or 0
-        if ram < 4:
-            ram_values[0] += 1
-        elif ram < 16:
-            ram_values[1] += 1
-        elif ram < 32:
-            ram_values[2] += 1
-        elif ram < 64:
-            ram_values[3] += 1
+        if total_count > 0:
+            win_percent = round((windows_count / total_count) * 100)
+            other_percent = 100 - win_percent
         else:
-            ram_values[4] += 1
+            win_percent = 0
+            other_percent = 0
 
-    cursor.execute(
-        """
-        SELECT 
-            MONTH(created_at) AS month,
-            COUNT(*) AS total
-        FROM servers
-        WHERE created_at IS NOT NULL
-        GROUP BY MONTH(created_at)
-        ORDER BY MONTH(created_at)
-        """
-    )
+        cursor.execute(
+            """
+            SELECT
+                o.name AS os_name,
+                COUNT(*) AS total
+            FROM servers s
+            LEFT JOIN os_types o ON s.os_type_id = o.id
+            GROUP BY o.name
+            ORDER BY total DESC
+            """
+        )
 
-    date_stats = cursor.fetchall()
+        os_stats = cursor.fetchall()
 
-    months = [
-        "Ocak",
-        "Şubat",
-        "Mart",
-        "Nisan",
-        "Mayıs",
-        "Haziran",
-        "Temmuz",
-        "Ağustos",
-        "Eylül",
-        "Ekim",
-        "Kasım",
-        "Aralık",
-    ]
+        TOP_N = 5
+        labels = []
+        values = []
+        other_total = 0
+        other_details = []
 
-    date_labels = []
-    date_values = []
+        for i, row in enumerate(os_stats):
+            os_name = row["os_name"] or "Bilinmeyen"
+            total = row["total"]
 
-    for row in date_stats:
-        date_labels.append(months[row["month"] - 1])
-        date_values.append(row["total"])
+            if i < TOP_N:
+                labels.append(os_name)
+                values.append(total)
+            else:
+                other_total += total
+                other_details.append(f"{os_name}: {total}")
 
-    cursor.execute(
-        """
-        SELECT COUNT(*) AS total
-        FROM servers
-        WHERE created_at IS NULL
-        """
-    )
+        if other_total > 0:
+            labels.append("Diğer")
+            values.append(other_total)
 
-    no_date = cursor.fetchone()["total"]
+        other_info_text = ", ".join(other_details)
 
-    cursor.execute(
-        """
-        SELECT disk_gb
-        FROM servers
-    """
-    )
+        cursor.execute("SELECT core_amount FROM servers")
+        cpu_servers = cursor.fetchall()
 
-    disk_data = cursor.fetchall()
+        cpu_labels = ["1-2 Core", "4-8 Core", "8-16 Core", "16+ Core"]
+        cpu_values = [0] * len(cpu_labels)
 
-    disk_labels = [
-        "0-100 GB",
-        "100-250 GB",
-        "250-500 GB",
-        "500 GB-1 TB",
-        "1-2 TB",
-        "2-5 TB",
-        "5-10 TB",
-        "10+ TB",
-    ]
+        for server in cpu_servers:
+            cpu = server["core_amount"] or 0
+            if cpu <= 2:
+                cpu_values[0] += 1
+            elif cpu <= 8:
+                cpu_values[1] += 1
+            elif cpu <= 16:
+                cpu_values[2] += 1
+            else:
+                cpu_values[3] += 1
 
-    disk_values = [0] * len(disk_labels)
+        cursor.execute("SELECT ram_g FROM servers")
+        ram_servers = cursor.fetchall()
 
-    for row in disk_data:
-        disk = row["disk_gb"] or 0
+        ram_labels = ["0-4 GB", "4-16 GB", "16-32 GB", "32-64 GB", "64+ GB"]
+        ram_values = [0] * len(ram_labels)
 
-        if disk < 100:
-            disk_values[0] += 1
-        elif disk < 250:
-            disk_values[1] += 1
-        elif disk < 500:
-            disk_values[2] += 1
-        elif disk < 1024:
-            disk_values[3] += 1
-        elif disk < 2048:
-            disk_values[4] += 1
-        elif disk < 5120:
-            disk_values[5] += 1
-        elif disk < 10240:
-            disk_values[6] += 1
-        else:
-            disk_values[7] += 1
+        for server in ram_servers:
+            ram = server["ram_g"] or 0
+            if ram < 4:
+                ram_values[0] += 1
+            elif ram < 16:
+                ram_values[1] += 1
+            elif ram < 32:
+                ram_values[2] += 1
+            elif ram < 64:
+                ram_values[3] += 1
+            else:
+                ram_values[4] += 1
 
-    return render_template(
-        "dashboard.html",
-        translations=translations,
-        lang=lang,
-        username=session.get("user"),
-        is_admin=session.get("is_admin"),
-        labels=labels,
-        values=values,
-        other_info_text=other_info_text,
-        disk_labels=json.dumps(disk_labels),
-        disk_values=json.dumps(disk_values),
-        total_servers=sum(values),
-        ram_labels=json.dumps(ram_labels),
-        ram_values=json.dumps(ram_values),
-        cpu_labels=json.dumps(cpu_labels),
-        cpu_values=json.dumps(cpu_values),
-        date_labels=json.dumps(date_labels),
-        date_values=json.dumps(date_values),
-        no_date=no_date,
-        total_disk_str=total_disk_str,
-        total_ram_str=total_ram_str,
-        total_cpu=total_cpu,
-        win_percent=win_percent,
-        other_percent=other_percent,
-    )
+        cursor.execute(
+            """
+            SELECT 
+                MONTH(created_at) AS month,
+                COUNT(*) AS total
+            FROM servers
+            WHERE created_at IS NOT NULL
+            GROUP BY MONTH(created_at)
+            ORDER BY MONTH(created_at)
+            """
+        )
+
+        date_stats = cursor.fetchall()
+
+        months = [
+            "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+            "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
+        ]
+
+        date_labels = []
+        date_values = []
+
+        for row in date_stats:
+            date_labels.append(months[row["month"] - 1])
+            date_values.append(row["total"])
+
+        cursor.execute("SELECT COUNT(*) AS total FROM servers WHERE created_at IS NULL")
+        no_date = cursor.fetchone()["total"]
+
+        cursor.execute("SELECT disk_gb FROM servers")
+        disk_data = cursor.fetchall()
+
+        disk_labels = [
+            "0-100 GB", "100-250 GB", "250-500 GB", "500 GB-1 TB",
+            "1-2 TB", "2-5 TB", "5-10 TB", "10+ TB"
+        ]
+
+        disk_values = [0] * len(disk_labels)
+
+        for row in disk_data:
+            disk = row["disk_gb"] or 0
+            if disk < 100:
+                disk_values[0] += 1
+            elif disk < 250:
+                disk_values[1] += 1
+            elif disk < 500:
+                disk_values[2] += 1
+            elif disk < 1024:
+                disk_values[3] += 1
+            elif disk < 2048:
+                disk_values[4] += 1
+            elif disk < 5120:
+                disk_values[5] += 1
+            elif disk < 10240:
+                disk_values[6] += 1
+            else:
+                disk_values[7] += 1
+
+        cursor.execute(
+            """
+            SELECT 
+                s.name,
+                s.ram_g,
+                s.disk_gb,
+                s.core_amount,
+                s.ip_address,
+                o.name AS os_name
+            FROM servers s
+            LEFT JOIN os_types o ON s.os_type_id = o.id
+            ORDER BY s.ram_g DESC, s.disk_gb DESC
+            LIMIT 3
+            """
+        )
+        top_servers = cursor.fetchall()
+
+        conn.close()
+
+        return render_template(
+            "dashboard.html",
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            is_admin=session.get("is_admin"),
+            is_connected=True,
+            db_status="Bağlı (Online)",
+            labels=labels,
+            values=values,
+            other_info_text=other_info_text,
+            disk_labels=json.dumps(disk_labels),
+            disk_values=json.dumps(disk_values),
+            total_servers=sum(values),
+            ram_labels=json.dumps(ram_labels),
+            ram_values=json.dumps(ram_values),
+            cpu_labels=json.dumps(cpu_labels),
+            cpu_values=json.dumps(cpu_values),
+            date_labels=json.dumps(date_labels),
+            date_values=json.dumps(date_values),
+            no_date=no_date,
+            total_disk_str=total_disk_str,
+            total_ram_str=total_ram_str,
+            total_cpu=total_cpu,
+            win_percent=win_percent,
+            other_percent=other_percent,
+            top_servers=top_servers
+        )
+    except Exception:
+        if conn:
+            conn.close()
+        return render_template(
+            "dashboard.html",
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            is_admin=session.get("is_admin"),
+            is_connected=False,
+            db_status="Bağlantı Kesildi (Offline)",
+            db_size="0 MB",
+            table_count=0,
+            server_count=0,
+            labels=[],
+            values=[],
+            other_info_text="",
+            disk_labels="[]",
+            disk_values="[]",
+            total_servers=0,
+            ram_labels="[]",
+            ram_values="[]",
+            cpu_labels="[]",
+            cpu_values="[]",
+            date_labels="[]",
+            date_values="[]",
+            no_date=0,
+            total_disk_str="0 GB",
+            total_ram_str="0 GB",
+            total_cpu=0,
+            win_percent=0,
+            other_percent=0,
+            top_servers=[]
+        )
 
 
 @app.route("/database")
 def database():
-
     if "user" not in session:
         return redirect(url_for("login"))
 
     lang = session.get("lang", "tr")
     translations = get_translation(lang)
 
-    return render_template(
-        "database.html",
-        translations=translations,
-        lang=lang,
-        username=session.get("user"),
-        role=session.get("role"),
-        is_admin=session.get("is_admin"),
-    )
+    conn, cursor, is_connected = get_db()
+
+    if not is_connected:
+        return render_template(
+            "database.html",
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            role=session.get("role"),
+            is_admin=session.get("is_admin"),
+            is_connected=False,
+            db_status="Bağlantı Kesildi (Offline)",
+            db_size="0 MB",
+            table_count=0,
+            server_count=0
+        )
+
+    try:
+        cursor.execute("SELECT COUNT(*) AS total FROM servers")
+        server_count = cursor.fetchone()["total"]
+
+        cursor.execute("SELECT COUNT(*) AS total FROM information_schema.tables WHERE table_schema = %s", (os.getenv("DB_NAME"),))
+        table_count = cursor.fetchone()["total"]
+
+        cursor.execute(
+            """
+            SELECT 
+                ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb 
+            FROM information_schema.tables 
+            WHERE table_schema = %s
+            """,
+            (os.getenv("DB_NAME"),)
+        )
+        db_size_row = cursor.fetchone()
+        db_size = f"{db_size_row['size_mb'] or 0} MB"
+
+        conn.close()
+
+        return render_template(
+            "database.html",
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            role=session.get("role"),
+            is_admin=session.get("is_admin"),
+            is_connected=True,
+            db_status="Bağlı (Online)",
+            db_size=db_size,
+            table_count=table_count,
+            server_count=server_count
+        )
+
+    except Exception:
+        if conn:
+            conn.close()
+        return render_template(
+            "database.html",
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            role=session.get("role"),
+            is_admin=session.get("is_admin"),
+            is_connected=False,
+            db_status="Bağlantı Kesildi (Offline)",
+            db_size="0 MB",
+            table_count=0,
+            server_count=0
+        )
 
 
 @app.route("/edit/<int:id>", methods=["POST"])
 @admin_required
 def edit(id):
-
     lang = session.get("lang", "tr")
-
     translations = get_translation(lang)
 
-    name = request.form["ad"]
-    disk = float(request.form["disk"])
-    ram = int(request.form["ram"])
-    ip = request.form["ip"]
-    project = request.form["project"]
-    cpu = int(request.form["cpu"])
-    date = request.form["date"] or None
-    disk_type = request.form["disktur"]
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        flash(translations.get("error", "Database disconnected"))
+        return redirect(url_for("index"))
 
-    if disk_type.upper() == "TB":
-        disk *= 1024
+    try:
+        name = request.form["ad"]
+        disk = float(request.form["disk"])
+        ram = int(request.form["ram"])
+        ip = request.form["ip"]
+        project = request.form["project"]
+        cpu = int(request.form["cpu"])
+        date = request.form["date"] or None
+        disk_type = request.form["disktur"]
 
-    if request.form["server"] == "Yeni":
-        os_name = request.form["isletim"]
+        if disk_type.upper() == "TB":
+            disk *= 1024
 
-        cursor.execute("INSERT INTO os_types (name) VALUES (%s)", (os_name,))
-        mydb.commit()
+        if request.form["server"] == "Yeni":
+            os_name = request.form["isletim"]
+            cursor.execute("INSERT INTO os_types (name) VALUES (%s)", (os_name,))
+            conn.commit()
+            os_type_id = cursor.lastrowid
+        else:
+            os_name = request.form["server"]
+            cursor.execute("SELECT id FROM os_types WHERE name = %s", (os_name,))
+            result = cursor.fetchone()
+            os_type_id = result["id"]
 
-        os_type_id = cursor.lastrowid
-
-    else:
-        os_name = request.form["server"]
-
-        cursor.execute("SELECT id FROM os_types WHERE name = %s", (os_name,))
-
-        result = cursor.fetchone()
-        os_type_id = result["id"]
-
-    sql = """
-    UPDATE servers
-    SET
-        name=%s,
-        disk_gb=%s,
-        ram_g=%s,
-        ip_address=%s,
-        usage_project=%s,
-        core_amount=%s,
-        os_type_id=%s,
-        created_at=%s
-    WHERE id=%s
-    """
-
-    values = (name, disk, ram, ip, project, cpu, os_type_id, date, id)
-
-    cursor.execute(
+        sql = """
+        UPDATE servers
+        SET
+            name=%s,
+            disk_gb=%s,
+            ram_g=%s,
+            ip_address=%s,
+            usage_project=%s,
+            core_amount=%s,
+            os_type_id=%s,
+            created_at=%s
+        WHERE id=%s
         """
-        SELECT id, data_type
-        FROM custom_columns
-    """
-    )
+        values = (name, disk, ram, ip, project, cpu, os_type_id, date, id)
 
-    custom_columns = cursor.fetchall()
+        cursor.execute("SELECT id, data_type FROM custom_columns")
+        custom_columns = cursor.fetchall()
 
-    for column in custom_columns:
+        for column in custom_columns:
+            value = request.form.get(f"custom_{column['id']}")
 
-        value = request.form.get(f"custom_{column['id']}")
-
-        if column["data_type"] == "BOOLEAN":
-            value = "True" if value else "False"
-
-        cursor.execute(
-            """
-            SELECT id
-            FROM custom_values
-            WHERE server_id=%s AND column_id=%s
-        """,
-            (id, column["id"]),
-        )
-
-        exists = cursor.fetchone()
-
-        if value not in ("", None):
-
-            if exists:
-
-                cursor.execute(
-                    """
-                    UPDATE custom_values
-                    SET value=%s
-                    WHERE server_id=%s AND column_id=%s
-                """,
-                    (value, id, column["id"]),
-                )
-
-            else:
-
-                cursor.execute(
-                    """
-                    INSERT INTO custom_values
-                    (server_id, column_id, value)
-                    VALUES (%s, %s, %s)
-                """,
-                    (id, column["id"], value),
-                )
-
-        elif exists:
+            if column["data_type"] == "BOOLEAN":
+                value = "True" if value else "False"
 
             cursor.execute(
-                """
-                DELETE FROM custom_values
-                WHERE server_id=%s AND column_id=%s
-            """,
+                "SELECT id FROM custom_values WHERE server_id=%s AND column_id=%s",
                 (id, column["id"]),
             )
+            exists = cursor.fetchone()
 
-    cursor.execute(sql, values)
-    mydb.commit()
+            if value not in ("", None):
+                if exists:
+                    cursor.execute(
+                        "UPDATE custom_values SET value=%s WHERE server_id=%s AND column_id=%s",
+                        (value, id, column["id"]),
+                    )
+                else:
+                    cursor.execute(
+                        "INSERT INTO custom_values (server_id, column_id, value) VALUES (%s, %s, %s)",
+                        (id, column["id"], value),
+                    )
+            elif exists:
+                cursor.execute(
+                    "DELETE FROM custom_values WHERE server_id=%s AND column_id=%s",
+                    (id, column["id"]),
+                )
 
-    flash(translations["server_updated"])
+        cursor.execute(sql, values)
+        conn.commit()
+        conn.close()
 
-    return redirect(url_for("index"))
+        flash(translations["server_updated"])
+        return redirect(url_for("index"))
+
+    except Exception as e:
+        if conn:
+            conn.close()
+        flash(translations.get("error", "Error updating server"))
+        return redirect(url_for("index"))
 
 
 @app.route("/delete/<int:id>")
 @admin_required
 def sil(id):
     lang = session.get("lang", "tr")
-
     translations = get_translation(lang)
 
-    cursor.execute(
-        """
-        DELETE FROM custom_values
-        WHERE server_id = %s
-    """,
-        (id,),
-    )
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        flash(translations.get("error", "Database disconnected"))
+        return redirect(url_for("index"))
 
-    cursor.execute(
-        """
-        DELETE FROM servers
-        WHERE id = %s
-    """,
-        (id,),
-    )
+    try:
+        cursor.execute("DELETE FROM custom_values WHERE server_id = %s", (id,))
+        cursor.execute("DELETE FROM servers WHERE id = %s", (id,))
+        conn.commit()
+        conn.close()
 
-    mydb.commit()
-
-    flash(translations["delete_server_s"])
-
-    return redirect(url_for("index"))
+        flash(translations["delete_server_s"])
+        return redirect(url_for("index"))
+    except Exception:
+        if conn:
+            conn.close()
+        flash(translations.get("error", "Error deleting server"))
+        return redirect(url_for("index"))
 
 
 @app.route("/add", methods=["GET", "POST"])
 @admin_required
 def ekle():
     lang = session.get("lang", "tr")
-
     translations = get_translation(lang)
 
-    if request.method == "POST":
-        name = request.form["ad"]
-        disk_gb = float(request.form["disk"])
-        ram_g = int(request.form["ram"])
-        core_amount = int(request.form["cpu"])
-        ip_address = request.form["ip"]
-        usage_project = request.form["aciklama"]
-        created_at = request.form["tarih"]
-
-        if created_at == "":
-            created_at = None
-
-        if request.form["server"] == "Yeni":
-            os = request.form["isletim"]
-            os_sql = "insert into os_types (name) values(%s)"
-            os_values = (os,)
-            cursor.execute(os_sql, os_values)
-            mydb.commit()
-            os_type_id = cursor.lastrowid
-
-        else:
-            os = request.form["server"]
-            os_sql = "select id from os_types where name = %s"
-            os_values = (os,)
-            cursor.execute(os_sql, os_values)
-            result = cursor.fetchone()
-            os_type_id = result["id"]
-
-        disk_type = request.form["disktur"].upper()
-
-        if disk_type == "TB":
-            disk_gb *= 1024
-
-        sql = """insert into servers 
-        (name,disk_gb,ram_g,core_amount,ip_address,os_type_id,usage_project,created_at)
-        values (%s,%s,%s,%s,%s,%s,%s,%s)
-        """
-
-        values = (
-            name,
-            disk_gb,
-            ram_g,
-            core_amount,
-            ip_address,
-            os_type_id,
-            usage_project,
-            created_at,
-        )
-
-        cursor.execute(sql, values)
-
-        server_id = cursor.lastrowid
-
-        cursor.execute(
-            """
-            SELECT id, data_type
-            FROM custom_columns
-        """
-        )
-
-        custom_columns = cursor.fetchall()
-
-        for column in custom_columns:
-
-            value = request.form.get(f"custom_{column['id']}")
-
-            if column["data_type"] == "BOOLEAN":
-                value = "True" if value else "False"
-
-            if value not in ("", None):
-
-                cursor.execute(
-                    """
-                    INSERT INTO custom_values
-                    (server_id, column_id, value)
-                    VALUES (%s, %s, %s)
-                """,
-                    (server_id, column["id"], value),
-                )
-
-        mydb.commit()
-
-        flash(translations["server_added"])
-
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        flash(translations.get("error", "Database disconnected"))
         return redirect(url_for("index"))
 
-    cursor.execute("select name from os_types order by name")
-    os_list = cursor.fetchall()
+    try:
+        if request.method == "POST":
+            name = request.form["ad"]
+            disk_gb = float(request.form["disk"])
+            ram_g = int(request.form["ram"])
+            core_amount = int(request.form["cpu"])
+            ip_address = request.form["ip"]
+            usage_project = request.form["aciklama"]
+            created_at = request.form["tarih"]
 
-    cursor.execute(
-        """
-        SELECT id, column_name, data_type
-        FROM custom_columns
-        ORDER BY id
-    """
-    )
+            if created_at == "":
+                created_at = None
 
-    custom_columns = cursor.fetchall()
+            if request.form["server"] == "Yeni":
+                os = request.form["isletim"]
+                cursor.execute("INSERT INTO os_types (name) VALUES (%s)", (os,))
+                conn.commit()
+                os_type_id = cursor.lastrowid
+            else:
+                os = request.form["server"]
+                cursor.execute("SELECT id FROM os_types WHERE name = %s", (os,))
+                result = cursor.fetchone()
+                os_type_id = result["id"]
 
-    return render_template(
-        "add.html",
-        os_list=os_list,
-        custom_columns=custom_columns,
-        translations=translations,
-        lang=lang,
-    )
+            disk_type = request.form["disktur"].upper()
+            if disk_type == "TB":
+                disk_gb *= 1024
+
+            sql = """INSERT INTO servers 
+            (name, disk_gb, ram_g, core_amount, ip_address, os_type_id, usage_project, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            values = (name, disk_gb, ram_g, core_amount, ip_address, os_type_id, usage_project, created_at)
+
+            cursor.execute(sql, values)
+            server_id = cursor.lastrowid
+
+            cursor.execute("SELECT id, data_type FROM custom_columns")
+            custom_columns = cursor.fetchall()
+
+            for column in custom_columns:
+                value = request.form.get(f"custom_{column['id']}")
+                if column["data_type"] == "BOOLEAN":
+                    value = "True" if value else "False"
+
+                if value not in ("", None):
+                    cursor.execute(
+                        "INSERT INTO custom_values (server_id, column_id, value) VALUES (%s, %s, %s)",
+                        (server_id, column["id"], value),
+                    )
+
+            conn.commit()
+            conn.close()
+
+            flash(translations["server_added"])
+            return redirect(url_for("index"))
+
+        cursor.execute("SELECT name FROM os_types ORDER BY name")
+        os_list = cursor.fetchall()
+
+        cursor.execute("SELECT id, column_name, data_type FROM custom_columns ORDER BY id")
+        custom_columns = cursor.fetchall()
+        conn.close()
+
+        return render_template(
+            "add.html",
+            os_list=os_list,
+            custom_columns=custom_columns,
+            translations=translations,
+            lang=lang,
+        )
+    except Exception:
+        if conn:
+            conn.close()
+        flash(translations.get("error", "Database error"))
+        return redirect(url_for("index"))
 
 
 @app.route("/search")
 def search():
     lang = session.get("lang", "tr")
-
     translations = get_translation(lang)
 
-    q = request.args.get("q", "").strip()
-    fields = request.args.getlist("fields")
-    disk_unit = request.args.get("disk_unit", "GB")
-    disk_compare = request.args.get("disk_compare", "equal")
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        return render_template(
+            "index.html",
+            servers=[],
+            windows_amount=0,
+            os_list=[],
+            custom_columns=[],
+            username=session.get("user"),
+            role=session.get("role"),
+            is_admin=session.get("is_admin"),
+            translations=translations,
+            lang=lang,
+        )
 
-    if not fields:
-        fields = ["name"]
+    try:
+        q = request.args.get("q", "").strip()
+        fields = request.args.getlist("fields")
+        disk_unit = request.args.get("disk_unit", "GB")
+        disk_compare = request.args.get("disk_compare", "equal")
 
-    allowed_fields = {
-        "name": "servers.name",
-        "os_name": "os_types.name",
-        "ip_address": "servers.ip_address",
-        "usage_project": "servers.usage_project",
-        "disk_gb": "servers.disk_gb",
-        "ram_g": "servers.ram_g",
-        "core_amount": "servers.core_amount",
-        "created_at": "servers.created_at",
-    }
+        if not fields:
+            fields = ["name"]
 
-    cursor.execute(
+        allowed_fields = {
+            "name": "servers.name",
+            "os_name": "os_types.name",
+            "ip_address": "servers.ip_address",
+            "usage_project": "servers.usage_project",
+            "disk_gb": "servers.disk_gb",
+            "ram_g": "servers.ram_g",
+            "core_amount": "servers.core_amount",
+            "created_at": "servers.created_at",
+        }
+
+        cursor.execute("SELECT * FROM custom_columns")
+        custom_columns = cursor.fetchall()
+
+        for col in custom_columns:
+            allowed_fields[f"custom_{col['id']}"] = {"type": "custom", "id": col["id"]}
+
+        selected_fields = []
+        for f in fields:
+            if f in allowed_fields:
+                selected_fields.append(allowed_fields[f])
+            elif f.startswith("custom_"):
+                column_id = int(f.split("_")[1])
+                selected_fields.append({"type": "custom", "id": column_id})
+
+        sql = """
+            SELECT
+                servers.*,
+                os_types.name AS os_name
+            FROM servers
+            LEFT JOIN os_types ON servers.os_type_id = os_types.id
         """
-        SELECT *
-        FROM custom_columns
-    """
-    )
+        values = []
 
-    custom_columns = cursor.fetchall()
-
-    for col in custom_columns:
-        allowed_fields[f"custom_{col['id']}"] = {"type": "custom", "id": col["id"]}
-
-    selected_fields = []
-
-    for f in fields:
-        if f in allowed_fields:
-            selected_fields.append(allowed_fields[f])
-
-        elif f.startswith("custom_"):
-            column_id = int(f.split("_")[1])
-            selected_fields.append({"type": "custom", "id": column_id})
-
-    sql = """
-        SELECT
-            servers.*,
-            os_types.name AS os_name
-        FROM servers
-        LEFT JOIN os_types
-        ON servers.os_type_id = os_types.id
-    """
-
-    values = []
-
-    if q and selected_fields:
-
-        conditions = []
-
-        for field in selected_fields:
-
-            if isinstance(field, dict) and field["type"] == "custom":
-
-                conditions.append(
-                    """
-                    EXISTS (
-                        SELECT 1
-                        FROM custom_values cv
-                        WHERE cv.server_id = servers.id
-                        AND cv.column_id = %s
-                        AND cv.value LIKE %s
+        if q and selected_fields:
+            conditions = []
+            for field in selected_fields:
+                if isinstance(field, dict) and field["type"] == "custom":
+                    conditions.append(
+                        """
+                        EXISTS (
+                            SELECT 1
+                            FROM custom_values cv
+                            WHERE cv.server_id = servers.id
+                            AND cv.column_id = %s
+                            AND cv.value LIKE %s
+                        )
+                        """
                     )
-                """
-                )
+                    values.append(field["id"])
+                    values.append(f"%{q}%")
+                elif field == "servers.disk_gb":
+                    try:
+                        limit = float(q)
+                        if disk_unit == "TB":
+                            limit *= 1024
+                        if disk_compare == "equal":
+                            conditions.append("CAST(servers.disk_gb AS DECIMAL(10,2)) = CAST(%s AS DECIMAL(10,2))")
+                        elif disk_compare == "gte":
+                            conditions.append("CAST(servers.disk_gb AS DECIMAL(10,2)) >= CAST(%s AS DECIMAL(10,2))")
+                        elif disk_compare == "lte":
+                            conditions.append("CAST(servers.disk_gb AS DECIMAL(10,2)) <= CAST(%s AS DECIMAL(10,2))")
+                        values.append(limit)
+                    except ValueError:
+                        pass
+                else:
+                    conditions.append(f"{field} LIKE %s")
+                    values.append(f"%{q}%")
 
-                values.append(field["id"])
-                values.append(f"%{q}%")
+            if conditions:
+                sql += " WHERE " + " OR ".join(conditions)
 
-            elif field == "servers.disk_gb":
+        cursor.execute(sql, values)
+        servers = cursor.fetchall()
 
-                try:
-                    limit = float(q)
+        cursor.execute("SELECT server_id, column_id, value FROM custom_values")
+        rows = cursor.fetchall()
 
-                    if disk_unit == "TB":
-                        limit *= 1024
+        custom_values = {}
+        for row in rows:
+            server_id = row["server_id"]
+            if server_id not in custom_values:
+                custom_values[server_id] = {}
+            custom_values[server_id][row["column_id"]] = row["value"]
 
-                    if disk_compare == "equal":
-                        conditions.append(
-                            "CAST(servers.disk_gb AS DECIMAL(10,2)) = CAST(%s AS DECIMAL(10,2))"
-                        )
+        for server in servers:
+            server["custom_values"] = custom_values.get(server["id"], {})
 
-                    elif disk_compare == "gte":
-                        conditions.append(
-                            "CAST(servers.disk_gb AS DECIMAL(10,2)) >= CAST(%s AS DECIMAL(10,2))"
-                        )
+        cursor.execute(
+            """
+            SELECT COUNT(*) AS count
+            FROM servers
+            LEFT JOIN os_types ON servers.os_type_id = os_types.id
+            WHERE os_types.name LIKE '%windows%'
+            """
+        )
+        windows_amount = cursor.fetchone()["count"]
 
-                    elif disk_compare == "lte":
-                        conditions.append(
-                            "CAST(servers.disk_gb AS DECIMAL(10,2)) <= CAST(%s AS DECIMAL(10,2))"
-                        )
+        cursor.execute("SELECT name FROM os_types ORDER BY name")
+        os_list = cursor.fetchall()
 
-                    values.append(limit)
+        cursor.execute("SELECT * FROM custom_columns ORDER BY column_name")
+        custom_columns = cursor.fetchall()
+        conn.close()
 
-                except ValueError:
-                    pass
-
-            else:
-
-                conditions.append(f"{field} LIKE %s")
-                values.append(f"%{q}%")
-
-        if conditions:
-            sql += " WHERE " + " OR ".join(conditions)
-
-    cursor.execute(sql, values)
-    servers = cursor.fetchall()
-
-    cursor.execute(
-        """
-        SELECT server_id, column_id, value
-        FROM custom_values
-    """
-    )
-
-    rows = cursor.fetchall()
-
-    custom_values = {}
-
-    for row in rows:
-
-        server_id = row["server_id"]
-
-        if server_id not in custom_values:
-            custom_values[server_id] = {}
-
-        custom_values[server_id][row["column_id"]] = row["value"]
-
-    for server in servers:
-        server["custom_values"] = custom_values.get(server["id"], {})
-
-    cursor.execute(
-        """
-        SELECT COUNT(*) AS count
-        FROM servers
-        LEFT JOIN os_types
-        ON servers.os_type_id = os_types.id
-        WHERE os_types.name LIKE '%windows%'
-    """
-    )
-    windows_amount = cursor.fetchone()["count"]
-
-    cursor.execute("SELECT name FROM os_types ORDER BY name")
-    os_list = cursor.fetchall()
-
-    cursor.execute(
-        """
-        SELECT *
-        FROM custom_columns
-        ORDER BY column_name
-    """
-    )
-    custom_columns = cursor.fetchall()
-
-    return render_template(
-        "index.html",
-        servers=servers,
-        windows_amount=windows_amount,
-        os_list=os_list,
-        custom_columns=custom_columns,
-        username=session.get("user"),
-        role=session.get("role"),
-        is_admin=session.get("is_admin"),
-        translations=translations,
-        lang=lang,
-    )
+        return render_template(
+            "index.html",
+            servers=servers,
+            windows_amount=windows_amount,
+            os_list=os_list,
+            custom_columns=custom_columns,
+            username=session.get("user"),
+            role=session.get("role"),
+            is_admin=session.get("is_admin"),
+            translations=translations,
+            lang=lang,
+        )
+    except Exception:
+        if conn:
+            conn.close()
+        return render_template(
+            "index.html",
+            servers=[],
+            windows_amount=0,
+            os_list=[],
+            custom_columns=[],
+            username=session.get("user"),
+            role=session.get("role"),
+            is_admin=session.get("is_admin"),
+            translations=translations,
+            lang=lang,
+        )
 
 
 @app.route("/addcolumn", methods=["GET", "POST"])
 @admin_required
 def addcolumn():
     lang = session.get("lang", "tr")
-
     translations = get_translation(lang)
 
-    if request.method == "POST":
-
-        column_name = request.form["colName"].strip()
-        data_type = request.form["dataType"]
-
-        cursor.execute(
-            """
-            SELECT id
-            FROM custom_columns
-            WHERE LOWER(column_name) = LOWER(%s)
-        """,
-            (column_name,),
-        )
-
-        if cursor.fetchone():
-            flash(translations["col_already_exists"])
-            return redirect(url_for("addcolumn"))
-
-        cursor.execute(
-            """
-            INSERT INTO custom_columns
-            (column_name, data_type, created_at)
-            VALUES (%s, %s, CURDATE())
-        """,
-            (column_name, data_type),
-        )
-
-        mydb.commit()
-
-        flash(translations["added_new_column"])
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        flash(translations.get("error", "Database disconnected"))
         return redirect(url_for("index"))
 
-    return render_template("addcolumn.html", translations=translations, lang=lang)
+    try:
+        if request.method == "POST":
+            column_name = request.form["colName"].strip()
+            data_type = request.form["dataType"]
+
+            cursor.execute(
+                "SELECT id FROM custom_columns WHERE LOWER(column_name) = LOWER(%s)",
+                (column_name,),
+            )
+
+            if cursor.fetchone():
+                conn.close()
+                flash(translations["col_already_exists"])
+                return redirect(url_for("addcolumn"))
+
+            cursor.execute(
+                """
+                INSERT INTO custom_columns
+                (column_name, data_type, created_at)
+                VALUES (%s, %s, CURDATE())
+                """,
+                (column_name, data_type),
+            )
+            conn.commit()
+            conn.close()
+
+            flash(translations["added_new_column"])
+            return redirect(url_for("index"))
+
+        conn.close()
+        return render_template("addcolumn.html", translations=translations, lang=lang)
+    except Exception:
+        if conn:
+            conn.close()
+        flash(translations.get("error", "Database error"))
+        return redirect(url_for("index"))
 
 
 @app.route("/editcolumn/<int:id>", methods=["POST"])
 @admin_required
 def editcolumn(id):
     lang = session.get("lang", "tr")
-
     translations = get_translation(lang)
 
-    column_name = request.form["columnName"].strip()
-    data_type = request.form["dataType"]
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        flash(translations.get("error", "Database disconnected"))
+        return redirect(url_for("index"))
 
-    cursor.execute(
-        """
-        SELECT data_type
-        FROM custom_columns
-        WHERE id=%s
-    """,
-        (id,),
-    )
+    try:
+        column_name = request.form["columnName"].strip()
+        data_type = request.form["dataType"]
 
-    current = cursor.fetchone()
-    old_data_type = current["data_type"]
+        cursor.execute("SELECT data_type FROM custom_columns WHERE id=%s", (id,))
+        current = cursor.fetchone()
+        old_data_type = current["data_type"]
 
-    cursor.execute(
-        """
-        UPDATE custom_columns
-        SET
-            column_name=%s,
-            data_type=%s
-        WHERE id=%s
-    """,
-        (column_name, data_type, id),
-    )
-
-    if old_data_type != data_type:
         cursor.execute(
             """
-            DELETE FROM custom_values
-            WHERE column_id=%s
-        """,
-            (id,),
+            UPDATE custom_columns
+            SET column_name=%s, data_type=%s
+            WHERE id=%s
+            """,
+            (column_name, data_type, id),
         )
-        flash(translations["update_column_override"])
-    else:
-        flash(translations["update_column"])
 
-    mydb.commit()
+        if old_data_type != data_type:
+            cursor.execute("DELETE FROM custom_values WHERE column_id=%s", (id,))
+            flash(translations["update_column_override"])
+        else:
+            flash(translations["update_column"])
 
-    return redirect(url_for("index"))
+        conn.commit()
+        conn.close()
+        return redirect(url_for("index"))
+
+    except Exception:
+        if conn:
+            conn.close()
+        flash(translations.get("error", "Database error"))
+        return redirect(url_for("index"))
 
 
 @app.route("/deleteColumn/<int:id>", methods=["POST"])
 @admin_required
 def deleteColumn(id):
     lang = session.get("lang", "tr")
-
     translations = get_translation(lang)
 
-    cursor.execute(
-        """
-        DELETE FROM custom_values
-        WHERE column_id = %s
-    """,
-        (id,),
-    )
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        flash(translations.get("error", "Database disconnected"))
+        return redirect(url_for("index"))
 
-    cursor.execute(
-        """
-        DELETE FROM custom_columns
-        WHERE id = %s
-    """,
-        (id,),
-    )
+    try:
+        cursor.execute("DELETE FROM custom_values WHERE column_id = %s", (id,))
+        cursor.execute("DELETE FROM custom_columns WHERE id = %s", (id,))
+        conn.commit()
+        conn.close()
 
-    mydb.commit()
+        flash(translations["f_delete_column"])
+        return redirect(url_for("index"))
 
-    flash(translations["f_delete_column"])
-
-    return redirect(url_for("index"))
+    except Exception:
+        if conn:
+            conn.close()
+        flash(translations.get("error", "Database error"))
+        return redirect(url_for("index"))
 
 
 if __name__ == "__main__":
