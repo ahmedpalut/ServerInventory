@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +8,9 @@
     <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
+
 <body>
-    
+
     {% with messages = get_flashed_messages() %}
     {% if messages %}
     <div id="toast">
@@ -38,7 +40,8 @@
 
         <div class="header-buttons">
 
-            <a href="/logout" title="{{translations.logout}}" class="logout-btn" onclick="return confirm('{{translations.logout_confirm}}')">
+            <a href="/logout" title="{{translations.logout}}" class="logout-btn"
+                onclick="return confirm('{{translations.logout_confirm}}')">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>
@@ -56,9 +59,16 @@
             {{ translations.dashboard }}
         </a>
 
-        <a href="{{ url_for('database') }}" class="nav-item {% if request.endpoint == 'database' %}active{% endif %}">
+        <a href="{{ url_for('database') }}"
+            class="nav-item {% if request.endpoint == 'database' %}active{% endif %} {% if not is_connected %}database-offline{% endif %}">
+
             <i class="fa-solid fa-database"></i>
+
             {{ translations.database }}
+
+            {% if not is_connected %}
+            <i class="fa-solid fa-circle-exclamation db-warning"></i>
+            {% endif %}
         </a>
 
         <a href="{{ url_for('logs') }}" class="nav-item {% if request.endpoint == 'logs' %}active{% endif %}">
@@ -100,4 +110,5 @@
     </table>
 
 </body>
+
 </html>

@@ -55,9 +55,16 @@
             {{ translations.dashboard }}
         </a>
 
-        <a href="{{ url_for('database') }}" class="nav-item {% if request.endpoint == 'database' %}active{% endif %}">
+        <a href="{{ url_for('database') }}"
+            class="nav-item {% if request.endpoint == 'database' %}active{% endif %} {% if not is_connected %}database-offline{% endif %}">
+
             <i class="fa-solid fa-database"></i>
+
             {{ translations.database }}
+
+            {% if not is_connected %}
+            <i class="fa-solid fa-circle-exclamation db-warning"></i>
+            {% endif %}
         </a>
 
         <a href="{{ url_for('logs') }}" class="nav-item {% if request.endpoint == 'logs' %}active{% endif %}">
