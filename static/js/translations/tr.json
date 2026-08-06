@@ -38,6 +38,7 @@
     "delete": "Sil",
 
     "login": "Giriş Yap",
+    "logout":"Oturumu Kapat",
     "welcome": "Hoş Geldiniz",
     "username": "Kullanıcı Adı",
     "password": "Şifre",
@@ -99,5 +100,18 @@
 
     "pages": "Sayfalar",
     "dashboard": "Dashboard",
-    "database": "Veritabanı"
+    "database": "Veritabanı",
+
+    "database_status": "Veritabanı Bağlantı Durumu: ",
+    "mysql_service_status": "MySQL servisine bağlanılamıyor. Lütfen çalıştığından emin olun.",
+    "connection_status_online": "Bağlı (Online)",
+    "connection_status_offline": "Bağlantı Kesildi (Offline)",
+    "db_name":"Veritabanı Adı",
+    "db_size":"Veritabanı Boyutu",
+    "total_table":"Toplam Tablo",
+    "table":"Tablo",
+    "saved_server":"Kayıtlı Sunucular",
+    "servers":"Sunucu",
+    "logs":"Logs",
+    "database_management" :"Veritabanı Yönetim Paneli"
 }

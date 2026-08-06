@@ -38,6 +38,7 @@
     "delete": "Delete",
 
     "login": "Login",
+    "logout":"Logout",
     "welcome": "Welcome",
     "username": "Username",
     "password": "Password",
@@ -99,5 +100,19 @@
 
     "pages": "Pages",
     "dashboard": "Dashboard",
-    "database": "Database"
+    "database": "Database",
+
+    "database_status": "Database Connection Status: ",
+    "mysql_service_status": "Unable to connect to the MySQL service. Please ensure it is running.",
+    "connection_status_online": "Connected (Online)",
+    "connection_status_offline": "Disconnected (Offline)",
+    "db_name":"Database Name",
+    "db_size":"Database Size",
+    "total_table":"Total Tables",
+    "table":"Table",
+    "saved_server":"Saved Servers",
+    "servers":"Servers",
+    "logs":"Logs",
+    "database_management" :"Database Management Panel"
+    
 }

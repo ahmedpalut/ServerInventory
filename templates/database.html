@@ -4,23 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veritabanı</title>
+    <title>{{translations.database}}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 
 <body>
 
-    <div class="db-status-banner {% if is_connected %}status-online{% else %}status-offline{% endif %}">
-        <div class="status-indicator">
-            <i class="fa-solid {% if is_connected %}fa-circle-check{% else %}fa-triangle-exclamation{% endif %}"></i>
-            <span>Veritabanı Durumu: <strong>{{ db_status }}</strong></span>
-        </div>
-        {% if not is_connected %}
-        <p class="status-warning">MySQL servisi durduruldu veya erişilemiyor. Lütfen Görev Yöneticisinden MySQL
-            hizmetini başlatın.</p>
-        {% endif %}
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div id="toast">
+        {{ messages[0] }}
     </div>
+    {% endif %}
+    {% endwith %}
 
     <div class="page-header">
         <div class="header-left">
@@ -43,7 +40,8 @@
 
         <div class="header-buttons">
 
-            <a href="/logout" class="logout-btn" onclick="return confirm('{{translations.logout_confirm}}')">
+            <a href="/logout" title="{{translations.logout}}" class="logout-btn"
+                onclick="return confirm('{{translations.logout_confirm}}')">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>
@@ -66,14 +64,45 @@
             {{ translations.database }}
         </a>
 
+        <a href="{{ url_for('logs') }}" class="nav-item {% if request.endpoint == 'logs' %}active{% endif %}">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            {{ translations.logs }}
+        </a>
+
+        <div class="lang-container">
+            <a href="/change_language/{{ 'en' if lang == 'tr' else 'tr' }}" id="langButton">
+                {{ 'EN' if lang == 'tr' else 'TR' }}
+            </a>
+        </div>
+
+
     </nav>
+
+    <div class="db-status-banner {% if is_connected %}status-online{% else %}status-offline{% endif %}">
+        <div class="status-indicator">
+            <i class="fa-solid {% if is_connected %}fa-circle-check{% else %}fa-triangle-exclamation{% endif %}"></i>
+            <span>{{translations.database_status}} <strong>{{ db_status }}</strong></span>
+        </div>
+        {% if not is_connected %}
+        <p class="status-warning">{{translations.myqsl_service_status}}</p>
+        {% endif %}
+    </div>
 
     {% if is_connected %}
     <div class="kpi-cards">
         <div class="kpi-card">
+            <div class="kpi-icon"><i class="fa-solid fa-folder-tree"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">{{translations.db_name}}</span>
+                <h3 class="kpi-value">{{ db_name }}</h3>
+            </div>
+        </div>
+
+
+        <div class="kpi-card">
             <div class="kpi-icon"><i class="fa-solid fa-database"></i></div>
             <div class="kpi-info">
-                <span class="kpi-label">Veritabanı Boyutu</span>
+                <span class="kpi-label">{{translations.db_size}}</span>
                 <h3 class="kpi-value">{{ db_size }}</h3>
             </div>
         </div>
@@ -81,24 +110,80 @@
         <div class="kpi-card">
             <div class="kpi-icon"><i class="fa-solid fa-table"></i></div>
             <div class="kpi-info">
-                <span class="kpi-label">Toplam Tablo</span>
-                <h3 class="kpi-value">{{ table_count }} Tablo</h3>
+                <span class="kpi-label">{{translations.total_table}}</span>
+                <h3 class="kpi-value">{{ table_count }} {{translations.table}}</h3>
             </div>
         </div>
 
         <div class="kpi-card">
             <div class="kpi-icon"><i class="fa-solid fa-server"></i></div>
             <div class="kpi-info">
-                <span class="kpi-label">Kayıtlı Sunucu</span>
-                <h3 class="kpi-value">{{ server_count }} Sunucu</h3>
+                <span class="kpi-label">{{translations.saved_server}}</span>
+                <h3 class="kpi-value">{{ server_count }} {{translations.servers}}</h3>
             </div>
         </div>
     </div>
     {% endif %}
 
-    
+    <div class="database-panel">
 
-    
+        <div class="database-panel-header">
+            <i class="fa-solid fa-sliders"></i>
+            <h2>{{ translations.database_management }}</h2>
+        </div>
+
+        <div class="database-panel-content">
+
+            <div class="database-panel-grid">
+
+                <div class="database-card">
+                    <div class="database-card-title">
+                        <i class="fa-solid fa-gear"></i>
+                        <span>Genel Ayarlar</span>
+                    </div>
+                </div>
+
+                <div class="database-card">
+                    <div class="database-card-title">
+                        <i class="fa-solid fa-broom"></i>
+                        <span>Bakım</span>
+                    </div>
+
+                    <div class="database-card-content">
+
+                        <form action="{{ url_for('start_database') }}" method="POST">
+
+                            <button type="submit" class="database-action-btn">
+                                <i class="fa-solid fa-plug-circle-check"></i>
+                                Veritabanına Bağlan
+                            </button>
+
+                        </form>
+
+                    </div>
+                </div>
+
+                <div class="database-card">
+                    <div class="database-card-title">
+                        <i class="fa-solid fa-database"></i>
+                        <span>Yedekleme</span>
+                    </div>
+                </div>
+
+                <div class="database-card">
+                    <div class="database-card-title">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Güvenlik</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
 </body>
 
 </html>

@@ -187,6 +187,11 @@ body {
     margin-bottom:25px;
 }
 
+.lang-container{
+    height: 100%;
+    width: calc(99% - (12px + 12px + 145.6px + 138.4px + 131.2px + 12px + 105.6px));
+}
+
 #langButton {
     background:#2563eb;
     color:white;
@@ -197,6 +202,7 @@ body {
     font-weight: bold;
     padding:12px 20px;
     font-weight: normal;
+    float: right;
 }
 
 #langButton:hover{
@@ -1448,4 +1454,110 @@ margin-bottom:25px;
     margin-top: 10px;
     font-size: 14px;
     color: #fca5a5;
+}
+
+.database-panel{
+    margin-top:30px;
+    background:#2b3347;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;
+    overflow:hidden;
+}
+
+.database-panel-header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    padding:18px 24px;
+
+    background:rgba(255,255,255,.03);
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.database-panel-header i{
+    color:#60a5fa;
+    font-size:22px;
+}
+
+.database-panel-header h2{
+    margin:0;
+    color:white;
+    font-size:22px;
+    font-weight:600;
+}
+
+.database-panel-content{
+    padding:24px;
+}
+
+/* 2x2 Grid */
+
+.database-panel-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:20px;
+}
+
+.database-card{
+    min-height:220px;
+    background:#343d53;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:16px;
+    padding:20px;
+    transition:.25s ease;
+}
+
+.database-card:hover{
+    transform:translateY(-2px);
+    border-color:#60a5fa;
+}
+
+.database-card-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    color:white;
+    font-size:19px;
+    font-weight:600;
+}
+
+.database-card-title i{
+    color:#60a5fa;
+    font-size:20px;
+}
+
+.database-card-content{
+    margin-top:30px;
+}
+
+.database-action-btn{
+    width:100%;
+    padding:14px 18px;
+
+    background:#2563eb;
+    color:white;
+
+    border:none;
+    border-radius:10px;
+
+    font-size:16px;
+    font-weight:600;
+
+    cursor:pointer;
+    transition:.25s;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+}
+
+.database-action-btn:hover{
+    background:#3b82f6;
+}
+
+.database-action-btn:active{
+    transform:scale(.98);
 }

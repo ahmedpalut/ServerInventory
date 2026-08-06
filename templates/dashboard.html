@@ -37,7 +37,7 @@
                 <i class="fa-solid fa-file-pdf"></i> Raporu PDF İndir
             </button>
 
-            <a href="/logout" class="logout-btn" onclick="return confirm('{{translations.logout_confirm}}')">
+            <a href="/logout" title="{{translations.logout}}" class="logout-btn" onclick="return confirm('{{translations.logout_confirm}}')">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>
@@ -59,6 +59,18 @@
             <i class="fa-solid fa-database"></i>
             {{ translations.database }}
         </a>
+
+        <a href="{{ url_for('logs') }}" class="nav-item {% if request.endpoint == 'logs' %}active{% endif %}">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            {{ translations.logs }}
+        </a>
+
+        <div class="lang-container">
+            <a href="/change_language/{{ 'en' if lang == 'tr' else 'tr' }}" id="langButton">
+                {{ 'EN' if lang == 'tr' else 'TR' }}
+            </a>
+        </div>
+
 
     </nav>
 

@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 from ldap3 import Server, Connection, SUBTREE, SIMPLE, NONE
 from functools import wraps
 import json
+import win32serviceutil
+import win32service
+import time
 
 load_dotenv()
 
@@ -32,6 +35,15 @@ def get_translation(lang="tr"):
     with open(f"static/js/translations/{lang}.json", encoding="utf-8") as file:
         return json.load(file)
 
+def add_log(cursor, username, action, target="", description=""):
+    cursor.execute(
+        """
+        INSERT INTO logs
+        (username, action, target, description)
+        VALUES (%s,%s,%s,%s)
+        """,
+        (username, action, target, description)
+    )
 
 @app.route("/change_language/<lang>")
 def change_language(lang):
@@ -50,7 +62,6 @@ def admin_required(f):
             return redirect(url_for("index"))
         return f(*args, **kwargs)
     return decorated_function
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -124,7 +135,111 @@ def logout():
     flash(translations["logout_s"])
     return redirect(url_for("login"))
 
+@app.route("/start_database", methods=["POST"])
+@admin_required
+def start_database():
 
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    conn, cursor, is_connected = get_db()
+
+    if is_connected:
+        conn.close()
+        flash("Veritabanı zaten bağlı.")
+        return redirect(url_for("database"))
+
+    service_name = os.getenv("MYSQL_SERVICE")
+
+    try:
+        status = win32serviceutil.QueryServiceStatus(service_name)[1]
+
+        if status != win32service.SERVICE_RUNNING:
+            win32serviceutil.StartService(service_name)
+
+        for _ in range(5):
+            time.sleep(1)
+
+            conn, cursor, is_connected = get_db()
+
+            if is_connected:
+                conn.close()
+                flash("Veritabanına başarıyla bağlanıldı.")
+                return redirect(url_for("database"))
+
+        flash("MySQL servisi başlatılamadı.")
+
+    except Exception as e:
+        print(e)
+        flash("Bir hata oluştu.")
+
+    return redirect(url_for("database"))
+
+@app.route("/logs")
+def logs():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+    
+    conn, cursor, is_connected = get_db()
+    
+    if not is_connected:
+        return render_template(
+        "logs.html",
+        translations=translations,
+        lang=lang,
+        username=session.get("user"),
+        role=session.get("role"),
+        is_admin=session.get("is_admin"),
+        is_connected=False,
+        logs=[]
+    )
+        
+    try:
+        cursor.execute("""
+            SELECT
+                username,
+                action,
+                target,
+                description,
+                created_at
+            FROM logs
+            ORDER BY created_at DESC
+            LIMIT 100
+        """)
+
+        logs = cursor.fetchall()
+
+        conn.close()
+
+        return render_template(
+            "logs.html",
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            role=session.get("role"),
+            is_admin=session.get("is_admin"),
+            is_connected=True,
+            logs=logs
+        )
+        
+    except Exception:
+        if conn:
+            conn.close()
+
+        return render_template(
+            "logs.html",
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            role=session.get("role"),
+            is_admin=session.get("is_admin"),
+            is_connected=False,
+            logs=[]
+        )
+        
 @app.route("/")
 def index():
     if "user" not in session:
@@ -237,7 +352,7 @@ def dashboard():
             username=session.get("user"),
             is_admin=session.get("is_admin"),
             is_connected=False,
-            db_status="Bağlantı Kesildi (Offline)",
+            db_status=translations["connection_status_offline"],
             db_size="0 MB",
             table_count=0,
             server_count=0,
@@ -465,7 +580,7 @@ def dashboard():
             username=session.get("user"),
             is_admin=session.get("is_admin"),
             is_connected=True,
-            db_status="Bağlı (Online)",
+            db_status=translations["connection_status_online"],
             labels=labels,
             values=values,
             other_info_text=other_info_text,
@@ -496,7 +611,7 @@ def dashboard():
             username=session.get("user"),
             is_admin=session.get("is_admin"),
             is_connected=False,
-            db_status="Bağlantı Kesildi (Offline)",
+            db_status=translations["connection_status_offline"],
             db_size="0 MB",
             table_count=0,
             server_count=0,
@@ -541,13 +656,16 @@ def database():
             role=session.get("role"),
             is_admin=session.get("is_admin"),
             is_connected=False,
-            db_status="Bağlantı Kesildi (Offline)",
+            db_status=translations["connection_status_offline"],
             db_size="0 MB",
             table_count=0,
-            server_count=0
+            server_count=0,
+            db_name="",
+            logs=[]
         )
 
     try:
+        
         cursor.execute("SELECT COUNT(*) AS total FROM servers")
         server_count = cursor.fetchone()["total"]
 
@@ -576,10 +694,11 @@ def database():
             role=session.get("role"),
             is_admin=session.get("is_admin"),
             is_connected=True,
-            db_status="Bağlı (Online)",
+            db_status=translations["connection_status_online"],
             db_size=db_size,
             table_count=table_count,
-            server_count=server_count
+            server_count=server_count,
+            db_name=os.getenv("DB_NAME")
         )
 
     except Exception:
@@ -593,10 +712,10 @@ def database():
             role=session.get("role"),
             is_admin=session.get("is_admin"),
             is_connected=False,
-            db_status="Bağlantı Kesildi (Offline)",
+            db_status=translations["connection_status_online"],
             db_size="0 MB",
             table_count=0,
-            server_count=0
+            server_count=0,
         )
 
 
@@ -698,7 +817,7 @@ def edit(id):
 
 @app.route("/delete/<int:id>")
 @admin_required
-def sil(id):
+def delete(id):
     lang = session.get("lang", "tr")
     translations = get_translation(lang)
 
@@ -708,8 +827,20 @@ def sil(id):
         return redirect(url_for("index"))
 
     try:
+        cursor.execute("SELECT name FROM servers WHERE id=%s", (id,))
+        server = cursor.fetchone()
+        
         cursor.execute("DELETE FROM custom_values WHERE server_id = %s", (id,))
         cursor.execute("DELETE FROM servers WHERE id = %s", (id,))
+        
+        add_log(
+            cursor,
+            session["user"],
+            "Sunucu Sil",
+            server["name"],
+            f"'{server['name']}' sunucusu silindi."
+        )
+        
         conn.commit()
         conn.close()
 
@@ -724,7 +855,7 @@ def sil(id):
 
 @app.route("/add", methods=["GET", "POST"])
 @admin_required
-def ekle():
+def add():
     lang = session.get("lang", "tr")
     translations = get_translation(lang)
 
@@ -783,6 +914,14 @@ def ekle():
                         "INSERT INTO custom_values (server_id, column_id, value) VALUES (%s, %s, %s)",
                         (server_id, column["id"], value),
                     )
+                    
+            add_log(
+                cursor,
+                session["user"],
+                "Sunucu Ekle",
+                name,
+                f"'{name}' sunucusu eklendi."
+            )
 
             conn.commit()
             conn.close()
@@ -1008,6 +1147,15 @@ def addcolumn():
                 """,
                 (column_name, data_type),
             )
+            
+            add_log(
+                cursor,
+                session["user"],
+                "Sütun Ekle",
+                column_name,
+                f"'{column_name}' sütunu eklendi, veri tipi={data_type}"
+            )
+            
             conn.commit()
             conn.close()
 
@@ -1080,8 +1228,20 @@ def deleteColumn(id):
         return redirect(url_for("index"))
 
     try:
+        cursor.execute("SELECT * FROM custom_columns WHERE id=%s", (id,))
+        column_name=cursor.fetchone()["column_name"]
+        
         cursor.execute("DELETE FROM custom_values WHERE column_id = %s", (id,))
         cursor.execute("DELETE FROM custom_columns WHERE id = %s", (id,))
+        
+        add_log(
+            cursor,
+            session["user"],
+            "Sütun Sil",
+            column_name,
+            f"'{column_name}' sütunu silindi."
+        )
+        
         conn.commit()
         conn.close()
 

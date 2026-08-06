@@ -31,9 +31,9 @@
                 {{ username }}
 
                 {% if is_admin %}
-                    - {{translations.admin}}
+                - {{translations.admin}}
                 {% else %}
-                    - {{translations.visitor}}
+                - {{translations.visitor}}
                 {% endif %}
             </div>
         </div>
@@ -41,14 +41,12 @@
         <div class="header-buttons">
 
             {% if is_admin %}
-                <button id="tableSettingsBtn" class="beautify">
-                    {{translations.table_settings}}
-                </button>
+            <button id="tableSettingsBtn" class="beautify">
+                {{translations.table_settings}}
+            </button>
             {% endif %}
 
-            <a href="/logout"
-            class="logout-btn"
-            onclick="return confirm('{{translations.logout_confirm}}')">
+            <a href="/logout" title="{{translations.logout}}" class="logout-btn" onclick="return confirm('{{translations.logout_confirm}}')">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>
@@ -56,23 +54,32 @@
 
     <nav class="navbar">
 
-        <a href="{{ url_for('index') }}"
-        class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+        <a href="{{ url_for('index') }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
             <i class="fa-solid fa-server"></i>
             {{ translations.inventory }}
         </a>
 
-        <a href="{{ url_for('dashboard') }}"
-        class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+        <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
             <i class="fa-solid fa-chart-line"></i>
             {{ translations.dashboard }}
         </a>
 
-        <a href="{{ url_for('database') }}"
-        class="nav-item {% if request.endpoint == 'database' %}active{% endif %}">
+        <a href="{{ url_for('database') }}" class="nav-item {% if request.endpoint == 'database' %}active{% endif %}">
             <i class="fa-solid fa-database"></i>
             {{ translations.database }}
         </a>
+
+        <a href="{{ url_for('logs') }}" class="nav-item {% if request.endpoint == 'logs' %}active{% endif %}">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            {{ translations.logs }}
+        </a>
+
+        <div class="lang-container">
+            <a href="/change_language/{{ 'en' if lang == 'tr' else 'tr' }}" id="langButton">
+                {{ 'EN' if lang == 'tr' else 'TR' }}
+            </a>
+        </div>
+
 
     </nav>
 
@@ -96,20 +103,17 @@
 
     </div>
 
-    <div class="toolbar"> 
+    <div class="toolbar">
         <form id="searchForm" action="/search" method="GET">
             <div class="search-area">
-                <input type="text"
-                    id="searchInput"
-                    name="q"
-                    placeholder="{{translations.search_placeholder}}"
+                <input type="text" id="searchInput" name="q" placeholder="{{translations.search_placeholder}}"
                     value="{{ request.args.get('q','') }}">
 
                 <button type="submit" id="searchBtn" class="beautify" data-lang="search">
                     {% if request.path == "/search" %}
-                        {{translations.back}}
+                    {{translations.back}}
                     {% else %}
-                        {{translations.search}}
+                    {{translations.search}}
                     {% endif %}
                 </button>
 
@@ -118,19 +122,15 @@
                 </button>
             </div>
         </form>
-        
-        <div> 
+
+        <div>
             {% if is_admin %}
-                <a href="/add" class="add-btn" id="addBtn">{{translations.new_server}}</a> 
+            <a href="/add" class="add-btn" id="addBtn">{{translations.new_server}}</a>
             {% endif %}
-                <a href="/change_language/{{ 'en' if lang == 'tr' else 'tr' }}"
-                    id="langButton">
-                        {{ 'EN' if lang == 'tr' else 'TR' }}
-                </a>
-            
+
         </div>
     </div>
-	<div class="table-wrapper">
+    <div class="table-wrapper">
         <table id="serverTable">
             <thead>
                 <tr>
@@ -184,21 +184,23 @@
                     </th>
 
                     {% for col in custom_columns %}
-                        <th id="th{{ loop.index0 + 8 }}" data-col="custom_{{ col.id }}" draggable="true" class="draggable-th">
-                            <div class="th-wrapper">
-                                <span>{{ col.column_name }}</span>
-                                <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'custom_{{ col.id }}')">▼</button>
-                            </div>
-                        </th>
+                    <th id="th{{ loop.index0 + 8 }}" data-col="custom_{{ col.id }}" draggable="true"
+                        class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>{{ col.column_name }}</span>
+                            <button class="column-menu-btn"
+                                onclick="toggleColumnMenu(event, 'custom_{{ col.id }}')">▼</button>
+                        </div>
+                    </th>
                     {% endfor %}
-                    
+
                     {% if is_admin %}
-                        <th id="th_last">{{translations.operation}}</th>
+                    <th id="th_last">{{translations.operation}}</th>
                     {% endif %}
                 </tr>
             </thead>
-            <tbody> 
-                {% for s in servers %} 
+            <tbody>
+                {% for s in servers %}
                 <tr class="serverRow">
                     <td id="left" data-col="name">{{ s.name }}</td>
                     <td data-col="disk">{{ s.disk_gb }}</td>
@@ -210,16 +212,13 @@
                     <td data-col="date">{{ s.created_at }}</td>
 
                     {% for col in custom_columns %}
-                        <td data-col="custom_{{ col.id }}">{{ s.custom_values.get(col.id, "") }}</td>
+                    <td data-col="custom_{{ col.id }}">{{ s.custom_values.get(col.id, "") }}</td>
                     {% endfor %}
 
                     {% if is_admin %}
                     <td>
-                        
-                            <a href="#"
-                            class="edit-btn"
-                            data-custom='{{ s.custom_values | tojson }}'
-                            onclick='openPanel(
+
+                        <a href="#" class="edit-btn" data-custom='{{ s.custom_values | tojson }}' onclick='openPanel(
                                 "{{ s.id }}",
                                 "{{ s.name }}",
                                 "{{ s.disk_gb }}",
@@ -231,17 +230,17 @@
                                 "{{ s.created_at }}",
                                 JSON.parse(this.dataset.custom)
                             ); return false;'>
-                                ✏️
-                            </a>
+                            ✏️
+                        </a>
 
-                            <a href="/delete/{{ s.id }}" class="delete-btn"
+                        <a href="/delete/{{ s.id }}" class="delete-btn"
                             onclick="return confirm('{{translations.are_u_sure_delete}}')">
-                                🗑️
-                            </a>
+                            🗑️
+                        </a>
                     </td>
                     {% endif %}
-                </tr> 
-                {% endfor %} 
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
@@ -278,23 +277,19 @@
                 <option value="" id="esl41">{{translations.select_server}}</option>
 
                 {% for os in os_list %}
-                    <option value="{{ os.name }}">{{ os.name }}</option>
+                <option value="{{ os.name }}">{{ os.name }}</option>
                 {% endfor %}
 
                 <option value="Yeni" id="esl42">{{translations.new}}</option>
             </select>
 
             <div id="serverekle" style="display:none; margin-top:10px;">
-                <input
-                    type="text"
-                    name="isletim"
-                    placeholder="{{translations.new_os}}"
-                    id="yeniIsletim">
+                <input type="text" name="isletim" placeholder="{{translations.new_os}}" id="yeniIsletim">
             </div>
             <br><br>
 
             <label>{{translations.ram}}</label><br>
-            <input type="number" name="ram" id="p_ram" ><br><br>
+            <input type="number" name="ram" id="p_ram"><br><br>
 
             <label>{{translations.ip}}</label><br>
             <input type="text" name="ip" id="p_ip"><br><br>
@@ -314,38 +309,25 @@
 
             {% for column in custom_columns %}
 
-                <label>{{ column.column_name }}</label>
+            <label>{{ column.column_name }}</label>
 
-                {% if column.data_type == "TEXT" %}
-                    <input type="text"
-                        id="custom_{{ column.id }}" 
-                        name="custom_{{ column.id }}"> <br> <br>
+            {% if column.data_type == "TEXT" %}
+            <input type="text" id="custom_{{ column.id }}" name="custom_{{ column.id }}"> <br> <br>
 
-                {% elif column.data_type == "INTEGER" %}
-                    <input type="number"
-                        step="1"
-                        id="custom_{{ column.id }}"
-                        name="custom_{{ column.id }}"> <br> <br>
+            {% elif column.data_type == "INTEGER" %}
+            <input type="number" step="1" id="custom_{{ column.id }}" name="custom_{{ column.id }}"> <br> <br>
 
-                {% elif column.data_type == "DECIMAL" %}
-                    <input type="number"
-                        step="0.01"
-                        id="custom_{{ column.id }}"
-                        name="custom_{{ column.id }}"> <br> <br>
+            {% elif column.data_type == "DECIMAL" %}
+            <input type="number" step="0.01" id="custom_{{ column.id }}" name="custom_{{ column.id }}"> <br> <br>
 
-                {% elif column.data_type == "DATE" %}
-                    <input type="date"
-                        id="custom_{{ column.id }}"
-                        name="custom_{{ column.id }}"> <br> <br>
+            {% elif column.data_type == "DATE" %}
+            <input type="date" id="custom_{{ column.id }}" name="custom_{{ column.id }}"> <br> <br>
 
-                {% elif column.data_type == "BOOLEAN" %}
-                    <input type="checkbox"
-                        id="custom_{{ column.id }}"
-                        name="custom_{{ column.id }}" 
-                        value="True"
-                        class="custom-checkbox"> <br> <br>
+            {% elif column.data_type == "BOOLEAN" %}
+            <input type="checkbox" id="custom_{{ column.id }}" name="custom_{{ column.id }}" value="True"
+                class="custom-checkbox"> <br> <br>
 
-                {% endif %}
+            {% endif %}
 
             {% endfor %}
 
@@ -355,113 +337,91 @@
 
     <div id="columnOverlay"></div>
 
-        <div id="columnPanel">
+    <div id="columnPanel">
 
-            <span onclick="closeColumnPanel()" id="closeColumnBtn">✖</span>
+        <span onclick="closeColumnPanel()" id="closeColumnBtn">✖</span>
 
-            <h2>{{translations.e_column}}</h2>
+        <h2>{{translations.e_column}}</h2>
 
-            <form id="columnForm" method="POST">
+        <form id="columnForm" method="POST">
 
-                <label>{{translations.select_column}}</label><br>
+            <label>{{translations.select_column}}</label><br>
 
-                <select
-                    id="columnSelect"
-                    class="beautifySelect"
-                    onchange="fillColumn()">
+            <select id="columnSelect" class="beautifySelect" onchange="fillColumn()">
 
-                    {% for c in custom_columns %}
-                        <option
-                            value="{{ c.id }}"
-                            data-name="{{ c.column_name }}"
-                            data-type="{{ c.data_type }}">
-                            {{ c.column_name }}
-                        </option>
-                    {% endfor %}
+                {% for c in custom_columns %}
+                <option value="{{ c.id }}" data-name="{{ c.column_name }}" data-type="{{ c.data_type }}">
+                    {{ c.column_name }}
+                </option>
+                {% endfor %}
 
-                </select>
+            </select>
 
-                <br><br>
+            <br><br>
 
-                <label>{{translations.col_name}}</label><br>
+            <label>{{translations.col_name}}</label><br>
 
-                <input
-                    type="text"
-                    id="columnName"
-                    name="columnName">
+            <input type="text" id="columnName" name="columnName">
 
-                <br><br>
+            <br><br>
 
-                <label>{{translations.data_type}}</label><br>
+            <label>{{translations.data_type}}</label><br>
 
-                <select
-                    id="columnType"
-                    name="dataType"
-                    class="beautifySelect">
+            <select id="columnType" name="dataType" class="beautifySelect">
 
-                    <option value="TEXT">TEXT</option>
-                    <option value="INTEGER">INTEGER</option>
-                    <option value="DECIMAL">DECIMAL</option>
-                    <option value="DATE">DATE</option>
-                    <option value="BOOLEAN">BOOLEAN</option>
+                <option value="TEXT">TEXT</option>
+                <option value="INTEGER">INTEGER</option>
+                <option value="DECIMAL">DECIMAL</option>
+                <option value="DATE">DATE</option>
+                <option value="BOOLEAN">BOOLEAN</option>
 
-                </select>
+            </select>
 
-                <br><br>
+            <br><br>
 
-                <button
-                    class="add-btn bold"
-                    type="submit">
+            <button class="add-btn bold" type="submit">
 
-                    {{translations.save}}
+                {{translations.save}}
 
-                </button>
+            </button>
 
-            </form>
+        </form>
 
-        </div>
+    </div>
 
-        <div id="columndeletelay"></div>
+    <div id="columndeletelay"></div>
 
-        <div id="columnDeletePanel">
+    <div id="columnDeletePanel">
 
-            <span  id="closeDeleteColumnBtn">✖</span>
+        <span id="closeDeleteColumnBtn">✖</span>
 
-            <h2>{{translations.delete_column}}</h2> <br>
+        <h2>{{translations.delete_column}}</h2> <br>
 
-            <form id="columnDeleteForm" method="POST">
+        <form id="columnDeleteForm" method="POST">
 
-                <label>{{translations.select_column}}</label><br>
+            <label>{{translations.select_column}}</label><br>
 
-                <select
-                    id="columnDeleteSelect"
-                    class="beautifySelect"
-                    onchange="fillDeleteColumn()">
+            <select id="columnDeleteSelect" class="beautifySelect" onchange="fillDeleteColumn()">
 
-                    {% for c in custom_columns %}
-                        <option
-                            value="{{ c.id }}"
-                            data-name="{{ c.column_name }}"
-                            data-type="{{ c.data_type }}">
-                            {{ c.column_name }}
-                        </option>
-                    {% endfor %}
+                {% for c in custom_columns %}
+                <option value="{{ c.id }}" data-name="{{ c.column_name }}" data-type="{{ c.data_type }}">
+                    {{ c.column_name }}
+                </option>
+                {% endfor %}
 
-                </select>
+            </select>
 
-                <br><br>
+            <br><br>
 
-                <button
-                    class="delete-btn bold"
-                    type="submit">
+            <button class="delete-btn bold" type="submit">
 
-                    {{translations.delete}}
+                {{translations.delete}}
 
-                </button>
+            </button>
 
-            </form>
+        </form>
 
-        </div>
+    </div>
 
 
     <div id="searchSettingsOverlay">
@@ -475,7 +435,7 @@
                 <div class="search-fields">
                     <label id="sl1">
                         <input type="checkbox" name="fields" value="name" checked>
-                        {{translations.e_server}} 
+                        {{translations.e_server}}
                     </label>
 
                     <label id="sl2">
@@ -526,12 +486,10 @@
                     </label>
 
                     {% for col in custom_columns %}
-                        <label>
-                            <input type="checkbox" 
-                                name="fields" 
-                                value="custom_{{ col.id }}" checked>
-                            {{ col.column_name }}
-                        </label>
+                    <label>
+                        <input type="checkbox" name="fields" value="custom_{{ col.id }}" checked>
+                        {{ col.column_name }}
+                    </label>
                     {% endfor %}
 
                 </div>
@@ -560,7 +518,7 @@
                     </div>
                 </div>
 
-                
+
 
             </div>
 
@@ -579,17 +537,26 @@
 
                 <div class="table-fields">
 
-                    <label id="ts1"><input type="checkbox" data-col="name" checked class="columnToggle">{{translations.e_server}}</label>
-                    <label id="ts2"><input type="checkbox" data-col="disk" checked class="columnToggle"> {{translations.e_disk}}</label>
-                    <label id="ts3"><input type="checkbox" data-col="os" checked class="columnToggle"> {{translations.os}}</label>
-                    <label id="ts4"><input type="checkbox" data-col="ram" checked class="columnToggle">{{translations.ram}}</label>
-                    <label id="ts5"><input type="checkbox" data-col="ip" checked class="columnToggle"> {{translations.ip}}</label>
-                    <label id="ts6"><input type="checkbox" data-col="desc" checked class="columnToggle"> {{translations.description}}</label>
-                    <label id="ts7"><input type="checkbox" data-col="cpu" checked class="columnToggle"> {{translations.cpu}}</label>
-                    <label id="ts8"><input type="checkbox" data-col="date" checked class="columnToggle"> {{translations.date}}</label>
+                    <label id="ts1"><input type="checkbox" data-col="name" checked
+                            class="columnToggle">{{translations.e_server}}</label>
+                    <label id="ts2"><input type="checkbox" data-col="disk" checked class="columnToggle">
+                        {{translations.e_disk}}</label>
+                    <label id="ts3"><input type="checkbox" data-col="os" checked class="columnToggle">
+                        {{translations.os}}</label>
+                    <label id="ts4"><input type="checkbox" data-col="ram" checked
+                            class="columnToggle">{{translations.ram}}</label>
+                    <label id="ts5"><input type="checkbox" data-col="ip" checked class="columnToggle">
+                        {{translations.ip}}</label>
+                    <label id="ts6"><input type="checkbox" data-col="desc" checked class="columnToggle">
+                        {{translations.description}}</label>
+                    <label id="ts7"><input type="checkbox" data-col="cpu" checked class="columnToggle">
+                        {{translations.cpu}}</label>
+                    <label id="ts8"><input type="checkbox" data-col="date" checked class="columnToggle">
+                        {{translations.date}}</label>
 
                     {% for col in custom_columns %}
-                        <label><input type="checkbox" data-col="custom_{{ col.id }}" checked class="columnToggle"> {{ col.column_name }}</label>
+                    <label><input type="checkbox" data-col="custom_{{ col.id }}" checked class="columnToggle"> {{
+                        col.column_name }}</label>
                     {% endfor %}
 
                 </div>
@@ -602,11 +569,12 @@
 
                     <button class="delete-btn" id="deleteColumnBtn" title="{{translations.delete_column}}">
                         ➖
-                    </button> 
-                        
-                    
+                    </button>
 
-                    <button id="editColumnPanelBtn" class="beautify" title="{{translations.e_column}}" onclick="openColumnPanel()">
+
+
+                    <button id="editColumnPanelBtn" class="beautify" title="{{translations.e_column}}"
+                        onclick="openColumnPanel()">
                         ✏️
                     </button>
 
