@@ -189,7 +189,7 @@ body {
 
 .lang-container{
     height: 100%;
-    width: calc(99% - (12px + 12px + 145.6px + 138.4px + 131.2px + 12px + 105.6px + 28.8px));
+    width: calc(99% - (12px + 12px + 145.6px + 138.4px + 131.2px + 105.6px));
 }
 
 #langButton {
@@ -1560,22 +1560,4 @@ margin-bottom:25px;
 
 .database-action-btn:active{
     transform:scale(.98);
-}
-
-.database-offline{
-    background:#dc2626 !important;
-    color:white !important;
-}
-
-.database-offline:hover{
-    background:#b91c1c !important;
-}
-
-.database-offline i{
-    color:#fff;
-}
-
-.db-warning{
-    margin-left:8px;
-    font-size:13px;
 }
