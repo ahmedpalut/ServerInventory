@@ -59,16 +59,11 @@
             {{ translations.dashboard }}
         </a>
 
-        <a href="{{ url_for('database') }}"
-            class="nav-item {% if request.endpoint == 'database' %}active{% endif %} {% if not is_connected %}database-offline{% endif %}">
+        <a href="{{ url_for('database') }}" class="nav-item {% if request.endpoint == 'database' %}active{% endif %}">
 
             <i class="fa-solid fa-database"></i>
 
             {{ translations.database }}
-
-            {% if not is_connected %}
-            <i class="fa-solid fa-circle-exclamation db-warning"></i>
-            {% endif %}
         </a>
 
         <a href="{{ url_for('logs') }}" class="nav-item {% if request.endpoint == 'logs' %}active{% endif %}">
@@ -80,8 +75,11 @@
             <a href="/change_language/{{ 'en' if lang == 'tr' else 'tr' }}" id="langButton">
                 {{ 'EN' if lang == 'tr' else 'TR' }}
             </a>
-        </div>
 
+            <button class="beautify" id="dbSettingsBtn" onclick="openDatabasePanel()">
+                DB Ayarları
+            </button>
+        </div>
 
     </nav>
 
@@ -132,11 +130,15 @@
     </div>
     {% endif %}
 
-    <div class="database-panel">
+    <div class="database-panel" id="databaseSettingsPanel">
 
         <div class="database-panel-header">
             <i class="fa-solid fa-sliders"></i>
             <h2>{{ translations.database_management }}</h2>
+
+            <button type="button" id="closeDbSettings">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
 
         <div class="database-panel-content">
@@ -175,6 +177,33 @@
                         <i class="fa-solid fa-database"></i>
                         <span>Yedekleme</span>
                     </div>
+
+                    <div class="database-card-content">
+
+                        <a href="{{ url_for('backup_database') }}" class="database-action-btn">
+                            <i class="fa-solid fa-file-export"></i>
+                            SQL Olarak Dışa Aktar
+                        </a>
+
+                        <form action="{{ url_for('database_restore') }}" method="POST" enctype="multipart/form-data">
+
+                            <input type="file" id="database_file" name="database_file" accept=".sql" hidden>
+
+                            <label for="database_file" class="database-action-btn" id="sqlsec">
+                                <i class="fa-solid fa-file-import"></i>
+                                SQL Olarak İçeri Aktar
+                            </label>
+
+                            <span id="selected_file"></span>
+
+                            <button type="submit" class="database-action-btn">
+                                <i class="fa-solid fa-database"></i>
+                                Veritabanını Geri Yükle
+                            </button>
+
+                        </form>
+
+                    </div>
                 </div>
 
                 <div class="database-card">
@@ -191,6 +220,8 @@
     </div>
 
 
+
+    <script src="{{url_for('static', filename='js/database.js')}}"></script>
 </body>
 
 </html>

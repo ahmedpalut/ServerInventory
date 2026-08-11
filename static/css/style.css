@@ -189,8 +189,12 @@ body {
 
 .lang-container{
     height: 100%;
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 12px;
     width: calc(99% - (12px + 12px + 145.6px + 138.4px + 131.2px + 105.6px));
 }
+
 
 #langButton {
     background:#2563eb;
@@ -202,7 +206,6 @@ body {
     font-weight: bold;
     padding:12px 20px;
     font-weight: normal;
-    float: right;
 }
 
 #langButton:hover{
@@ -1529,35 +1532,107 @@ margin-bottom:25px;
 }
 
 .database-card-content{
+    display: flex;
+    flex-direction: column;
     margin-top:30px;
+    gap: 20px;
 }
 
-.database-action-btn{
-    width:100%;
-    padding:14px 18px;
-
-    background:#2563eb;
-    color:white;
-
-    border:none;
-    border-radius:10px;
-
-    font-size:16px;
-    font-weight:600;
-
-    cursor:pointer;
-    transition:.25s;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:10px;
+#sqlsec {
+    transition: 0.5s;
+    cursor: pointer;
 }
 
-.database-action-btn:hover{
-    background:#3b82f6;
+#sqlsec:hover {
+    transform: translateY(-2px);
 }
 
-.database-action-btn:active{
-    transform:scale(.98);
+#selected_file {
+    margin: 0;
+    padding: 0 5px;
+    font-size: 14px;
+    opacity: 0.8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.database-action-btn {
+    width: 100%;
+    padding: 14px 18px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.25s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    box-sizing: border-box;
+}
+
+.database-action-btn:hover {
+    transform: translateY(-2px);
+}
+
+.database-action-btn:active {
+    transform: scale(0.98);
+}
+
+.database-card-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.db-settings-container {
+    display: flex;
+    align-items: center;
+}
+
+#dbSettingsButton {
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: .25s;
+}
+
+#dbSettingsButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#databaseSettingsPanel {
+    display: none;
+    position: relative;
+}
+
+#databaseSettingsPanel.active {
+    display: block;
+}
+
+#closeDbSettings {
+    margin-left: auto;
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 6px;
+}
+
+#closeDbSettings:hover {
+    background: rgba(255, 255, 255, 0.1);
 }

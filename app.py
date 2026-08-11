@@ -1,6 +1,5 @@
 from flask import *
-import mysql.connector
-import os
+from datetime import datetime
 from dotenv import load_dotenv
 from ldap3 import Server, Connection, SUBTREE, SIMPLE, NONE
 from functools import wraps
@@ -8,8 +7,13 @@ import json
 import win32serviceutil
 import win32service
 import time
+import subprocess
+import mysql.connector
+import os
+import re
 
 load_dotenv()
+
 
 def get_db():
     try:
@@ -18,11 +22,12 @@ def get_db():
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_NAME"),
-            connect_timeout=2
+            connect_timeout=2,
         )
         return conn, conn.cursor(dictionary=True), True
     except Exception:
         return None, None, False
+
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
@@ -35,6 +40,7 @@ def get_translation(lang="tr"):
     with open(f"static/js/translations/{lang}.json", encoding="utf-8") as file:
         return json.load(file)
 
+
 def add_log(cursor, username, action, target="", description=""):
     cursor.execute(
         """
@@ -42,8 +48,9 @@ def add_log(cursor, username, action, target="", description=""):
         (username, action, target, description)
         VALUES (%s,%s,%s,%s)
         """,
-        (username, action, target, description)
+        (username, action, target, description),
     )
+
 
 @app.route("/change_language/<lang>")
 def change_language(lang):
@@ -61,16 +68,197 @@ def admin_required(f):
             flash(translations["permission"])
             return redirect(url_for("index"))
         return f(*args, **kwargs)
+
     return decorated_function
+
+@app.route("/database/restore", methods=["POST"])
+@admin_required
+def database_restore():
+
+    mysql_path = r"C:\Program Files\MySQL\MySQL Server 9.7\bin\mysql.exe"
+
+    db_host = os.getenv("DB_HOST", "localhost")
+    db_port = os.getenv("DB_PORT", "3306")
+    db_user = os.getenv("DB_USER", "root")
+    db_password = os.getenv("DB_PASSWORD", "")
+    db_name = os.getenv("DB_NAME")
+
+    file = request.files.get("database_file")
+
+    if not file or file.filename == "":
+        flash("SQL dosyası seçilmedi.")
+        return redirect(url_for("database"))
+
+    if not file.filename.lower().endswith(".sql"):
+        flash("Sadece .sql dosyaları yüklenebilir.")
+        return redirect(url_for("database"))
+
+    temp_path = os.path.join(
+        os.getcwd(),
+        "_restore_temp.sql"
+    )
+
+    try:
+        file.save(temp_path)
+
+        with open(temp_path, "r", encoding="utf-8-sig", errors="replace") as f:
+            sql_content = f.read()
+
+        sql_content = re.sub(
+            r"SET\s+@@GLOBAL\.GTID_PURGED\s*=\s*.*?;",
+            "",
+            sql_content,
+            flags=re.IGNORECASE | re.DOTALL
+        )
+
+        sql_content = re.sub(
+            r"SET\s+GLOBAL\.GTID_PURGED\s*=\s*.*?;",
+            "",
+            sql_content,
+            flags=re.IGNORECASE | re.DOTALL
+        )
+
+        sql_content = re.sub(
+            r"SET\s+@@GLOBAL\.GTID_PURGED\s*=\s*/\*![0-9]+\s*\+\s*\*/\s*'.*?';",
+            "",
+            sql_content,
+            flags=re.IGNORECASE | re.DOTALL
+        )
+
+        with open(temp_path, "w", encoding="utf-8") as f:
+            f.write(sql_content)
+
+        command = [
+            mysql_path,
+            "-h", db_host,
+            "-P", db_port,
+            "-u", db_user,
+            f"-p{db_password}",
+            db_name
+        ]
+
+        with open(temp_path, "r", encoding="utf-8") as sql_file:
+            result = subprocess.run(
+                command,
+                stdin=sql_file,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace"
+            )
+
+        if result.returncode != 0:
+
+            error_message = result.stderr.strip()
+
+            if not error_message:
+                error_message = "Veritabanı geri yüklenemedi."
+
+            flash(f"Restore error: {error_message}")
+            return redirect(url_for("database"))
+
+        flash("Veritabanı başarıyla geri yüklendi.")
+        return redirect(url_for("database"))
+
+    except Exception as e:
+
+        flash(f"Restore error: {e}")
+        return redirect(url_for("database"))
+
+    finally:
+
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
+
+@app.route("/backup_database")
+@admin_required
+def backup_database():
+
+    conn, cursor, is_connected = get_db()
+
+    if not is_connected:
+        flash("Veritabanına bağlı değil.")
+        return redirect(url_for("database"))
+
+    conn.close()
+
+    db_name = os.getenv("DB_NAME")
+    db_user = os.getenv("DB_USER")
+    db_password = os.getenv("DB_PASSWORD")
+    db_host = os.getenv("DB_HOST", "localhost")
+    db_port = os.getenv("DB_PORT", "3306")
+
+    filename = f"{db_name}_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.sql"
+    filepath = os.path.join(os.getcwd(), filename)
+
+    mysql_dump = r"C:\Program Files\MySQL\MySQL Server 9.7\bin\mysqldump.exe"
+
+    try:
+        command = [
+            mysql_dump,
+            f"--host={db_host}",
+            f"--port={db_port}",
+            f"--user={db_user}",
+            f"--password={db_password}",
+            "--set-gtid-purged=OFF",
+            "--routines",
+            "--triggers",
+            "--events",
+            "--single-transaction",
+            "--add-drop-table",
+            db_name
+        ]
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            result = subprocess.run(
+                command,
+                stdout=f,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace"
+            )
+
+        if result.returncode != 0:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+
+            error_message = result.stderr.strip()
+
+            if not error_message:
+                error_message = "Yedek oluşturulamadı."
+
+            flash(f"Backup error: {error_message}")
+            return redirect(url_for("database"))
+
+        return send_file(
+            filepath,
+            as_attachment=True,
+            download_name=filename,
+            mimetype="application/sql"
+        )
+
+    except Exception as e:
+        print("Backup error:", e)
+
+        if os.path.exists(filepath):
+            os.remove(filepath)
+
+        flash(f"Backup error: {e}")
+        return redirect(url_for("database"))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     session["user"] = "apalut"
     session["role"] = "admin"
     session["is_admin"] = True
-    
-    return(redirect(url_for("index")))
-    
+
+    return redirect(url_for("index"))
+
     # lang = session.get("lang", "tr")
     # translations = get_translation(lang)
     # if request.method == "POST":
@@ -110,11 +298,25 @@ def login():
     #                     if "CN=Test Admin," in group or "CN=Domain Admins," in group:
     #                         role = "Admin"
 
-    #             session.clear()
-    #             session["user"] = username
-    #             session["role"] = role
-    #             session["is_admin"] = role == "Admin"
-    #             flash(translations["login_s"])
+                # session.clear()
+                # session["user"] = username
+                # session["role"] = role
+                # session["is_admin"] = role == "Admin"
+                # flash(translations["login_s"])
+    
+                # conn_db, cursor, is_connected = get_db()
+
+                # if is_connected:
+                #     add_log(
+                #         cursor,
+                #         username,
+                #         "Giriş",
+                #         "Sunucu Envanteri",
+                #         f"{username}, sunucu envanter sitesine giriş yaptı."
+                #     )
+                #     conn_db.commit()
+                #     conn_db.close()
+                    
     #             return redirect(url_for("index"))
     #         else:
     #             flash(translations["name_error"])
@@ -140,6 +342,7 @@ def logout():
     session.clear()
     flash(translations["logout_s"])
     return redirect(url_for("login"))
+
 
 @app.route("/start_database", methods=["POST"])
 @admin_required
@@ -181,30 +384,32 @@ def start_database():
 
     return redirect(url_for("database"))
 
+
 @app.route("/logs")
 def logs():
     if "user" not in session:
         return redirect(url_for("login"))
-    
+
     lang = session.get("lang", "tr")
     translations = get_translation(lang)
-    
+
     conn, cursor, is_connected = get_db()
-    
+
     if not is_connected:
         return render_template(
-        "logs.html",
-        translations=translations,
-        lang=lang,
-        username=session.get("user"),
-        role=session.get("role"),
-        is_admin=session.get("is_admin"),
-        is_connected=False,
-        logs=[]
-    )
-        
+            "logs.html",
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            role=session.get("role"),
+            is_admin=session.get("is_admin"),
+            is_connected=False,
+            logs=[],
+        )
+
     try:
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 username,
                 action,
@@ -214,7 +419,8 @@ def logs():
             FROM logs
             ORDER BY created_at DESC
             LIMIT 100
-        """)
+        """
+        )
 
         logs = cursor.fetchall()
 
@@ -228,9 +434,9 @@ def logs():
             role=session.get("role"),
             is_admin=session.get("is_admin"),
             is_connected=True,
-            logs=logs
+            logs=logs,
         )
-        
+
     except Exception:
         if conn:
             conn.close()
@@ -243,9 +449,10 @@ def logs():
             role=session.get("role"),
             is_admin=session.get("is_admin"),
             is_connected=False,
-            logs=[]
+            logs=[],
         )
-        
+
+
 @app.route("/")
 def index():
     if "user" not in session:
@@ -380,7 +587,7 @@ def dashboard():
             total_cpu=0,
             win_percent=0,
             other_percent=0,
-            top_servers=[]
+            top_servers=[],
         )
 
     try:
@@ -517,8 +724,18 @@ def dashboard():
         date_stats = cursor.fetchall()
 
         months = [
-            "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
-            "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
+            "Ocak",
+            "Şubat",
+            "Mart",
+            "Nisan",
+            "Mayıs",
+            "Haziran",
+            "Temmuz",
+            "Ağustos",
+            "Eylül",
+            "Ekim",
+            "Kasım",
+            "Aralık",
         ]
 
         date_labels = []
@@ -535,8 +752,14 @@ def dashboard():
         disk_data = cursor.fetchall()
 
         disk_labels = [
-            "0-100 GB", "100-250 GB", "250-500 GB", "500 GB-1 TB",
-            "1-2 TB", "2-5 TB", "5-10 TB", "10+ TB"
+            "0-100 GB",
+            "100-250 GB",
+            "250-500 GB",
+            "500 GB-1 TB",
+            "1-2 TB",
+            "2-5 TB",
+            "5-10 TB",
+            "10+ TB",
         ]
 
         disk_values = [0] * len(disk_labels)
@@ -605,7 +828,7 @@ def dashboard():
             total_cpu=total_cpu,
             win_percent=win_percent,
             other_percent=other_percent,
-            top_servers=top_servers
+            top_servers=top_servers,
         )
     except Exception:
         if conn:
@@ -639,7 +862,7 @@ def dashboard():
             total_cpu=0,
             win_percent=0,
             other_percent=0,
-            top_servers=[]
+            top_servers=[],
         )
 
 
@@ -667,15 +890,18 @@ def database():
             table_count=0,
             server_count=0,
             db_name="",
-            logs=[]
+            logs=[],
         )
 
     try:
-        
+
         cursor.execute("SELECT COUNT(*) AS total FROM servers")
         server_count = cursor.fetchone()["total"]
 
-        cursor.execute("SELECT COUNT(*) AS total FROM information_schema.tables WHERE table_schema = %s", (os.getenv("DB_NAME"),))
+        cursor.execute(
+            "SELECT COUNT(*) AS total FROM information_schema.tables WHERE table_schema = %s",
+            (os.getenv("DB_NAME"),),
+        )
         table_count = cursor.fetchone()["total"]
 
         cursor.execute(
@@ -685,7 +911,7 @@ def database():
             FROM information_schema.tables 
             WHERE table_schema = %s
             """,
-            (os.getenv("DB_NAME"),)
+            (os.getenv("DB_NAME"),),
         )
         db_size_row = cursor.fetchone()
         db_size = f"{db_size_row['size_mb'] or 0} MB"
@@ -704,7 +930,7 @@ def database():
             db_size=db_size,
             table_count=table_count,
             server_count=server_count,
-            db_name=os.getenv("DB_NAME")
+            db_name=os.getenv("DB_NAME"),
         )
 
     except Exception:
@@ -738,7 +964,8 @@ def edit(id):
         return redirect(url_for("index"))
 
     try:
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 name,
                 disk_gb,
@@ -750,7 +977,9 @@ def edit(id):
                 created_at
             FROM servers
             WHERE id=%s
-        """, (id,))
+        """,
+            (id,),
+        )
 
         old_server = cursor.fetchone()
 
@@ -774,10 +1003,7 @@ def edit(id):
         if request.form["server"] == "Yeni":
             os_name = request.form["isletim"]
 
-            cursor.execute(
-                "INSERT INTO os_types (name) VALUES (%s)",
-                (os_name,)
-            )
+            cursor.execute("INSERT INTO os_types (name) VALUES (%s)", (os_name,))
 
             conn.commit()
             os_type_id = cursor.lastrowid
@@ -785,10 +1011,7 @@ def edit(id):
         else:
             os_name = request.form["server"]
 
-            cursor.execute(
-                "SELECT id FROM os_types WHERE name=%s",
-                (os_name,)
-            )
+            cursor.execute("SELECT id FROM os_types WHERE name=%s", (os_name,))
 
             result = cursor.fetchone()
 
@@ -798,8 +1021,7 @@ def edit(id):
             os_type_id = result["id"]
 
         cursor.execute(
-            "SELECT name FROM os_types WHERE id=%s",
-            (old_server["os_type_id"],)
+            "SELECT name FROM os_types WHERE id=%s", (old_server["os_type_id"],)
         )
 
         old_os_result = cursor.fetchone()
@@ -808,52 +1030,38 @@ def edit(id):
         changes = []
 
         if str(old_server["name"] or "") != str(name):
-            changes.append(
-                f"Sunucu Adı: '{old_server['name']}' → '{name}'"
-            )
+            changes.append(f"Sunucu Adı: '{old_server['name']}' → '{name}'")
 
         if float(old_server["disk_gb"] or 0) != float(disk):
-            changes.append(
-                f"Disk: '{old_server['disk_gb']}' → '{disk}' GB"
-            )
+            changes.append(f"Disk: '{old_server['disk_gb']}' → '{disk}' GB")
 
         if str(old_os_name or "") != str(os_name):
-            changes.append(
-                f"İşletim Sistemi: '{old_os_name}' → '{os_name}'"
-            )
+            changes.append(f"İşletim Sistemi: '{old_os_name}' → '{os_name}'")
 
         if int(old_server["ram_g"] or 0) != int(ram):
-            changes.append(
-                f"RAM: '{old_server['ram_g']}' → '{ram}' GB"
-            )
+            changes.append(f"RAM: '{old_server['ram_g']}' → '{ram}' GB")
 
         if str(old_server["ip_address"] or "") != str(ip):
-            changes.append(
-                f"IP: '{old_server['ip_address']}' → '{ip}'"
-            )
+            changes.append(f"IP: '{old_server['ip_address']}' → '{ip}'")
 
         if str(old_server["usage_project"] or "") != str(project):
-            changes.append(
-                f"Açıklama: '{old_server['usage_project']}' → '{project}'"
-            )
+            changes.append(f"Açıklama: '{old_server['usage_project']}' → '{project}'")
 
         if int(old_server["core_amount"] or 0) != int(cpu):
-            changes.append(
-                f"CPU: '{old_server['core_amount']}' → '{cpu}'"
-            )
+            changes.append(f"CPU: '{old_server['core_amount']}' → '{cpu}'")
 
         old_date = str(old_server["created_at"] or "")
         new_date = str(date or "")
 
         if old_date != new_date:
-            changes.append(
-                f"Tarih: '{old_date}' → '{new_date}'"
-            )
+            changes.append(f"Tarih: '{old_date}' → '{new_date}'")
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id, column_name, data_type
             FROM custom_columns
-        """)
+        """
+        )
 
         custom_columns = cursor.fetchall()
 
@@ -867,41 +1075,38 @@ def edit(id):
             if data_type == "BOOLEAN":
                 value = "True" if value else "False"
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT id, value
                 FROM custom_values
                 WHERE server_id=%s AND column_id=%s
-            """, (id, column_id))
+            """,
+                (id, column_id),
+            )
 
             old_value_result = cursor.fetchone()
 
-            old_value = (
-                old_value_result["value"]
-                if old_value_result
-                else ""
-            )
+            old_value = old_value_result["value"] if old_value_result else ""
 
             new_value = value if value not in ("", None) else ""
 
             if str(old_value) != str(new_value):
-                changes.append(
-                    f"{column_name}: '{old_value}' → '{new_value}'"
-                )
+                changes.append(f"{column_name}: '{old_value}' → '{new_value}'")
 
             if value not in ("", None):
                 if old_value_result:
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         UPDATE custom_values
                         SET value=%s
                         WHERE server_id=%s
                         AND column_id=%s
-                    """, (
-                        value,
-                        id,
-                        column_id
-                    ))
+                    """,
+                        (value, id, column_id),
+                    )
                 else:
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         INSERT INTO custom_values
                         (
                             server_id,
@@ -909,20 +1114,18 @@ def edit(id):
                             value
                         )
                         VALUES (%s, %s, %s)
-                    """, (
-                        id,
-                        column_id,
-                        value
-                    ))
+                    """,
+                        (id, column_id, value),
+                    )
             elif old_value_result:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     DELETE FROM custom_values
                     WHERE server_id=%s
                     AND column_id=%s
-                """, (
-                    id,
-                    column_id
-                ))
+                """,
+                    (id, column_id),
+                )
 
         sql = """
         UPDATE servers
@@ -938,28 +1141,12 @@ def edit(id):
         WHERE id=%s
         """
 
-        values = (
-            name,
-            disk,
-            ram,
-            ip,
-            project,
-            cpu,
-            os_type_id,
-            date,
-            id
-        )
+        values = (name, disk, ram, ip, project, cpu, os_type_id, date, id)
 
         cursor.execute(sql, values)
 
         for change in changes:
-            add_log(
-                cursor,
-                session["user"],
-                "Düzenle",
-                name,
-                change
-            )
+            add_log(cursor, session["user"], "Düzenle", name, change)
 
         conn.commit()
         conn.close()
@@ -973,12 +1160,7 @@ def edit(id):
         if conn:
             conn.close()
 
-        flash(
-            translations.get(
-                "error",
-                "Error updating server"
-            )
-        )
+        flash(translations.get("error", "Error updating server"))
 
         return redirect(url_for("index"))
 
@@ -997,18 +1179,18 @@ def delete(id):
     try:
         cursor.execute("SELECT name FROM servers WHERE id=%s", (id,))
         server = cursor.fetchone()
-        
+
         cursor.execute("DELETE FROM custom_values WHERE server_id = %s", (id,))
         cursor.execute("DELETE FROM servers WHERE id = %s", (id,))
-        
+
         add_log(
             cursor,
             session["user"],
             "Sunucu Sil",
             server["name"],
-            f"'{server['name']}' sunucusu silindi."
+            f"'{server['name']}' sunucusu silindi.",
         )
-        
+
         conn.commit()
         conn.close()
 
@@ -1064,7 +1246,16 @@ def add():
             (name, disk_gb, ram_g, core_amount, ip_address, os_type_id, usage_project, created_at)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
-            values = (name, disk_gb, ram_g, core_amount, ip_address, os_type_id, usage_project, created_at)
+            values = (
+                name,
+                disk_gb,
+                ram_g,
+                core_amount,
+                ip_address,
+                os_type_id,
+                usage_project,
+                created_at,
+            )
 
             cursor.execute(sql, values)
             server_id = cursor.lastrowid
@@ -1082,13 +1273,13 @@ def add():
                         "INSERT INTO custom_values (server_id, column_id, value) VALUES (%s, %s, %s)",
                         (server_id, column["id"], value),
                     )
-                    
+
             add_log(
                 cursor,
                 session["user"],
                 "Sunucu Ekle",
                 name,
-                f"'{name}' sunucusu eklendi."
+                f"'{name}' sunucusu eklendi.",
             )
 
             conn.commit()
@@ -1100,7 +1291,9 @@ def add():
         cursor.execute("SELECT name FROM os_types ORDER BY name")
         os_list = cursor.fetchall()
 
-        cursor.execute("SELECT id, column_name, data_type FROM custom_columns ORDER BY id")
+        cursor.execute(
+            "SELECT id, column_name, data_type FROM custom_columns ORDER BY id"
+        )
         custom_columns = cursor.fetchall()
         conn.close()
 
@@ -1204,11 +1397,17 @@ def search():
                         if disk_unit == "TB":
                             limit *= 1024
                         if disk_compare == "equal":
-                            conditions.append("CAST(servers.disk_gb AS DECIMAL(10,2)) = CAST(%s AS DECIMAL(10,2))")
+                            conditions.append(
+                                "CAST(servers.disk_gb AS DECIMAL(10,2)) = CAST(%s AS DECIMAL(10,2))"
+                            )
                         elif disk_compare == "gte":
-                            conditions.append("CAST(servers.disk_gb AS DECIMAL(10,2)) >= CAST(%s AS DECIMAL(10,2))")
+                            conditions.append(
+                                "CAST(servers.disk_gb AS DECIMAL(10,2)) >= CAST(%s AS DECIMAL(10,2))"
+                            )
                         elif disk_compare == "lte":
-                            conditions.append("CAST(servers.disk_gb AS DECIMAL(10,2)) <= CAST(%s AS DECIMAL(10,2))")
+                            conditions.append(
+                                "CAST(servers.disk_gb AS DECIMAL(10,2)) <= CAST(%s AS DECIMAL(10,2))"
+                            )
                         values.append(limit)
                     except ValueError:
                         pass
@@ -1315,15 +1514,15 @@ def addcolumn():
                 """,
                 (column_name, data_type),
             )
-            
+
             add_log(
                 cursor,
                 session["user"],
                 "Sütun Ekle",
                 column_name,
-                f"'{column_name}' sütunu eklendi, veri tipi={data_type}"
+                f"'{column_name}' sütunu eklendi, veri tipi={data_type}",
             )
-            
+
             conn.commit()
             conn.close()
 
@@ -1397,19 +1596,19 @@ def deleteColumn(id):
 
     try:
         cursor.execute("SELECT * FROM custom_columns WHERE id=%s", (id,))
-        column_name=cursor.fetchone()["column_name"]
-        
+        column_name = cursor.fetchone()["column_name"]
+
         cursor.execute("DELETE FROM custom_values WHERE column_id = %s", (id,))
         cursor.execute("DELETE FROM custom_columns WHERE id = %s", (id,))
-        
+
         add_log(
             cursor,
             session["user"],
             "Sütun Sil",
             column_name,
-            f"'{column_name}' sütunu silindi."
+            f"'{column_name}' sütunu silindi.",
         )
-        
+
         conn.commit()
         conn.close()
 
