@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ağ Cihazı Ekle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="top-bar">
+
+            <h1 id="title">Ağ Cihazı Ekle</h1>
+
+            <a href="/change_language/{{ 'en' if lang == 'tr' else 'tr' }}" id="langButton">
+                {{ 'EN' if lang == 'tr' else 'TR' }}
+            </a>
+
+        </div>
+
+
+        <form action="/addnetworkdevice" method="POST">
+
+
+            <label>Cihaz Adı</label>
+            <input type="text" name="name" required>
+
+
+            <label>Cihaz Türü</label>
+
+            <select name="device_type" class="beautifySelect" required>
+
+                <option value="">Cihaz türü seçin</option>
+
+                <option value="Switch">Switch</option>
+                <option value="Router">Router</option>
+                <option value="Firewall">Firewall</option>
+                <option value="Access Point">Access Point</option>
+                <option value="Modem">Modem</option>
+                <option value="Diğer">Diğer</option>
+
+            </select>
+
+
+            <label>Marka</label>
+            <input type="text" name="brand">
+
+
+            <label>Model</label>
+            <input type="text" name="model">
+
+
+            <label>Seri Numarası</label>
+            <input type="text" name="serial_number">
+
+
+            <label>IP Adresi</label>
+            <input type="text" name="ip_address">
+
+
+            <label>MAC Adresi</label>
+            <input type="text" name="mac_address">
+
+
+            <label>Lokasyon</label>
+            <input type="text" name="location">
+
+
+            <label>Durum</label>
+
+            <select name="status" class="beautifySelect">
+
+                <option value="Aktif">Aktif</option>
+                <option value="Pasif">Pasif</option>
+                <option value="Bakımda">Bakımda</option>
+                <option value="Arızalı">Arızalı</option>
+                <option value="Emekli">Emekli</option>
+
+            </select>
+
+
+            <label>Software Version</label>
+            <input type="text" name="software_version">
+
+
+            <label>Tarih</label>
+            <input type="date" name="created_at">
+
+
+            <label>Açıklama</label>
+            <input type="text" name="description">
+
+
+            <div class="buttons">
+
+                <button type="submit" id="saveBtn">
+                    Ekle
+                </button>
+
+                <a href="/networkdevices" id="cancelBtn">
+                    İptal
+                </a>
+
+            </div>
+
+
+        </form>
+
+    </div>
+
+</body>
+
+</html>

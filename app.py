@@ -11,6 +11,7 @@ import subprocess
 import mysql.connector
 import os
 import re
+import threading
 
 load_dotenv()
 
@@ -338,31 +339,40 @@ def login():
                 if is_connected:
                     client_ip = request.remote_addr
 
+                    import socket
+                    hostname = socket.gethostname()
+
                     cursor.execute("""
-                        SELECT hostname
+                        SELECT id
                         FROM clients
-                        WHERE username = %s AND ip_address = %s
-                    """, (username, client_ip))
+                        WHERE hostname = %s
+                    """, (hostname,))
 
                     client = cursor.fetchone()
 
                     if client:
+                        # Agent'ın oluşturduğu gerçek client kaydını güncelle
                         cursor.execute("""
                             UPDATE clients
-                            SET status = %s,
+                            SET username = %s,
                                 site_status = %s,
                                 last_seen = NOW()
-                            WHERE username = %s AND ip_address = %s
-                        """, ("online", "active", username, client_ip))
+                            WHERE id = %s
+                        """, (
+                            username,
+                            "active",
+                            client[0]
+                        ))
 
                     else:
                         cursor.execute("""
                             INSERT INTO clients
-                                (hostname, ip_address, username, os_name, status, site_status, last_seen)
+                                (hostname, ip_address, username, os_name,
+                                status, site_status, last_seen)
                             VALUES
                                 (%s, %s, %s, %s, %s, %s, NOW())
                         """, (
-                            "Unknown",
+                            hostname,
                             client_ip,
                             username,
                             None,
@@ -1239,7 +1249,7 @@ def edit(id):
         cursor.execute(sql, values)
 
         for change in changes:
-            add_log(cursor, session["user"], "Düzenle", name, change)
+            add_log(cursor, session["user"], "Sunucu Düzenle", name, change)
 
         conn.commit()
         conn.close()
@@ -1638,6 +1648,7 @@ def editcolumn(id):
     translations = get_translation(lang)
 
     conn, cursor, is_connected = get_db()
+
     if not is_connected:
         flash(translations.get("error", "Database disconnected"))
         return redirect(url_for("index"))
@@ -1646,9 +1657,36 @@ def editcolumn(id):
         column_name = request.form["columnName"].strip()
         data_type = request.form["dataType"]
 
-        cursor.execute("SELECT data_type FROM custom_columns WHERE id=%s", (id,))
+        cursor.execute(
+            """
+            SELECT column_name, data_type
+            FROM custom_columns
+            WHERE id=%s
+            """,
+            (id,),
+        )
+
         current = cursor.fetchone()
+
+        if not current:
+            conn.close()
+            flash(translations.get("error", "Column not found"))
+            return redirect(url_for("index"))
+
+        old_column_name = current["column_name"]
         old_data_type = current["data_type"]
+
+        changes = []
+
+        if str(old_column_name or "") != str(column_name):
+            changes.append(
+                f"Sütun Adı: '{old_column_name}' → '{column_name}'"
+            )
+
+        if str(old_data_type or "") != str(data_type):
+            changes.append(
+                f"Veri Tipi: '{old_data_type}' → '{data_type}'"
+            )
 
         cursor.execute(
             """
@@ -1660,19 +1698,37 @@ def editcolumn(id):
         )
 
         if old_data_type != data_type:
-            cursor.execute("DELETE FROM custom_values WHERE column_id=%s", (id,))
+            cursor.execute(
+                "DELETE FROM custom_values WHERE column_id=%s",
+                (id,),
+            )
+
             flash(translations["update_column_override"])
         else:
             flash(translations["update_column"])
 
+        for change in changes:
+            add_log(
+                cursor,
+                session["user"],
+                "Sütun Düzenle",
+                column_name,
+                change
+            )
+
         conn.commit()
         conn.close()
+
         return redirect(url_for("index"))
 
-    except Exception:
+    except Exception as e:
+        print(e)
+
         if conn:
             conn.close()
+
         flash(translations.get("error", "Database error"))
+
         return redirect(url_for("index"))
 
 
@@ -1775,6 +1831,179 @@ def clients():
         flash("Client bilgileri alınamadı.")
         return redirect(url_for("index"))
     
+@app.route("/networkdevices")
+def networkdevices():
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    username = session.get("user", "Unknown")
+    is_admin = session.get("is_admin", False)
+
+    conn, cursor, is_connected = get_db()
+
+    if not is_connected:
+        flash(translations.get("error", "Database disconnected"))
+        return render_template(
+            "networkdevices.html",
+            translations=translations,
+            lang=lang,
+            username=username,
+            is_admin=is_admin,
+            devices=[]
+        )
+
+    try:
+        cursor.execute("""
+            SELECT
+                id,
+                name,
+                device_type,
+                brand,
+                model,
+                serial_number,
+                ip_address,
+                mac_address,
+                location,
+                status,
+                software_version,
+                description,
+                created_at,
+                updated_at
+            FROM network_devices
+            ORDER BY id DESC
+        """)
+
+        devices = cursor.fetchall()
+
+        conn.close()
+
+        return render_template(
+            "networkdevices.html",
+            translations=translations,
+            lang=lang,
+            username=username,
+            is_admin=is_admin,
+            devices=devices
+        )
+
+    except Exception as e:
+        print(e)
+
+        if conn:
+            conn.close()
+
+        flash(translations.get("error", "Database error"))
+
+        return render_template(
+            "networkdevices.html",
+            translations=translations,
+            lang=lang,
+            username=username,
+            is_admin=is_admin,
+            devices=[]
+        )
+    
+@app.route("/addnetworkdevice", methods=["POST"])
+@admin_required
+def addnetworkdevice():
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    conn, cursor, is_connected = get_db()
+
+    if not is_connected:
+        flash(translations.get("error", "Database disconnected"))
+        return redirect(url_for("networkdevices"))
+
+    try:
+        name = request.form["name"].strip()
+        device_type = request.form["device_type"]
+        brand = request.form["brand"].strip()
+        model = request.form["model"].strip()
+        serial_number = request.form["serial_number"].strip()
+        ip_address = request.form["ip_address"].strip()
+        mac_address = request.form["mac_address"].strip()
+        location = request.form["location"].strip()
+        status = request.form["status"]
+        software_version = request.form["software_version"].strip()
+        description = request.form["description"].strip()
+        created_at = request.form["created_at"] or None
+
+        cursor.execute(
+            """
+            INSERT INTO network_devices
+            (
+                name,
+                device_type,
+                brand,
+                model,
+                serial_number,
+                ip_address,
+                mac_address,
+                location,
+                status,
+                software_version,
+                description,
+                created_at,
+                updated_at
+            )
+            VALUES
+            (
+                %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, NOW()
+            )
+            """,
+            (
+                name,
+                device_type,
+                brand,
+                model,
+                serial_number,
+                ip_address,
+                mac_address,
+                location,
+                status,
+                software_version,
+                description,
+                created_at,
+            ),
+        )
+
+        add_log(
+            cursor,
+            session["user"],
+            "Ekle",
+            name,
+            f"Ağ cihazı eklendi: {name}"
+        )
+
+        conn.commit()
+        conn.close()
+
+        flash("Ağ cihazı başarıyla eklendi.")
+        return redirect(url_for("networkdevices"))
+
+    except Exception as e:
+        print(e)
+
+        if conn:
+            conn.close()
+
+        flash(translations.get("error", "Error adding network device"))
+        return redirect(url_for("networkdevices"))   
+    
+@app.route("/addnetworkdevice")
+@admin_required
+def addnetworkdevice_page():
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    return render_template(
+        "addnetworkdevice.html",
+        translations=translations,
+        lang=lang
+    )
+    
 @app.route("/api/client/update", methods=["POST"])
 def client_update():
     data = request.get_json()
@@ -1849,5 +2078,32 @@ def client_update():
         cursor.close()
         conn.close()
 
+def check_offline_clients():
+    while True:
+        try:
+            conn, cursor, is_connected = get_db()
+
+            if is_connected:
+                cursor.execute("""
+                    UPDATE clients
+                    SET status = 'offline'
+                    WHERE last_seen < NOW() - INTERVAL 60 SECOND
+                """)
+
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+        except Exception as e:
+            print("Offline kontrol hatası:", e)
+
+        time.sleep(30)
+
 if __name__ == "__main__":
+    offline_thread = threading.Thread(
+        target=check_offline_clients,
+        daemon=True
+    )
+    offline_thread.start()
+
     app.run(host="0.0.0.0", port=5000, debug=True)

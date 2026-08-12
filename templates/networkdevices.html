@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ağ Cihazları</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+
+<body>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div id="toast">
+        {{ messages[0] }}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+
+    <div class="page-header">
+
+        <div class="header-left">
+
+            <h1 id="title">
+                {{ translations.title }}
+            </h1>
+
+
+            <div class="user-info">
+
+                <i class="fa-solid fa-user"></i>
+
+                {{ username }}
+
+                {% if is_admin %}
+                - {{ translations.admin }}
+                {% else %}
+                - {{ translations.visitor }}
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <div class="header-buttons">
+
+            <a href="/logout" title="{{ translations.logout }}" class="logout-btn"
+                onclick="return confirm('{{ translations.logout_confirm }}')">
+
+                <i class="fa-solid fa-right-from-bracket"></i>
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    {% include 'navbar.html' %}
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Cihaz Adı</th>
+                    <th>Tür</th>
+                    <th>Marka</th>
+                    <th>Model</th>
+                    <th>Seri Numarası</th>
+                    <th>IP Adresi</th>
+                    <th>MAC Adresi</th>
+                    <th>Lokasyon</th>
+                    <th>Durum</th>
+                    <th>Software Version</th>
+                    <th>Oluşturulma</th>
+                    <th>Son Güncelleme</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for device in devices %}
+
+                <tr>
+
+                    <td>{{ device.name }}</td>
+
+                    <td>{{ device.device_type }}</td>
+
+                    <td>{{ device.brand }}</td>
+
+                    <td>{{ device.model }}</td>
+
+                    <td>{{ device.serial_number }}</td>
+
+                    <td>{{ device.ip_address }}</td>
+
+                    <td>{{ device.mac_address }}</td>
+
+                    <td>{{ device.location }}</td>
+
+                    <td>{{ device.status }}</td>
+
+                    <td>{{ device.software_version }}</td>
+
+                    <td>{{ device.created_at or '-' }}</td>
+
+                    <td>{{ device.updated_at or '-' }}</td>
+
+                </tr>
+
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="12" style="text-align: center;">
+                        Henüz ağ cihazı bulunmuyor.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+</body>
+
+</html>

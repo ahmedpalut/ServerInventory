@@ -1,0 +1,53 @@
+<nav class="navbar">
+
+    <a href="{{ url_for('index') }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+        <i class="fa-solid fa-server"></i>
+        {{ translations.inventory }}
+    </a>
+
+    <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+        <i class="fa-solid fa-chart-line"></i>
+        {{ translations.dashboard }}
+    </a>
+
+    <a href="{{ url_for('database') }}" class="nav-item {% if request.endpoint == 'database' %}active{% endif %}">
+        <i class="fa-solid fa-database"></i>
+        {{ translations.database }}
+    </a>
+
+    <a href="{{ url_for('clients') }}" class="nav-item {% if request.endpoint == 'clients' %}active{% endif %}">
+        <i class="fa-solid fa-desktop"></i>
+        <span>Clients</span>
+    </a>
+
+    <a href="{{ url_for('logs') }}" class="nav-item {% if request.endpoint == 'logs' %}active{% endif %}">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        {{ translations.logs }}
+    </a>
+
+    <a href="{{ url_for('networkdevices') }}"
+        class="nav-item {% if request.endpoint == 'networkdevices' %}active{% endif %}">
+        <i class="fa-solid fa-network-wired"></i>
+        Ağ Cihazları
+    </a>
+
+    <a href="/change_language/{{ 'en' if lang == 'tr' else 'tr' }}" id="langButton">
+        {{ 'EN' if lang == 'tr' else 'TR' }}
+    </a>
+
+    {% if request.endpoint == 'database' %}
+    <button class="beautify" id="dbSettingsBtn" onclick="openDatabasePanel()">
+        <i class="fa-solid fa-cog"></i>
+        DB Ayarları
+    </button>
+    {% endif %}
+
+    {% if is_admin %}
+        {% if request.endpoint == 'networkdevices' %}
+        <a href="{{ url_for('addnetworkdevice_page') }}" class="add-btn" id="addNetworkDevice">
+           ➕ Ağ Cihazı Ekle
+        </a>
+        {% endif %}
+    {% endif %}
+
+</nav>

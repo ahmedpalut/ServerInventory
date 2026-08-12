@@ -187,15 +187,6 @@ body {
     margin-bottom:25px;
 }
 
-.lang-container{
-    height: 100%;
-    display: flex;
-    flex-direction: row-reverse;
-    gap: 12px;
-    width: calc(99% - (12px + 12px + 145.6px + 138.4px + 131.2px + 105.6px + 111.2px + 12px));
-}
-
-
 #langButton {
     background:#2563eb;
     color:white;
@@ -206,11 +197,19 @@ body {
     font-weight: bold;
     padding:12px 20px;
     font-weight: normal;
+    margin-left: auto;
 }
 
 #langButton:hover{
     background:#1d4ed8;
     transform:translateY(-2px);
+}
+
+#addNetworkDevice{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: normal;
 }
 
 #searchInput {
