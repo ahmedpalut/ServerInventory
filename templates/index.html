@@ -72,6 +72,11 @@
             {{ translations.database }}
         </a>
 
+        <a href="{{ url_for('clients') }}"  class="nav-item {% if request.endpoint == 'clients' %}active{% endif %}">
+            <i class="fa-solid fa-desktop"></i>
+            <span>Clients</span>
+        </a>
+
         <a href="{{ url_for('logs') }}" class="nav-item {% if request.endpoint == 'logs' %}active{% endif %}">
             <i class="fa-solid fa-clock-rotate-left"></i>
             {{ translations.logs }}

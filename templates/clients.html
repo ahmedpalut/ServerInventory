@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{translations.logs}}</title>
-    <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}">
+    <title>Clients</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
 </head>
 
 <body>
@@ -85,26 +86,51 @@
 
     </nav>
 
+    <h1>Clients</h1>
 
-    <table class="logs-table">
+    <table>
         <thead>
             <tr>
-                <th>{{translations.date}}</th>
-                <th>{{translations.username}}</th>
-                <th>İşlem</th>
-                <th>Hedef</th>
-                <th>{{translations.description}}</th>
+                <th>Client</th>
+                <th>IP</th>
+                <th>Kullanıcı</th>
+                <th>OS</th>
+                <th>Durum</th>
+                <th>Site Durumu</th>
+                <th>Son Görülme</th>
             </tr>
         </thead>
 
         <tbody>
-            {% for log in logs %}
+            {% for client in clients %}
             <tr>
-                <td>{{ log.created_at }}</td>
-                <td>{{ log.username }}</td>
-                <td>{{ log.action }}</td>
-                <td>{{ log.target }}</td>
-                <td>{{ log.description }}</td>
+
+                <td>{{ client["hostname"] }}</td>
+
+                <td>{{ client["ip_address"] }}</td>
+
+                <td>{{ client["username"] }}</td>
+
+                <td>{{ client["os_name"] }}</td>
+
+                <td>
+                    {% if client["status"] == "online" %}
+                    🟢 Online
+                    {% else %}
+                    🔴 Offline
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if client["site_status"] == "active" %}
+                    🟢 Aktif
+                    {% else %}
+                    🔴 Pasif
+                    {% endif %}
+                </td>
+
+                <td>{{ client["last_seen"] or "-" }}</td>
+
             </tr>
             {% endfor %}
         </tbody>

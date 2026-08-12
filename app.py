@@ -71,6 +71,35 @@ def admin_required(f):
 
     return decorated_function
 
+@app.before_request
+def update_client_last_seen():
+    username = session.get("user")
+
+    if not username:
+        return
+
+    conn, cursor, is_connected = get_db()
+
+    if not is_connected:
+        return
+
+    client_ip = request.remote_addr
+
+    try:
+        cursor.execute("""
+            UPDATE clients
+            SET last_seen = NOW(),
+                status = %s
+            WHERE username = %s
+              AND ip_address = %s
+        """, ("online", username, client_ip))
+
+        conn.commit()
+
+    finally:
+        cursor.close()
+        conn.close()
+
 @app.route("/database/restore", methods=["POST"])
 @admin_required
 def database_restore():
@@ -253,94 +282,157 @@ def backup_database():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    session["user"] = "apalut"
-    session["role"] = "admin"
-    session["is_admin"] = True
+    # session["user"] = "apalut"
+    # session["role"] = "admin"
+    # session["is_admin"] = True
 
-    return redirect(url_for("index"))
+    # return redirect(url_for("index"))
 
-    # lang = session.get("lang", "tr")
-    # translations = get_translation(lang)
-    # if request.method == "POST":
-    #     username = request.form.get("username")
-    #     password = request.form.get("password")
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
 
-    #     if "\\" in username:
-    #         user_dn = username
-    #     else:
-    #         user_dn = f"{username}@{AD_DOMAIN}"
+        if "\\" in username:
+            user_dn = username
+        else:
+            user_dn = f"{username}@{AD_DOMAIN}"
 
-    #     conn = None
-    #     try:
-    #         server = Server(AD_SERVER, get_info=NONE)
-    #         conn = Connection(
-    #             server,
-    #             user=user_dn,
-    #             password=password,
-    #             authentication=SIMPLE,
-    #             raise_exceptions=True,
-    #         )
+        conn = None
+        try:
+            server = Server(AD_SERVER, get_info=NONE)
+            conn = Connection(
+                server,
+                user=user_dn,
+                password=password,
+                authentication=SIMPLE,
+                raise_exceptions=True,
+            )
 
-    #         if conn.bind():
-    #             search_base = ",".join([f"DC={x}" for x in AD_DOMAIN.split(".")])
-    #             conn.search(
-    #                 search_base=search_base,
-    #                 search_filter=f"(sAMAccountName={username})",
-    #                 search_scope=SUBTREE,
-    #                 attributes=["memberOf"],
-    #             )
+            if conn.bind():
+                search_base = ",".join([f"DC={x}" for x in AD_DOMAIN.split(".")])
+                conn.search(
+                    search_base=search_base,
+                    search_filter=f"(sAMAccountName={username})",
+                    search_scope=SUBTREE,
+                    attributes=["memberOf"],
+                )
 
-    #             role = "Visitor"
-    #             if conn.entries:
-    #                 groups = conn.entries[0]["memberOf"]
-    #                 for group in groups:
-    #                     group = str(group)
-    #                     if "CN=Test Admin," in group or "CN=Domain Admins," in group:
-    #                         role = "Admin"
+                role = "Visitor"
+                if conn.entries:
+                    groups = conn.entries[0]["memberOf"]
+                    for group in groups:
+                        group = str(group)
+                        if "CN=Test Admin," in group or "CN=Domain Admins," in group:
+                            role = "Admin"
 
-                # session.clear()
-                # session["user"] = username
-                # session["role"] = role
-                # session["is_admin"] = role == "Admin"
-                # flash(translations["login_s"])
-    
-                # conn_db, cursor, is_connected = get_db()
+                session.clear()
+                session["user"] = username
+                session["role"] = role
+                session["is_admin"] = role == "Admin"
+                flash(translations["login_s"])
 
-                # if is_connected:
-                #     add_log(
-                #         cursor,
-                #         username,
-                #         "Giriş",
-                #         "Sunucu Envanteri",
-                #         f"{username}, sunucu envanter sitesine giriş yaptı."
-                #     )
-                #     conn_db.commit()
-                #     conn_db.close()
+                conn_db, cursor, is_connected = get_db()
+
+                if is_connected:
+                    client_ip = request.remote_addr
+
+                    cursor.execute("""
+                        SELECT hostname
+                        FROM clients
+                        WHERE username = %s AND ip_address = %s
+                    """, (username, client_ip))
+
+                    client = cursor.fetchone()
+
+                    if client:
+                        cursor.execute("""
+                            UPDATE clients
+                            SET status = %s,
+                                site_status = %s,
+                                last_seen = NOW()
+                            WHERE username = %s AND ip_address = %s
+                        """, ("online", "active", username, client_ip))
+
+                    else:
+                        cursor.execute("""
+                            INSERT INTO clients
+                                (hostname, ip_address, username, os_name, status, site_status, last_seen)
+                            VALUES
+                                (%s, %s, %s, %s, %s, %s, NOW())
+                        """, (
+                            "Unknown",
+                            client_ip,
+                            username,
+                            None,
+                            "online",
+                            "active"
+                        ))
+
+                    add_log(
+                        cursor,
+                        username,
+                        "Giriş",
+                        "Sunucu Envanteri",
+                        f"{username}, sunucu envanter sitesine giriş yaptı."
+                    )
+
+                    conn_db.commit()
+                    cursor.close()
+                    conn_db.close()
                     
-    #             return redirect(url_for("index"))
-    #         else:
-    #             flash(translations["name_error"])
-    #             return redirect(url_for("login"))
+                    return redirect(url_for("index"))
+            else:
+                flash(translations["name_error"])
+                return redirect(url_for("login"))
 
-    #     except Exception as e:
-    #         flash(translations["error"])
-    #         if conn:
-    #             conn.unbind()
-    #         return redirect(url_for("login"))
+        except Exception as e:
+            print("LOGIN HATASI:", repr(e))
+            flash(translations["error"])
+            if conn:
+                conn.unbind()
+            return redirect(url_for("login"))
 
-    #     finally:
-    #         if conn:
-    #             conn.unbind()
+        finally:
+            if conn:
+                conn.unbind()
 
-    # return render_template("login.html", translations=translations, lang=lang)
+    return render_template("login.html", translations=translations, lang=lang)
 
 
 @app.route("/logout")
 def logout():
     lang = session.get("lang", "tr")
     translations = get_translation(lang)
+
+    username = session.get("user", "Bilinmeyen kullanıcı")
+
+    conn, cursor, is_connected = get_db()
+
+    if is_connected:
+        cursor.execute("""
+            UPDATE clients
+            SET site_status = %s
+            WHERE username = %s
+        """, ("inactive", username))
+
+        add_log(
+            cursor,
+            username,
+            "Çıkış",
+            "Sunucu Envanteri",
+            f"{username}, sunucu envanter sitesinden çıkış yaptı."
+        )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
     session.clear()
+
     flash(translations["logout_s"])
+
     return redirect(url_for("login"))
 
 
@@ -455,6 +547,7 @@ def logs():
 
 @app.route("/")
 def index():
+    
     if "user" not in session:
         return redirect(url_for("login"))
 
@@ -1620,7 +1713,141 @@ def deleteColumn(id):
             conn.close()
         flash(translations.get("error", "Database error"))
         return redirect(url_for("index"))
+    
+@app.route("/clients")
+def clients():
 
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    conn, cursor, is_connected = get_db()
+
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    if not is_connected:
+        flash("Veritabanına bağlanılamadı.")
+        return redirect(url_for("index"))
+
+    try:
+        cursor.execute("""
+        UPDATE clients
+        SET status = 'offline'
+        WHERE last_seen IS NULL
+        OR last_seen < NOW() - INTERVAL 2 MINUTE
+        """)
+
+        conn.commit()
+        
+        cursor.execute("""
+            SELECT
+                id,
+                hostname,
+                ip_address,
+                username,
+                os_name,
+                status,
+                site_status,
+                last_seen
+            FROM clients
+            ORDER BY hostname
+        """)
+
+        clients = cursor.fetchall()
+
+        conn.close()
+
+        return render_template(
+            "clients.html",
+            clients=clients,
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            is_admin=session.get("is_admin", False)
+        )
+
+    except Exception as e:
+        print("Clients error:", e)
+
+        if conn:
+            conn.close()
+
+        flash("Client bilgileri alınamadı.")
+        return redirect(url_for("index"))
+    
+@app.route("/api/client/update", methods=["POST"])
+def client_update():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Veri alınamadı"}), 400
+
+    hostname = data.get("hostname")
+    username = data.get("username")
+    os_name = data.get("os_name")
+    ip_address = data.get("ip_address")
+
+    if not hostname or not username:
+        return jsonify({"error": "Eksik bilgi"}), 400
+
+    conn, cursor, is_connected = get_db()
+
+    if not is_connected:
+        return jsonify({"error": "Veritabanına bağlanılamadı"}), 500
+
+    try:
+        cursor.execute("""
+            SELECT id
+            FROM clients
+            WHERE hostname = %s
+        """, (hostname,))
+
+        client = cursor.fetchone()
+
+        if client:
+            cursor.execute("""
+                UPDATE clients
+                SET ip_address = %s,
+                    username = %s,
+                    os_name = %s,
+                    status = %s,
+                    last_seen = NOW()
+                WHERE hostname = %s
+            """, (
+                ip_address,
+                username,
+                os_name,
+                "online",
+                hostname
+            ))
+
+        else:
+            cursor.execute("""
+                INSERT INTO clients
+                    (hostname, ip_address, username, os_name, status, site_status, last_seen)
+                VALUES
+                    (%s, %s, %s, %s, %s, %s, NOW())
+            """, (
+                hostname,
+                ip_address,
+                username,
+                os_name,
+                "online",
+                "inactive"
+            ))
+
+        conn.commit()
+
+        return jsonify({"success": True}), 200
+
+    except Exception as e:
+        print("CLIENT AGENT HATASI:", repr(e))
+        conn.rollback()
+        return jsonify({"error": "Sunucu hatası"}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

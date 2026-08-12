@@ -66,6 +66,11 @@
             {{ translations.database }}
         </a>
 
+        <a href="{{ url_for('clients') }}"  class="nav-item {% if request.endpoint == 'clients' %}active{% endif %}">
+            <i class="fa-solid fa-desktop"></i>
+            <span>Clients</span>
+        </a>
+
         <a href="{{ url_for('logs') }}" class="nav-item {% if request.endpoint == 'logs' %}active{% endif %}">
             <i class="fa-solid fa-clock-rotate-left"></i>
             {{ translations.logs }}
@@ -130,93 +135,96 @@
     </div>
     {% endif %}
 
-    <div class="database-panel" id="databaseSettingsPanel">
+    <div id="databasePanelOverlay">
+        <div class="database-panel" id="databaseSettingsPanel">
 
-        <div class="database-panel-header">
-            <i class="fa-solid fa-sliders"></i>
-            <h2>{{ translations.database_management }}</h2>
+            <div class="database-panel-header">
+                <i class="fa-solid fa-sliders"></i>
+                <h2>{{ translations.database_management }}</h2>
 
-            <button type="button" id="closeDbSettings">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
+                <button type="button" id="closeDbSettings">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
 
-        <div class="database-panel-content">
+            <div class="database-panel-content">
 
-            <div class="database-panel-grid">
+                <div class="database-panel-grid">
 
-                <div class="database-card">
-                    <div class="database-card-title">
-                        <i class="fa-solid fa-gear"></i>
-                        <span>Genel Ayarlar</span>
-                    </div>
-                </div>
-
-                <div class="database-card">
-                    <div class="database-card-title">
-                        <i class="fa-solid fa-broom"></i>
-                        <span>Bakım</span>
+                    <div class="database-card">
+                        <div class="database-card-title">
+                            <i class="fa-solid fa-gear"></i>
+                            <span>Genel Ayarlar</span>
+                        </div>
                     </div>
 
-                    <div class="database-card-content">
+                    <div class="database-card">
+                        <div class="database-card-title">
+                            <i class="fa-solid fa-broom"></i>
+                            <span>Bakım</span>
+                        </div>
 
-                        <form action="{{ url_for('start_database') }}" method="POST">
+                        <div class="database-card-content">
 
-                            <button type="submit" class="database-action-btn">
-                                <i class="fa-solid fa-plug-circle-check"></i>
-                                Veritabanına Bağlan
-                            </button>
+                            <form action="{{ url_for('start_database') }}" method="POST">
 
-                        </form>
+                                <button type="submit" class="database-action-btn">
+                                    <i class="fa-solid fa-plug-circle-check"></i>
+                                    Veritabanına Bağlan
+                                </button>
 
+                            </form>
+
+                        </div>
                     </div>
-                </div>
 
-                <div class="database-card">
-                    <div class="database-card-title">
-                        <i class="fa-solid fa-database"></i>
-                        <span>Yedekleme</span>
+                    <div class="database-card">
+                        <div class="database-card-title">
+                            <i class="fa-solid fa-database"></i>
+                            <span>Yedekleme</span>
+                        </div>
+
+                        <div class="database-card-content">
+
+                            <a href="{{ url_for('backup_database') }}" class="database-action-btn">
+                                <i class="fa-solid fa-file-export"></i>
+                                SQL Olarak Dışa Aktar
+                            </a>
+
+                            <form action="{{ url_for('database_restore') }}" method="POST"
+                                enctype="multipart/form-data">
+
+                                <input type="file" id="database_file" name="database_file" accept=".sql" hidden>
+
+                                <label for="database_file" class="database-action-btn" id="sqlsec">
+                                    <i class="fa-solid fa-file-import"></i>
+                                    SQL Olarak İçeri Aktar
+                                </label>
+
+                                <span id="selected_file"></span>
+
+                                <button type="submit" class="database-action-btn" id="restoreBtn">
+                                    <i class="fa-solid fa-database"></i>
+                                    Veritabanını Geri Yükle
+                                </button>
+
+                            </form>
+
+                        </div>
                     </div>
 
-                    <div class="database-card-content">
-
-                        <a href="{{ url_for('backup_database') }}" class="database-action-btn">
-                            <i class="fa-solid fa-file-export"></i>
-                            SQL Olarak Dışa Aktar
-                        </a>
-
-                        <form action="{{ url_for('database_restore') }}" method="POST" enctype="multipart/form-data">
-
-                            <input type="file" id="database_file" name="database_file" accept=".sql" hidden>
-
-                            <label for="database_file" class="database-action-btn" id="sqlsec">
-                                <i class="fa-solid fa-file-import"></i>
-                                SQL Olarak İçeri Aktar
-                            </label>
-
-                            <span id="selected_file"></span>
-
-                            <button type="submit" class="database-action-btn">
-                                <i class="fa-solid fa-database"></i>
-                                Veritabanını Geri Yükle
-                            </button>
-
-                        </form>
-
+                    <div class="database-card">
+                        <div class="database-card-title">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <span>Güvenlik</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="database-card">
-                    <div class="database-card-title">
-                        <i class="fa-solid fa-shield-halved"></i>
-                        <span>Güvenlik</span>
-                    </div>
                 </div>
 
             </div>
 
         </div>
-
     </div>
 
 
