@@ -13,6 +13,7 @@
     "inventory": "IT Envanteri",
 
     "search_placeholder": "🔍 Sunucu Ara...",
+    "search_network_placeholder": "🔍 Ağ Cihazı Ara...",
     "search": "🔍 Ara",
     "back": "⬅️ Geri Dön",
     "search_settings": "⚙️ Arama Ayarları",
@@ -53,7 +54,7 @@
     "e_server": "Sunucu Adı",
     "e_disk": "Disk Boyutu",
     "e_disk_type": "Disk Boyut Türü (GB/TB)",
-    "select_server": "Sunucu Seçin",
+    "select_os": "İşletim Sistemi Seçin",
     "new": "Yeni",
 
     "special_areas": "-Özel Alanlar-",

@@ -11,11 +11,13 @@
 
 <body>
 
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div id="toast">
-        {{ messages[0] }}
+    {% for category, message in messages %}
+    <div id="toast" class="{{ category }}-toast">
+        {{ message }}
     </div>
+    {% endfor %}
     {% endif %}
     {% endwith %}
 
@@ -232,10 +234,10 @@
 
         <form id="editForm" method="POST">
             <label id="esl1">{{translations.e_server}}</label><br>
-            <input type="text" name="ad" id="p_name"><br><br>
+            <input type="text" name="ad" id="p_name" required><br><br>
 
             <label id="esl2">{{translations.e_disk}}</label><br>
-            <input type="number" name="disk" id="p_disk" step="any"><br><br>
+            <input type="number" name="disk" id="p_disk" step="any" required><br><br>
 
             <label id="esl3">{{translations.e_disk_type}}</label><br>
             <select name="disktur" id="p_disktur" class="beautifySelect">
@@ -245,32 +247,36 @@
 
             <label id="esl4">{{translations.os}}</label><br>
 
-            <select name="server" id="server" class="beautifySelect">
-                <option value="" id="esl41">{{translations.select_server}}</option>
+            <select name="server" id="server"  required>
+                <option value="" selected disabled>
+                    <!-- {{ translations.select_os }} -->
+                      İşletim Sistemi Seçin
+                </option>
 
                 {% for os in os_list %}
                 <option value="{{ os.name }}">{{ os.name }}</option>
                 {% endfor %}
 
-                <option value="Yeni" id="esl42">{{translations.new}}</option>
+                <option value="Yeni" id="esl42">{{ translations.new }}</option>
             </select>
 
             <div id="serverekle" style="display:none; margin-top:10px;">
-                <input type="text" name="isletim" placeholder="{{translations.new_os}}" id="yeniIsletim">
+                <input type="text" name="isletim" placeholder="{{ translations.new_os }}" id="yeniIsletim">
             </div>
+
             <br><br>
 
             <label>{{translations.ram}}</label><br>
-            <input type="number" name="ram" id="p_ram"><br><br>
+            <input type="number" name="ram" id="p_ram" required><br><br>
 
             <label>{{translations.ip}}</label><br>
-            <input type="text" name="ip" id="p_ip"><br><br>
+            <input type="text" name="ip" id="p_ip" required><br><br>
 
             <label id="esl5">{{translations.description}}</label><br>
             <input type="text" name="project" id="p_project"><br><br>
 
             <label>{{translations.cpu}}</label><br>
-            <input type="number" name="cpu" id="p_cpu"><br><br>
+            <input type="number" name="cpu" id="p_cpu" required><br><br>
 
             <label id="esl6">{{translations.date}}</label><br>
             <input type="date" name="date" id="p_date"><br><br>

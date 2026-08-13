@@ -66,26 +66,126 @@
 
     {% include 'navbar.html' %}
 
+    <div class="toolbar">
+
+        <form id="searchForm" action="/networkdevices/search" method="GET">
+
+            <div class="search-area">
+
+                <input type="text" id="searchInput" name="q" placeholder="{{ translations.search_network_placeholder }}"
+                    value="{{ request.args.get('q', '') }}">
+
+                <button type="submit" id="searchBtn" class="beautify">
+                    {% if request.path == "/networkdevices/search" %}
+                    {{translations.back}}
+                    {% else %}
+                    {{translations.search}}
+                    {% endif %}
+                </button>
+
+                <button type="button" id="searchSettingsBtn" class="beautify">
+                    {{ translations.search_settings }}
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
     <div class="table-container">
 
-        <table>
+        <table id="networkDeviceTable">
 
             <thead>
 
-                <tr>
+                <tr class="serverRow">
 
-                    <th>Cihaz Adı</th>
-                    <th>Tür</th>
-                    <th>Marka</th>
-                    <th>Model</th>
-                    <th>Seri Numarası</th>
-                    <th>IP Adresi</th>
-                    <th>MAC Adresi</th>
-                    <th>Lokasyon</th>
-                    <th>Durum</th>
-                    <th>Software Version</th>
-                    <th>Oluşturulma</th>
-                    <th>Son Güncelleme</th>
+                    <th draggable="true" data-col="name" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Cihaz Adı</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'name')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="device_type" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Tür</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'device_type')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="brand" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Marka</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'brand')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="model" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Model</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'model')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="serial_number" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Seri Numarası</span>
+                            <button class="column-menu-btn"
+                                onclick="toggleColumnMenu(event, 'serial_number')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="ip_address" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>IP Adresi</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'ip_address')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="mac_address" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>MAC Adresi</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'mac_address')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="location" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Lokasyon</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'location')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="status" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Durum</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'status')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="software_version" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Software Version</span>
+                            <button class="column-menu-btn"
+                                onclick="toggleColumnMenu(event, 'software_version')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="created_at" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Oluşturulma</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'created_at')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="updated_at" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Son Güncelleme</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'updated_at')">▼</button>
+                        </div>
+                    </th>
 
                 </tr>
 
@@ -96,38 +196,39 @@
 
                 {% for device in devices %}
 
-                <tr>
+                <tr class="serverRow">
 
-                    <td>{{ device.name }}</td>
+                    <td data-col="name">{{ device.name }}</td>
 
-                    <td>{{ device.device_type }}</td>
+                    <td data-col="device_type">{{ device.device_type }}</td>
 
-                    <td>{{ device.brand }}</td>
+                    <td data-col="brand">{{ device.brand }}</td>
 
-                    <td>{{ device.model }}</td>
+                    <td data-col="model">{{ device.model }}</td>
 
-                    <td>{{ device.serial_number }}</td>
+                    <td data-col="serial_number">{{ device.serial_number }}</td>
 
-                    <td>{{ device.ip_address }}</td>
+                    <td data-col="ip_address">{{ device.ip_address }}</td>
 
-                    <td>{{ device.mac_address }}</td>
+                    <td data-col="mac_address">{{ device.mac_address }}</td>
 
-                    <td>{{ device.location }}</td>
+                    <td data-col="location">{{ device.location }}</td>
 
-                    <td>{{ device.status }}</td>
+                    <td data-col="status">{{ device.status }}</td>
 
-                    <td>{{ device.software_version }}</td>
+                    <td data-col="software_version">{{ device.software_version }}</td>
 
-                    <td>{{ device.created_at or '-' }}</td>
+                    <td data-col="created_at">{{ device.created_at or '-' }}</td>
 
-                    <td>{{ device.updated_at or '-' }}</td>
+                    <td data-col="updated_at">{{ device.updated_at or '-' }}</td>
+
 
                 </tr>
 
 
                 {% else %}
 
-                <tr>
+                <tr class="serverRow">
 
                     <td colspan="12" style="text-align: center;">
                         Henüz ağ cihazı bulunmuyor.
@@ -143,7 +244,114 @@
 
     </div>
 
+    <div id="searchSettingsOverlay">
 
+        <div id="searchSettingsPanel">
+
+            <span id="closeSearchSettings">✖</span>
+
+            <h2 id="aramalabel">
+                {{ translations.search_settings_i }}
+            </h2>
+
+            <br>
+
+            <h3 id="aranacakalan">
+                {{ translations.search_fields }}
+            </h3>
+
+            <div class="search-options">
+
+                <div class="search-fields">
+
+                    <label>
+                        <input type="checkbox" name="fields" value="name" checked>
+                        Cihaz Adı
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="device_type" checked>
+                        Tür
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="brand" checked>
+                        Marka
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="model" checked>
+                        Model
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="serial_number" checked>
+                        Seri Numarası
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="ip_address" checked>
+                        IP Adresi
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="mac_address" checked>
+                        MAC Adresi
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="location" checked>
+                        Lokasyon
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="status" checked>
+                        Durum
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="software_version" checked>
+                        Software Version
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="created_at" checked>
+                        Oluşturulma
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="fields" value="updated_at" checked>
+                        Son Güncelleme
+                    </label>
+
+                </div>
+
+                <div class="search-buttons">
+
+                    <button type="button" id="selectAllBtn" class="beautify">
+                        {{ translations.select_all }}
+                    </button>
+
+                    <button type="button" id="clearAllBtn" class="beautify">
+                        {{ translations.clear_all }}
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="sharedColumnMenu" class="column-dropdown-menu" style="display:none;">
+        <div onclick="executeSort('asc')">{{translations.asc}}</div>
+        <div onclick="executeSort('desc')">{{translations.desc}}</div>
+        <div onclick="openSharedSearch(event)">{{translations.search_column}}</div>
+    </div>
+
+    <script src="{{url_for('static', filename='js/networkdevices.js')}}"></script>
 </body>
 
 </html>

@@ -13,6 +13,7 @@
     "inventory": "IT Inventory",
 
     "search_placeholder": "🔍 Search Server...",
+    "search_network_placeholder": "🔍 Search Network Device...",
     "search": "🔍 Search",
     "back": "⬅️ Back",
     "search_settings": "⚙️ Search Settings",
@@ -53,7 +54,7 @@
     "e_server": "Server Name",
     "e_disk": "Disk Size",
     "e_disk_type": "Disk Size Type (GB/TB)",
-    "select_server": "Select Server",
+    "select_os": "Select Operating System",
     "new": "New",
 
     "special_areas": "-Special Fields-",

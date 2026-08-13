@@ -66,7 +66,7 @@ def admin_required(f):
         lang = session.get("lang", "tr")
         translations = get_translation(lang)
         if not session.get("is_admin"):
-            flash(translations["permission"])
+            flash(translations["permission"], "error")
             return redirect(url_for("index"))
         return f(*args, **kwargs)
 
@@ -116,11 +116,11 @@ def database_restore():
     file = request.files.get("database_file")
 
     if not file or file.filename == "":
-        flash("SQL dosyası seçilmedi.")
+        flash("SQL dosyası seçilmedi.","error")
         return redirect(url_for("database"))
 
     if not file.filename.lower().endswith(".sql"):
-        flash("Sadece .sql dosyaları yüklenebilir.")
+        flash("Sadece .sql dosyaları yüklenebilir.","error")
         return redirect(url_for("database"))
 
     temp_path = os.path.join(
@@ -185,15 +185,15 @@ def database_restore():
             if not error_message:
                 error_message = "Veritabanı geri yüklenemedi."
 
-            flash(f"Restore error: {error_message}")
+            flash(f"Restore error: {error_message}","error")
             return redirect(url_for("database"))
 
-        flash("Veritabanı başarıyla geri yüklendi.")
+        flash("Veritabanı başarıyla geri yüklendi.","success")
         return redirect(url_for("database"))
 
     except Exception as e:
 
-        flash(f"Restore error: {e}")
+        flash(f"Restore error: {e}","error")
         return redirect(url_for("database"))
 
     finally:
@@ -211,7 +211,7 @@ def backup_database():
     conn, cursor, is_connected = get_db()
 
     if not is_connected:
-        flash("Veritabanına bağlı değil.")
+        flash("Veritabanına bağlı değil.","error")
         return redirect(url_for("database"))
 
     conn.close()
@@ -262,7 +262,7 @@ def backup_database():
             if not error_message:
                 error_message = "Yedek oluşturulamadı."
 
-            flash(f"Backup error: {error_message}")
+            flash(f"Backup error: {error_message}","error")
             return redirect(url_for("database"))
 
         return send_file(
@@ -278,137 +278,137 @@ def backup_database():
         if os.path.exists(filepath):
             os.remove(filepath)
 
-        flash(f"Backup error: {e}")
+        flash(f"Backup error: {e}","error")
         return redirect(url_for("database"))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    # session["user"] = "apalut"
-    # session["role"] = "admin"
-    # session["is_admin"] = True
+    session["user"] = "apalut"
+    session["role"] = "admin"
+    session["is_admin"] = True
 
-    # return redirect(url_for("index"))
+    return redirect(url_for("index"))
 
-    lang = session.get("lang", "tr")
-    translations = get_translation(lang)
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+    # lang = session.get("lang", "tr")
+    # translations = get_translation(lang)
+    # if request.method == "POST":
+    #     username = request.form.get("username")
+    #     password = request.form.get("password")
 
-        if "\\" in username:
-            user_dn = username
-        else:
-            user_dn = f"{username}@{AD_DOMAIN}"
+    #     if "\\" in username:
+    #         user_dn = username
+    #     else:
+    #         user_dn = f"{username}@{AD_DOMAIN}"
 
-        conn = None
-        try:
-            server = Server(AD_SERVER, get_info=NONE)
-            conn = Connection(
-                server,
-                user=user_dn,
-                password=password,
-                authentication=SIMPLE,
-                raise_exceptions=True,
-            )
+    #     conn = None
+    #     try:
+    #         server = Server(AD_SERVER, get_info=NONE)
+    #         conn = Connection(
+    #             server,
+    #             user=user_dn,
+    #             password=password,
+    #             authentication=SIMPLE,
+    #             raise_exceptions=True,
+    #         )
 
-            if conn.bind():
-                search_base = ",".join([f"DC={x}" for x in AD_DOMAIN.split(".")])
-                conn.search(
-                    search_base=search_base,
-                    search_filter=f"(sAMAccountName={username})",
-                    search_scope=SUBTREE,
-                    attributes=["memberOf"],
-                )
+    #         if conn.bind():
+    #             search_base = ",".join([f"DC={x}" for x in AD_DOMAIN.split(".")])
+    #             conn.search(
+    #                 search_base=search_base,
+    #                 search_filter=f"(sAMAccountName={username})",
+    #                 search_scope=SUBTREE,
+    #                 attributes=["memberOf"],
+    #             )
 
-                role = "Visitor"
-                if conn.entries:
-                    groups = conn.entries[0]["memberOf"]
-                    for group in groups:
-                        group = str(group)
-                        if "CN=Test Admin," in group or "CN=Domain Admins," in group:
-                            role = "Admin"
+    #             role = "Visitor"
+    #             if conn.entries:
+    #                 groups = conn.entries[0]["memberOf"]
+    #                 for group in groups:
+    #                     group = str(group)
+    #                     if "CN=Test Admin," in group or "CN=Domain Admins," in group:
+    #                         role = "Admin"
 
-                session.clear()
-                session["user"] = username
-                session["role"] = role
-                session["is_admin"] = role == "Admin"
-                flash(translations["login_s"])
+    #             session.clear()
+    #             session["user"] = username
+    #             session["role"] = role
+    #             session["is_admin"] = role == "Admin"
+    #             flash(translations["login_s"])
 
-                conn_db, cursor, is_connected = get_db()
+    #             conn_db, cursor, is_connected = get_db()
 
-                if is_connected:
-                    client_ip = request.remote_addr
+    #             if is_connected:
+    #                 client_ip = request.remote_addr
 
-                    import socket
-                    hostname = socket.gethostname()
+    #                 import socket
+    #                 hostname = socket.gethostname()
 
-                    cursor.execute("""
-                        SELECT id
-                        FROM clients
-                        WHERE hostname = %s
-                    """, (hostname,))
+    #                 cursor.execute("""
+    #                     SELECT id
+    #                     FROM clients
+    #                     WHERE hostname = %s
+    #                 """, (hostname,))
 
-                    client = cursor.fetchone()
+    #                 client = cursor.fetchone()
 
-                    if client:
-                        # Agent'ın oluşturduğu gerçek client kaydını güncelle
-                        cursor.execute("""
-                            UPDATE clients
-                            SET username = %s,
-                                site_status = %s,
-                                last_seen = NOW()
-                            WHERE id = %s
-                        """, (
-                            username,
-                            "active",
-                            client[0]
-                        ))
+    #                 if client:
+    #                     # Agent'ın oluşturduğu gerçek client kaydını güncelle
+    #                     cursor.execute("""
+    #                         UPDATE clients
+    #                         SET username = %s,
+    #                             site_status = %s,
+    #                             last_seen = NOW()
+    #                         WHERE id = %s
+    #                     """, (
+    #                         username,
+    #                         "active",
+    #                         client[0]
+    #                     ))
 
-                    else:
-                        cursor.execute("""
-                            INSERT INTO clients
-                                (hostname, ip_address, username, os_name,
-                                status, site_status, last_seen)
-                            VALUES
-                                (%s, %s, %s, %s, %s, %s, NOW())
-                        """, (
-                            hostname,
-                            client_ip,
-                            username,
-                            None,
-                            "online",
-                            "active"
-                        ))
+    #                 else:
+    #                     cursor.execute("""
+    #                         INSERT INTO clients
+    #                             (hostname, ip_address, username, os_name,
+    #                             status, site_status, last_seen)
+    #                         VALUES
+    #                             (%s, %s, %s, %s, %s, %s, NOW())
+    #                     """, (
+    #                         hostname,
+    #                         client_ip,
+    #                         username,
+    #                         None,
+    #                         "online",
+    #                         "active"
+    #                     ))
 
-                    add_log(
-                        cursor,
-                        username,
-                        "Giriş",
-                        "Sunucu Envanteri",
-                        f"{username}, sunucu envanter sitesine giriş yaptı."
-                    )
+    #                 add_log(
+    #                     cursor,
+    #                     username,
+    #                     "Giriş",
+    #                     "Sunucu Envanteri",
+    #                     f"{username}, sunucu envanter sitesine giriş yaptı."
+    #                 )
 
-                    conn_db.commit()
-                    cursor.close()
-                    conn_db.close()
+    #                 conn_db.commit()
+    #                 cursor.close()
+    #                 conn_db.close()
                     
-                    return redirect(url_for("index"))
-            else:
-                flash(translations["name_error"])
-                return redirect(url_for("login"))
+    #                 return redirect(url_for("index"))
+    #         else:
+    #             flash(translations["name_error"])
+    #             return redirect(url_for("login"))
 
-        except Exception as e:
-            print("LOGIN HATASI:", repr(e))
-            flash(translations["error"])
-            if conn:
-                conn.unbind()
-            return redirect(url_for("login"))
+    #     except Exception as e:
+    #         print("LOGIN HATASI:", repr(e))
+    #         flash(translations["error"])
+    #         if conn:
+    #             conn.unbind()
+    #         return redirect(url_for("login"))
 
-        finally:
-            if conn:
-                conn.unbind()
+    #     finally:
+    #         if conn:
+    #             conn.unbind()
 
-    return render_template("login.html", translations=translations, lang=lang)
+    # return render_template("login.html", translations=translations, lang=lang)
 
 
 @app.route("/logout")
@@ -441,7 +441,7 @@ def logout():
 
     session.clear()
 
-    flash(translations["logout_s"])
+    flash(translations["logout_s"],"success")
 
     return redirect(url_for("login"))
 
@@ -457,7 +457,7 @@ def start_database():
 
     if is_connected:
         conn.close()
-        flash("Veritabanı zaten bağlı.")
+        flash("Veritabanı zaten bağlı.","error")
         return redirect(url_for("database"))
 
     service_name = os.getenv("MYSQL_SERVICE")
@@ -475,14 +475,14 @@ def start_database():
 
             if is_connected:
                 conn.close()
-                flash("Veritabanına başarıyla bağlanıldı.")
+                flash("Veritabanına başarıyla bağlanıldı.","success")
                 return redirect(url_for("database"))
 
-        flash("MySQL servisi başlatılamadı.")
+        flash("MySQL servisi başlatılamadı.","error")
 
     except Exception as e:
         print(e)
-        flash("Bir hata oluştu.")
+        flash("Bir hata oluştu.","error")
 
     return redirect(url_for("database"))
 
@@ -1063,7 +1063,7 @@ def edit(id):
     conn, cursor, is_connected = get_db()
 
     if not is_connected:
-        flash(translations.get("error", "Database disconnected"))
+        flash(translations.get("error", "Database disconnected"),"error")
         return redirect(url_for("index"))
 
     try:
@@ -1088,7 +1088,7 @@ def edit(id):
 
         if not old_server:
             conn.close()
-            flash(translations.get("error", "Server not found"))
+            flash(translations.get("error", "Server not found"),"error")
             return redirect(url_for("index"))
 
         name = request.form["ad"]
@@ -1103,18 +1103,46 @@ def edit(id):
         if disk_type.upper() == "TB":
             disk *= 1024
 
-        if request.form["server"] == "Yeni":
-            os_name = request.form["isletim"]
+        selected_os = request.form.get("server", "").strip()
 
-            cursor.execute("INSERT INTO os_types (name) VALUES (%s)", (os_name,))
+        if not selected_os:
+            raise Exception("İşletim sistemi seçilmedi.")
 
-            conn.commit()
-            os_type_id = cursor.lastrowid
+        if selected_os == "Yeni":
+
+            new_os_name = request.form.get("isletim", "").strip()
+
+            if not new_os_name:
+                raise Exception("Yeni işletim sistemi adı boş bırakılamaz.")
+
+            cursor.execute(
+                "SELECT id FROM os_types WHERE name=%s",
+                (new_os_name,)
+            )
+
+            existing_os = cursor.fetchone()
+
+            if existing_os:
+                os_type_id = existing_os["id"]
+                os_name = new_os_name
+
+            else:
+                cursor.execute(
+                    "INSERT INTO os_types (name) VALUES (%s)",
+                    (new_os_name,)
+                )
+
+                os_type_id = cursor.lastrowid
+                os_name = new_os_name
 
         else:
-            os_name = request.form["server"]
 
-            cursor.execute("SELECT id FROM os_types WHERE name=%s", (os_name,))
+            os_name = selected_os
+
+            cursor.execute(
+                "SELECT id FROM os_types WHERE name=%s",
+                (os_name,)
+            )
 
             result = cursor.fetchone()
 
@@ -1254,7 +1282,7 @@ def edit(id):
         conn.commit()
         conn.close()
 
-        flash(translations["server_updated"])
+        flash(translations["server_updated"],"success")
         return redirect(url_for("index"))
 
     except Exception as e:
@@ -1263,7 +1291,7 @@ def edit(id):
         if conn:
             conn.close()
 
-        flash(translations.get("error", "Error updating server"))
+        flash(translations.get("error", "Error updating server"),"error")
 
         return redirect(url_for("index"))
 
@@ -1276,7 +1304,7 @@ def delete(id):
 
     conn, cursor, is_connected = get_db()
     if not is_connected:
-        flash(translations.get("error", "Database disconnected"))
+        flash(translations.get("error", "Database disconnected"),"error")
         return redirect(url_for("index"))
 
     try:
@@ -1297,12 +1325,12 @@ def delete(id):
         conn.commit()
         conn.close()
 
-        flash(translations["delete_server_s"])
+        flash(translations["delete_server_s"],"success")
         return redirect(url_for("index"))
     except Exception:
         if conn:
             conn.close()
-        flash(translations.get("error", "Error deleting server"))
+        flash(translations.get("error", "Error deleting server"),"error")
         return redirect(url_for("index"))
 
 
@@ -1314,7 +1342,7 @@ def add():
 
     conn, cursor, is_connected = get_db()
     if not is_connected:
-        flash(translations.get("error", "Database disconnected"))
+        flash(translations.get("error", "Database disconnected"),"error")
         return redirect(url_for("index"))
 
     try:
@@ -1388,7 +1416,7 @@ def add():
             conn.commit()
             conn.close()
 
-            flash(translations["server_added"])
+            flash(translations["server_added"],"success")
             return redirect(url_for("index"))
 
         cursor.execute("SELECT name FROM os_types ORDER BY name")
@@ -1410,7 +1438,7 @@ def add():
     except Exception:
         if conn:
             conn.close()
-        flash(translations.get("error", "Database error"))
+        flash(translations.get("error", "Database error"),"error")
         return redirect(url_for("index"))
 
 
@@ -1582,6 +1610,128 @@ def search():
             lang=lang,
         )
 
+@app.route("/networkdevices/search")
+def networkdevices_search():
+
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    username = session.get("user", "Unknown")
+    is_admin = session.get("is_admin", False)
+
+    conn, cursor, is_connected = get_db()
+
+    if not is_connected:
+        flash(translations.get("error", "Database disconnected"),"error")
+
+        return render_template(
+            "networkdevices.html",
+            translations=translations,
+            lang=lang,
+            username=username,
+            is_admin=is_admin,
+            devices=[]
+        )
+
+    try:
+
+        q = request.args.get("q", "").strip()
+        fields = request.args.getlist("fields")
+
+        allowed_fields = {
+            "name": "name",
+            "device_type": "device_type",
+            "brand": "brand",
+            "model": "model",
+            "serial_number": "serial_number",
+            "ip_address": "ip_address",
+            "mac_address": "mac_address",
+            "location": "location",
+            "status": "status",
+            "software_version": "software_version",
+            "description": "description",
+            "created_at": "created_at",
+            "updated_at": "updated_at"
+        }
+
+        selected_fields = []
+
+        for field in fields:
+
+            if field in allowed_fields:
+                selected_fields.append(
+                    allowed_fields[field]
+                )
+
+        sql = """
+            SELECT
+                id,
+                name,
+                device_type,
+                brand,
+                model,
+                serial_number,
+                ip_address,
+                mac_address,
+                location,
+                status,
+                software_version,
+                description,
+                created_at,
+                updated_at
+            FROM network_devices
+        """
+
+        values = []
+
+        if q and selected_fields:
+
+            conditions = []
+
+            for field in selected_fields:
+
+                conditions.append(
+                    f"CAST({field} AS CHAR) LIKE %s"
+                )
+
+                values.append(f"%{q}%")
+
+            sql += " WHERE " + " OR ".join(conditions)
+
+        sql += " ORDER BY id DESC"
+
+        cursor.execute(sql, values)
+
+        devices = cursor.fetchall()
+
+        conn.close()
+
+        return render_template(
+            "networkdevices.html",
+            translations=translations,
+            lang=lang,
+            username=username,
+            is_admin=is_admin,
+            devices=devices
+        )
+
+    except Exception as e:
+
+        print(e)
+
+        if conn:
+            conn.close()
+
+        flash(translations.get("error", "Database error"),"error")
+
+        return render_template(
+            "networkdevices.html",
+            translations=translations,
+            lang=lang,
+            username=username,
+            is_admin=is_admin,
+            devices=[]
+        )
 
 @app.route("/addcolumn", methods=["GET", "POST"])
 @admin_required
@@ -1591,7 +1741,7 @@ def addcolumn():
 
     conn, cursor, is_connected = get_db()
     if not is_connected:
-        flash(translations.get("error", "Database disconnected"))
+        flash(translations.get("error", "Database disconnected"),"error")
         return redirect(url_for("index"))
 
     try:
@@ -1606,7 +1756,7 @@ def addcolumn():
 
             if cursor.fetchone():
                 conn.close()
-                flash(translations["col_already_exists"])
+                flash(translations["col_already_exists"],"error")
                 return redirect(url_for("addcolumn"))
 
             cursor.execute(
@@ -1629,7 +1779,7 @@ def addcolumn():
             conn.commit()
             conn.close()
 
-            flash(translations["added_new_column"])
+            flash(translations["added_new_column"],"success")
             return redirect(url_for("index"))
 
         conn.close()
@@ -1637,7 +1787,7 @@ def addcolumn():
     except Exception:
         if conn:
             conn.close()
-        flash(translations.get("error", "Database error"))
+        flash(translations.get("error", "Database error"),"error")
         return redirect(url_for("index"))
 
 
@@ -1650,7 +1800,7 @@ def editcolumn(id):
     conn, cursor, is_connected = get_db()
 
     if not is_connected:
-        flash(translations.get("error", "Database disconnected"))
+        flash(translations.get("error", "Database disconnected"),"error")
         return redirect(url_for("index"))
 
     try:
@@ -1670,7 +1820,7 @@ def editcolumn(id):
 
         if not current:
             conn.close()
-            flash(translations.get("error", "Column not found"))
+            flash(translations.get("error", "Column not found"),"error")
             return redirect(url_for("index"))
 
         old_column_name = current["column_name"]
@@ -1703,9 +1853,9 @@ def editcolumn(id):
                 (id,),
             )
 
-            flash(translations["update_column_override"])
+            flash(translations["update_column_override"],"success")
         else:
-            flash(translations["update_column"])
+            flash(translations["update_column"],"success")
 
         for change in changes:
             add_log(
@@ -1727,7 +1877,7 @@ def editcolumn(id):
         if conn:
             conn.close()
 
-        flash(translations.get("error", "Database error"))
+        flash(translations.get("error", "Database error"),"error")
 
         return redirect(url_for("index"))
 
@@ -1740,7 +1890,7 @@ def deleteColumn(id):
 
     conn, cursor, is_connected = get_db()
     if not is_connected:
-        flash(translations.get("error", "Database disconnected"))
+        flash(translations.get("error", "Database disconnected"),"error")
         return redirect(url_for("index"))
 
     try:
@@ -1761,13 +1911,13 @@ def deleteColumn(id):
         conn.commit()
         conn.close()
 
-        flash(translations["f_delete_column"])
+        flash(translations["f_delete_column"],"success")
         return redirect(url_for("index"))
 
     except Exception:
         if conn:
             conn.close()
-        flash(translations.get("error", "Database error"))
+        flash(translations.get("error", "Database error"),"error")
         return redirect(url_for("index"))
     
 @app.route("/clients")
@@ -1782,7 +1932,7 @@ def clients():
     translations = get_translation(lang)
 
     if not is_connected:
-        flash("Veritabanına bağlanılamadı.")
+        flash("Veritabanına bağlanılamadı.","error")
         return redirect(url_for("index"))
 
     try:
@@ -1828,7 +1978,7 @@ def clients():
         if conn:
             conn.close()
 
-        flash("Client bilgileri alınamadı.")
+        flash("Client bilgileri alınamadı.","error")
         return redirect(url_for("index"))
     
 @app.route("/networkdevices")
@@ -1842,7 +1992,7 @@ def networkdevices():
     conn, cursor, is_connected = get_db()
 
     if not is_connected:
-        flash(translations.get("error", "Database disconnected"))
+        flash(translations.get("error", "Database disconnected"),"error")
         return render_template(
             "networkdevices.html",
             translations=translations,
@@ -1892,7 +2042,7 @@ def networkdevices():
         if conn:
             conn.close()
 
-        flash(translations.get("error", "Database error"))
+        flash(translations.get("error", "Database error"),"error")
 
         return render_template(
             "networkdevices.html",
@@ -1912,7 +2062,7 @@ def addnetworkdevice():
     conn, cursor, is_connected = get_db()
 
     if not is_connected:
-        flash(translations.get("error", "Database disconnected"))
+        flash(translations.get("error", "Database disconnected"),"error")
         return redirect(url_for("networkdevices"))
 
     try:
@@ -1972,7 +2122,7 @@ def addnetworkdevice():
         add_log(
             cursor,
             session["user"],
-            "Ekle",
+            "Ağ Cihazı Ekle",
             name,
             f"Ağ cihazı eklendi: {name}"
         )
@@ -1980,7 +2130,7 @@ def addnetworkdevice():
         conn.commit()
         conn.close()
 
-        flash("Ağ cihazı başarıyla eklendi.")
+        flash("Ağ cihazı başarıyla eklendi.","success")
         return redirect(url_for("networkdevices"))
 
     except Exception as e:

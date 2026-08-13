@@ -23,6 +23,8 @@ const diskCompareOptions = document.getElementById("diskCompareOptions");
 const columnForm = document.getElementById("columnForm");
 let activeColumn = null;
 let columnSearchActive = false;
+let draggedKey = null;
+
 
 if(deleteColumnBtn){
     deleteColumnBtn.onclick = function(){
@@ -208,15 +210,27 @@ if(editOverlay){
     };
 }   
 
-if(select && serverekle){
+if (select && serverekle) {
+
     select.addEventListener("change", function () {
+
         if (this.value === "Yeni") {
+
             serverekle.style.display = "block";
-        }
-        else {
+
+            document.getElementById("yeniIsletim").required = true;
+
+        } else {
+
             serverekle.style.display = "none";
+
+            document.getElementById("yeniIsletim").required = false;
+            document.getElementById("yeniIsletim").value = "";
+
         }
+
     });
+
 }
 
 if(tableSettingsBtn){
@@ -465,7 +479,6 @@ function applyColumnOrder(order) {
 
 }
 
-let draggedKey = null;
 
 document.querySelectorAll(".draggable-th").forEach(function (th) {
 
