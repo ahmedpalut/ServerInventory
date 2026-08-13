@@ -14,10 +14,13 @@
 
     "search_placeholder": "🔍 Sunucu Ara...",
     "search_network_placeholder": "🔍 Ağ Cihazı Ara...",
+    "search_clients_placeholder": "🔍 Client Ara...",
+    "search_logs_placeholder": "🔍 Log Ara...",
     "search": "🔍 Ara",
     "back": "⬅️ Geri Dön",
     "search_settings": "⚙️ Arama Ayarları",
     "search_settings_i": "Arama Ayarları",
+    "select_at_least_one_field": "Lütfen en az bir arama alanı seçin.",
 
     "new_server": "➕ Yeni Sunucu",
 

@@ -15,11 +15,13 @@
 
 <body>
 
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div id="toast">
-        {{ messages[0] }}
+    {% for category, message in messages %}
+    <div id="toast" class="{{ category }}-toast">
+        {{ message }}
     </div>
+    {% endfor %}
     {% endif %}
     {% endwith %}
 
@@ -87,6 +89,40 @@
                     {{ translations.search_settings }}
                 </button>
 
+            </div>
+
+            <div id="searchSettingsOverlay" style="display:none;">
+                <div id="searchSettingsPanel">
+                    <span id="closeSearchSettings">✖</span>
+                    <h2 id="aramalabel">{{ translations.search_settings_i }}</h2>
+                    <br>
+                    <h3 id="aranacakalan">{{ translations.search_fields }}</h3>
+                    <div class="search-options">
+                        <div class="search-fields">
+                            <label><input type="checkbox" name="fields" value="name" checked> Cihaz Adı</label>
+                            <label><input type="checkbox" name="fields" value="device_type" checked> Tür</label>
+                            <label><input type="checkbox" name="fields" value="brand" checked> Marka</label>
+                            <label><input type="checkbox" name="fields" value="model" checked> Model</label>
+                            <label><input type="checkbox" name="fields" value="serial_number" checked> Seri
+                                Numarası</label>
+                            <label><input type="checkbox" name="fields" value="ip_address" checked> IP Adresi</label>
+                            <label><input type="checkbox" name="fields" value="mac_address" checked> MAC Adresi</label>
+                            <label><input type="checkbox" name="fields" value="location" checked> Lokasyon</label>
+                            <label><input type="checkbox" name="fields" value="status" checked> Durum</label>
+                            <label><input type="checkbox" name="fields" value="software_version" checked> Software
+                                Version</label>
+                            <label><input type="checkbox" name="fields" value="created_at" checked> Oluşturulma</label>
+                            <label><input type="checkbox" name="fields" value="updated_at" checked> Son
+                                Güncelleme</label>
+                        </div>
+                        <div class="search-buttons">
+                            <button type="button" id="selectAllBtn" class="beautify">{{ translations.select_all
+                                }}</button>
+                            <button type="button" id="clearAllBtn" class="beautify">{{ translations.clear_all
+                                }}</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </form>
@@ -187,6 +223,10 @@
                         </div>
                     </th>
 
+                    {% if is_admin %}
+                    <th id="th_last">{{translations.operation}}</th>
+                    {% endif %}
+
                 </tr>
 
             </thead>
@@ -222,6 +262,25 @@
 
                     <td data-col="updated_at">{{ device.updated_at or '-' }}</td>
 
+                    {% if is_admin %}
+                    <td class="action-cell">
+                        <a href="#" class="edit-btn" data-id="{{ device.id }}" data-name="{{ device.name }}"
+                            data-device_type="{{ device.device_type }}" data-brand="{{ device.brand }}"
+                            data-model="{{ device.model }}" data-serial_number="{{ device.serial_number }}"
+                            data-ip_address="{{ device.ip_address }}" data-mac_address="{{ device.mac_address }}"
+                            data-location="{{ device.location }}" data-status="{{ device.status }}"
+                            data-software_version="{{ device.software_version }}"
+                            data-description="{{ device.description or '' }}"
+                            onclick="openNetworkEditFromBtn(this); return false;">
+                            ✏️
+                        </a>
+
+                        <a href="/deletenetworkdevice/{{ device.id }}" class="delete-btn"
+                            onclick="return confirm('{{translations.are_u_sure_delete}}')">
+                            🗑️
+                        </a>
+                    </td>
+                    {% endif %}
 
                 </tr>
 
@@ -230,7 +289,7 @@
 
                 <tr class="serverRow">
 
-                    <td colspan="12" style="text-align: center;">
+                    <td colspan="13" style="text-align: center;">
                         Henüz ağ cihazı bulunmuyor.
                     </td>
 
@@ -244,104 +303,53 @@
 
     </div>
 
-    <div id="searchSettingsOverlay">
+    <div id="editNetworkOverlay" style="display:none;" onclick="closeNetworkEditPanel()"></div>
 
-        <div id="searchSettingsPanel">
+    <div id="editNetworkPanel">
+        <span onclick="closeNetworkEditPanel()" id="closeEditNetworkBtn">✖</span>
+        <h2>Ağ Cihazı Düzenle</h2>
 
-            <span id="closeSearchSettings">✖</span>
+        <form id="editNetworkForm" method="POST">
+            <label>Cihaz Adı</label><br>
+            <input type="text" name="name" id="net_name" required><br><br>
 
-            <h2 id="aramalabel">
-                {{ translations.search_settings_i }}
-            </h2>
+            <label>Tür</label><br>
+            <input type="text" name="device_type" id="net_device_type"><br><br>
 
-            <br>
+            <label>Marka</label><br>
+            <input type="text" name="brand" id="net_brand"><br><br>
 
-            <h3 id="aranacakalan">
-                {{ translations.search_fields }}
-            </h3>
+            <label>Model</label><br>
+            <input type="text" name="model" id="net_model"><br><br>
 
-            <div class="search-options">
+            <label>Seri Numarası</label><br>
+            <input type="text" name="serial_number" id="net_serial_number"><br><br>
 
-                <div class="search-fields">
+            <label>IP Adresi</label><br>
+            <input type="text" name="ip_address" id="net_ip_address"><br><br>
 
-                    <label>
-                        <input type="checkbox" name="fields" value="name" checked>
-                        Cihaz Adı
-                    </label>
+            <label>MAC Adresi</label><br>
+            <input type="text" name="mac_address" id="net_mac_address"><br><br>
 
-                    <label>
-                        <input type="checkbox" name="fields" value="device_type" checked>
-                        Tür
-                    </label>
+            <label>Lokasyon</label><br>
+            <input type="text" name="location" id="net_location"><br><br>
 
-                    <label>
-                        <input type="checkbox" name="fields" value="brand" checked>
-                        Marka
-                    </label>
+            <label>Durum</label><br>
+            <select name="status" id="net_status" class="beautifySelect">
+                <option value="Aktif">Aktif</option>
+                <option value="Pasif">Pasif</option>
+                <option value="Bakımda">Bakımda</option>
+                <option value="Arızalı">Arızalı</option>
+            </select><br><br>
 
-                    <label>
-                        <input type="checkbox" name="fields" value="model" checked>
-                        Model
-                    </label>
+            <label>Software Version</label><br>
+            <input type="text" name="software_version" id="net_software_version"><br><br>
 
-                    <label>
-                        <input type="checkbox" name="fields" value="serial_number" checked>
-                        Seri Numarası
-                    </label>
+            <label>Açıklama</label><br>
+            <input type="text" name="description" id="net_description"><br><br>
 
-                    <label>
-                        <input type="checkbox" name="fields" value="ip_address" checked>
-                        IP Adresi
-                    </label>
-
-                    <label>
-                        <input type="checkbox" name="fields" value="mac_address" checked>
-                        MAC Adresi
-                    </label>
-
-                    <label>
-                        <input type="checkbox" name="fields" value="location" checked>
-                        Lokasyon
-                    </label>
-
-                    <label>
-                        <input type="checkbox" name="fields" value="status" checked>
-                        Durum
-                    </label>
-
-                    <label>
-                        <input type="checkbox" name="fields" value="software_version" checked>
-                        Software Version
-                    </label>
-
-                    <label>
-                        <input type="checkbox" name="fields" value="created_at" checked>
-                        Oluşturulma
-                    </label>
-
-                    <label>
-                        <input type="checkbox" name="fields" value="updated_at" checked>
-                        Son Güncelleme
-                    </label>
-
-                </div>
-
-                <div class="search-buttons">
-
-                    <button type="button" id="selectAllBtn" class="beautify">
-                        {{ translations.select_all }}
-                    </button>
-
-                    <button type="button" id="clearAllBtn" class="beautify">
-                        {{ translations.clear_all }}
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
+            <button class="add-btn bold" type="submit">{{translations.save}}</button>
+        </form>
     </div>
 
 

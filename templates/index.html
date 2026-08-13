@@ -95,6 +95,105 @@
                     {{translations.search_settings}}
                 </button>
             </div>
+
+            <div id="searchSettingsOverlay">
+                <div id="searchSettingsPanel">
+                    <span id="closeSearchSettings">✖</span>
+                    <h2 id="aramalabel">{{translations.search_settings_i}}</h2>
+                    <br>
+                    <h3 id="aranacakalan">{{translations.search_fields}}</h3>
+                    <div class="search-options">
+
+                        <div class="search-fields">
+                            <label id="sl1">
+                                <input type="checkbox" name="fields" value="name" checked>
+                                {{translations.e_server}}
+                            </label>
+
+                            <label id="sl2">
+                                <input type="checkbox" name="fields" value="os_name" checked>
+                                {{translations.os}}
+                            </label>
+
+                            <label id="sl3">
+                                <input type="checkbox" name="fields" value="ip_address" checked>
+                                {{translations.ip_address}}
+                            </label>
+
+                            <label id="sl4">
+                                <input type="checkbox" name="fields" value="usage_project" checked>
+                                {{translations.description}}
+                            </label>
+
+                            <label id="sl5">
+                                <input type="checkbox" name="fields" value="disk_gb" checked>
+                                {{translations.e_disk}}
+                            </label>
+
+                            <div id="diskUnitOptions">
+                                <label>
+                                    <input type="radio" name="disk_unit" value="GB" checked>
+                                    GB
+                                </label>
+
+                                <label>
+                                    <input type="radio" name="disk_unit" value="TB">
+                                    TB
+                                </label>
+                            </div>
+
+                            <label>
+                                <input type="checkbox" name="fields" value="ram_g" checked>
+                                {{translations.ram}}
+                            </label>
+
+                            <label>
+                                <input type="checkbox" name="fields" value="core_amount" checked>
+                                {{translations.cpu}}
+                            </label>
+
+                            <label id="sl6">
+                                <input type="checkbox" name="fields" value="created_at" checked>
+                                {{translations.date}}
+                            </label>
+
+                            {% for col in custom_columns %}
+                            <label>
+                                <input type="checkbox" name="fields" value="custom_{{ col.id }}" checked>
+                                {{ col.column_name }}
+                            </label>
+                            {% endfor %}
+
+                        </div>
+
+                        <div class="search-buttons">
+                            <button type="button" id="selectAllBtn" class="beautify">{{translations.select_all}}</button>
+                            <button type="button" id="clearAllBtn" class="beautify"> {{translations.clear_all}}</button>
+
+                            <div id="diskCompareOptions">
+
+                                <label id="ssr1">
+                                    <input type="radio" name="disk_compare" value="equal">
+                                    {{translations.equals}}
+                                </label>
+
+                                <label id="ssr2">
+                                    <input type="radio" name="disk_compare" value="gte">
+                                    {{translations.min}}
+                                </label>
+
+                                <label id="ssr3">
+                                    <input type="radio" name="disk_compare" value="lte" checked>
+                                    {{translations.max}}
+                                </label>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
         </form>
 
         <div>
@@ -247,10 +346,9 @@
 
             <label id="esl4">{{translations.os}}</label><br>
 
-            <select name="server" id="server"  required>
+            <select name="server" id="server" class="beautifySelect" required>
                 <option value="" selected disabled>
-                    <!-- {{ translations.select_os }} -->
-                      İşletim Sistemi Seçin
+                    {{translations.select_os}}
                 </option>
 
                 {% for os in os_list %}
@@ -399,108 +497,6 @@
 
         </form>
 
-    </div>
-
-
-    <div id="searchSettingsOverlay">
-        <div id="searchSettingsPanel">
-            <span id="closeSearchSettings">✖</span>
-            <h2 id="aramalabel">{{translations.search_settings_i}}</h2>
-            <br>
-            <h3 id="aranacakalan">{{translations.search_fields}}</h3>
-            <div class="search-options">
-
-                <div class="search-fields">
-                    <label id="sl1">
-                        <input type="checkbox" name="fields" value="name" checked>
-                        {{translations.e_server}}
-                    </label>
-
-                    <label id="sl2">
-                        <input type="checkbox" name="fields" value="os_name" checked>
-                        {{translations.os}}
-                    </label>
-
-                    <label id="sl3">
-                        <input type="checkbox" name="fields" value="ip_address" checked>
-                        {{translations.ip_address}}
-                    </label>
-
-                    <label id="sl4">
-                        <input type="checkbox" name="fields" value="usage_project" checked>
-                        {{translations.description}}
-                    </label>
-
-                    <label id="sl5">
-                        <input type="checkbox" name="fields" value="disk_gb" checked>
-                        {{translations.e_disk}}
-                    </label>
-
-                    <div id="diskUnitOptions">
-                        <label>
-                            <input type="radio" name="disk_unit" value="GB" checked>
-                            GB
-                        </label>
-
-                        <label>
-                            <input type="radio" name="disk_unit" value="TB">
-                            TB
-                        </label>
-                    </div>
-
-                    <label>
-                        <input type="checkbox" name="fields" value="ram_g" checked>
-                        {{translations.ram}}
-                    </label>
-
-                    <label>
-                        <input type="checkbox" name="fields" value="core_amount" checked>
-                        {{translations.cpu}}
-                    </label>
-
-                    <label id="sl6">
-                        <input type="checkbox" name="fields" value="created_at" checked>
-                        {{translations.date}}
-                    </label>
-
-                    {% for col in custom_columns %}
-                    <label>
-                        <input type="checkbox" name="fields" value="custom_{{ col.id }}" checked>
-                        {{ col.column_name }}
-                    </label>
-                    {% endfor %}
-
-                </div>
-
-                <div class="search-buttons">
-                    <button type="button" id="selectAllBtn" class="beautify">{{translations.select_all}}</button>
-                    <button type="button" id="clearAllBtn" class="beautify"> {{translations.clear_all}}</button>
-
-                    <div id="diskCompareOptions">
-
-                        <label id="ssr1">
-                            <input type="radio" name="disk_compare" value="equal">
-                            {{translations.equals}}
-                        </label>
-
-                        <label id="ssr2">
-                            <input type="radio" name="disk_compare" value="gte">
-                            {{translations.min}}
-                        </label>
-
-                        <label id="ssr3">
-                            <input type="radio" name="disk_compare" value="lte" checked>
-                            {{translations.max}}
-                        </label>
-
-                    </div>
-                </div>
-
-
-
-            </div>
-
-        </div>
     </div>
 
     <div id="tableSettingsOverlay">

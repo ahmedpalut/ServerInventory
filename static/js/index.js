@@ -2,10 +2,10 @@ const searchSettingsBtn = document.getElementById("searchSettingsBtn");
 const overlay = document.getElementById("searchSettingsOverlay");
 const panel = document.getElementById("searchSettingsPanel");
 const closeBtn = document.getElementById("closeSearchSettings");
-const tableSettingsOverlay=document.getElementById("tableSettingsOverlay");
-const tableSettingsBtn=document.getElementById("tableSettingsBtn");
-const tableCloseBtn=document.getElementById("closeTableSettings");
-const tablePanel=document.getElementById("tableSettingsPanel");
+const tableSettingsOverlay = document.getElementById("tableSettingsOverlay");
+const tableSettingsBtn = document.getElementById("tableSettingsBtn");
+const tableCloseBtn = document.getElementById("closeTableSettings");
+const tablePanel = document.getElementById("tableSettingsPanel");
 const closeDeleteColumnBtn = document.getElementById("closeDeleteColumnBtn");
 const columnDeletePanel = document.getElementById("columnDeletePanel");
 const columndeletelay = document.getElementById("columndeletelay");
@@ -26,110 +26,110 @@ let columnSearchActive = false;
 let draggedKey = null;
 
 
-if(deleteColumnBtn){
-    deleteColumnBtn.onclick = function(){
+if (deleteColumnBtn) {
+    deleteColumnBtn.onclick = function () {
         openDeleteColumnPanel();
     };
 }
 
-function openDeleteColumnPanel(){
+function openDeleteColumnPanel() {
 
     document.body.classList.add("modal-open");
 
     fillDeleteColumn();
 
-    document.getElementById("columnDeletePanel").style.right="0";
+    document.getElementById("columnDeletePanel").style.right = "0";
 
-    document.getElementById("columndeletelay").style.display="block";
-    tableSettingsOverlay.style.display="none";
+    document.getElementById("columndeletelay").style.display = "block";
+    tableSettingsOverlay.style.display = "none";
 
 }
 
-function closeDeleteColumnPanel(){
+function closeDeleteColumnPanel() {
 
     document.body.classList.remove("modal-open");
 
-    columnDeletePanel.style.right="-420px";
+    columnDeletePanel.style.right = "-420px";
 
-    columndeletelay.style.display="none";
+    columndeletelay.style.display = "none";
 
 }
 
-if(columndeletelay){
-    columndeletelay.onclick = function(){
+if (columndeletelay) {
+    columndeletelay.onclick = function () {
         closeDeleteColumnPanel();
     }
 }
 
 if (closeDeleteColumnBtn) {
-    closeDeleteColumnBtn.onclick = function(){
+    closeDeleteColumnBtn.onclick = function () {
         closeDeleteColumnPanel();
     };
 }
 
-function openColumnPanel(){
+function openColumnPanel() {
 
     document.body.classList.add("modal-open");
 
     fillColumn();
 
-    document.getElementById("columnPanel").style.right="0";
+    document.getElementById("columnPanel").style.right = "0";
 
-    columnOverlay.style.display="block";
-    tableSettingsOverlay.style.display="none";
+    columnOverlay.style.display = "block";
+    tableSettingsOverlay.style.display = "none";
 
 }
 
-function closeColumnPanel(){
+function closeColumnPanel() {
 
     document.body.classList.remove("modal-open");
 
-    document.getElementById("columnPanel").style.right="-420px";
+    document.getElementById("columnPanel").style.right = "-420px";
 
-    columnOverlay.style.display="none";
+    columnOverlay.style.display = "none";
 
 }
 
-if(columnOverlay){
-    columnOverlay.onclick=function(){
+if (columnOverlay) {
+    columnOverlay.onclick = function () {
         closeColumnPanel();
     };
 }
 
-    if(columnDeleteForm){
-        columnDeleteForm.onsubmit = function () {
-            return confirm("Bu sütun silinecek. Devam etmek istiyor musunuz?");
-        };
+if (columnDeleteForm) {
+    columnDeleteForm.onsubmit = function () {
+        return confirm("Bu sütun silinecek. Devam etmek istiyor musunuz?");
+    };
 }
 
-function fillDeleteColumn(){
+function fillDeleteColumn() {
 
-    const select=document.getElementById("columnDeleteSelect");
+    const select = document.getElementById("columnDeleteSelect");
 
-    const option=
+    const option =
         select.options[select.selectedIndex];
 
 
-    document.getElementById("columnDeleteForm").action=
-        "/deleteColumn/"+option.value;
+    document.getElementById("columnDeleteForm").action =
+        "/deleteColumn/" + option.value;
 
 }
 
-function fillColumn(){
+function fillColumn() {
 
-    const select=document.getElementById("columnSelect");
+    const select = document.getElementById("columnSelect");
 
-    const option=
+    const option =
         select.options[select.selectedIndex];
 
-    document.getElementById("columnName").value=
+    document.getElementById("columnName").value =
         option.dataset.name;
 
-    document.getElementById("columnType").value=
+    document.getElementById("columnType").value =
         option.dataset.type;
 
-    document.getElementById("columnForm").action=
-        "/editcolumn/"+option.value;
+    document.getElementById("columnForm").action =
+        "/editcolumn/" + option.value;
 
 }
 
@@ -148,15 +148,15 @@ function openPanel(
     document.body.classList.add("modal-open");
 
     document.getElementById("p_name").value = name;
-    if(disk>=1024){
-        disk/=1024;
-        document.getElementById("p_disktur").value="TB";
+    if (disk >= 1024) {
+        disk /= 1024;
+        document.getElementById("p_disktur").value = "TB";
     }
-    else{
-        document.getElementById("p_disktur").value="GB";
+    else {
+        document.getElementById("p_disktur").value = "GB";
     }
     document.getElementById("p_disk").value = disk;
-    document.getElementById("server").value = os;
+    document.getElementById("server").value = (os && os !== "None") ? os : "";
     document.getElementById("p_ram").value = ram;
     document.getElementById("p_ip").value = ip;
     document.getElementById("p_project").value = project;
@@ -204,11 +204,37 @@ function closePanel() {
     editOverlay.style.display = "none";
 }
 
-if(editOverlay){
-    editOverlay.onclick = function(){
+if (editOverlay) {
+    editOverlay.onclick = function () {
         closePanel();
     };
-}   
+}
+
+const searchBtn = document.getElementById("searchBtn");
+const searchActive = window.location.pathname === "/search";
+
+if (searchBtn) {
+    searchBtn.onclick = function (e) {
+        if (searchActive) {
+            e.preventDefault();
+            window.location.href = "/";
+            return;
+        }
+
+        const query = searchInput ? searchInput.value.trim() : "";
+        if (!query) {
+            e.preventDefault();
+            return;
+        }
+
+        const checkedFields = document.querySelectorAll('input[name="fields"]:checked');
+        if (checkedFields.length === 0) {
+            e.preventDefault();
+            alert("Lütfen en az bir arama alanı seçin.");
+            return;
+        }
+    };
+}
 
 if (select && serverekle) {
 
@@ -233,28 +259,28 @@ if (select && serverekle) {
 
 }
 
-if(tableSettingsBtn){
-    tableSettingsBtn.onclick = function(){
-        tableSettingsOverlay.style.display="flex";
+if (tableSettingsBtn) {
+    tableSettingsBtn.onclick = function () {
+        tableSettingsOverlay.style.display = "flex";
         document.body.classList.add("modal-open");
     };
 }
 
-if(tableCloseBtn){
-    tableCloseBtn.onclick = function(){
-        tableSettingsOverlay.style.display="none";
+if (tableCloseBtn) {
+    tableCloseBtn.onclick = function () {
+        tableSettingsOverlay.style.display = "none";
         document.body.classList.remove("modal-open");
     };
 }
 
-if(tableSettingsOverlay){
-    tableSettingsOverlay.onclick=function(){
-        tableSettingsOverlay.style.display="none";
+if (tableSettingsOverlay) {
+    tableSettingsOverlay.onclick = function () {
+        tableSettingsOverlay.style.display = "none";
         document.body.classList.remove("modal-open");
     };
 }
 
-if(searchSettingsBtn){
+if (searchSettingsBtn) {
     searchSettingsBtn.onclick = function () {
         overlay.style.display = "flex";
         document.body.classList.add("modal-open");
@@ -262,8 +288,8 @@ if(searchSettingsBtn){
 }
 
 
-if(tablePanel){
-    tablePanel.onclick=function(e){
+if (tablePanel) {
+    tablePanel.onclick = function (e) {
         e.stopPropagation();
     }
 }
@@ -371,30 +397,30 @@ document.getElementById("searchBtn").onclick = function (e) {
     window.location.href = url;
 };
 
-function updateDiskOptions(){
+function updateDiskOptions() {
 
-    if(diskCheckbox.checked){
+    if (diskCheckbox.checked) {
 
-        diskOptions.style.display="flex";
-        diskCompareOptions.style.display="flex";
+        diskOptions.style.display = "flex";
+        diskCompareOptions.style.display = "flex";
 
-    }else{
+    } else {
 
-        diskOptions.style.display="none";
-        diskCompareOptions.style.display="none";
+        diskOptions.style.display = "none";
+        diskCompareOptions.style.display = "none";
 
     }
 
 }
 
-if(diskCheckbox){
+if (diskCheckbox) {
     diskCheckbox.addEventListener("change", updateDiskOptions);
     updateDiskOptions();
 }
 
 updateDiskOptions();
 
-if(columnForm){
+if (columnForm) {
     columnForm.onsubmit = function () {
 
         const select = document.getElementById("columnSelect");
@@ -537,32 +563,56 @@ function restoreColumnOrder() {
 
     const saved = localStorage.getItem("columnOrder");
 
-    if (!saved) return;
-
-    let order;
-
-    try {
-        order = JSON.parse(saved);
-    } catch (e) {
-        return;
-    }
-
     const table = document.getElementById("serverTable");
+    if (!table) return;
+
     const headerRow = table.tHead.rows[0];
     const lastTh = document.getElementById("th_last");
 
+    let order = [];
+
+    if (saved) {
+        try {
+            order = JSON.parse(saved);
+        } catch (e) {
+            order = [];
+        }
+    }
+
+    const currentColumns = Array.from(
+        headerRow.querySelectorAll("th[data-col]")
+    ).map(th => th.dataset.col);
+
+    const newColumns = currentColumns.filter(
+        col => !order.includes(col)
+    );
+
+    order = [
+        ...order.filter(col => currentColumns.includes(col)),
+        ...newColumns
+    ];
+
     order.forEach(function (colKey) {
 
-        const th = headerRow.querySelector(`th[data-col="${colKey}"]`);
+        const th = headerRow.querySelector(
+            `th[data-col="${colKey}"]`
+        );
 
         if (th) {
             headerRow.insertBefore(th, lastTh);
         }
 
-        Array.from(table.tBodies[0].rows).forEach(function (row) {
+    });
 
-            const cell = row.querySelector(`[data-col="${colKey}"]`);
-            const lastCell = row.cells[row.cells.length - 1];
+    Array.from(table.tBodies[0].rows).forEach(function (row) {
+
+        const lastCell = row.cells[row.cells.length - 1];
+
+        order.forEach(function (colKey) {
+
+            const cell = row.querySelector(
+                `[data-col="${colKey}"]`
+            );
 
             if (cell) {
                 row.insertBefore(cell, lastCell);
@@ -572,32 +622,36 @@ function restoreColumnOrder() {
 
     });
 
+    localStorage.setItem(
+        "columnOrder",
+        JSON.stringify(order)
+    );
 }
 
 function toggleColumnMenu(event, colKey) {
     window.scrollTo({
         top: 0,
-        behavior: "smooth" 
+        behavior: "smooth"
     });
     event.stopPropagation();
-    activeColumn = colKey; 
-    
+    activeColumn = colKey;
+
     const menu = document.getElementById('sharedColumnMenu');
     const btn = event.currentTarget;
-    
+
     if (menu.style.display === 'block') {
         menu.style.display = 'none';
     } else {
         const rect = btn.getBoundingClientRect();
-        
+
         const oldSearch = menu.querySelector('.col-search-box');
         if (oldSearch) oldSearch.remove();
-        
+
         menu.style.display = 'block';
-        
+
         let leftPos = rect.right - menu.offsetWidth;
         if (leftPos < 10) leftPos = rect.left;
-        
+
         menu.style.top = (rect.bottom + 4) + 'px';
         menu.style.left = leftPos + 'px';
     }
@@ -611,20 +665,20 @@ function executeSort(order) {
 
 function openSharedSearch(event) {
     event.stopPropagation();
-    
+
     const menu = document.getElementById('sharedColumnMenu');
-    
+
     if (!menu.querySelector('.col-search-box')) {
         const searchDiv = document.createElement('div');
         searchDiv.className = 'col-search-box';
         searchDiv.innerHTML = `<input type="text" placeholder="Aranacak kelime..." class="col-filter-input" onclick="event.stopPropagation()">`;
-        
+
         menu.appendChild(searchDiv);
-        
+
         const input = searchDiv.querySelector('input');
         input.focus();
-        
-        input.oninput = function() {
+
+        input.oninput = function () {
             let val = this.value.toLowerCase();
             columnSearchActive = val.length > 0;
 
@@ -658,20 +712,20 @@ function openSharedSearch(event) {
     }
 }
 
-function updateSearchButton(){
+function updateSearchButton() {
 
     const btn = document.getElementById("searchBtn");
 
-    if(columnSearchActive){
+    if (columnSearchActive) {
         btn.innerHTML = "⬅️ Geri Dön";
     }
-    else{
+    else {
         btn.innerHTML = "🔍 Ara";
     }
 
 }
 
-window.addEventListener('click', function() {
+window.addEventListener('click', function () {
     const menu = document.getElementById('sharedColumnMenu');
     if (menu) menu.style.display = 'none';
 });
@@ -698,7 +752,7 @@ function sortTable(colKey, order) {
     rows.forEach(row => tbody.appendChild(row));
 }
 
-window.addEventListener('scroll', function() {
+window.addEventListener('scroll', function () {
     const menu = document.getElementById('sharedColumnMenu');
     if (menu && menu.style.display === 'block') {
         menu.style.display = 'none';

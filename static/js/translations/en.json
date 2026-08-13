@@ -14,10 +14,13 @@
 
     "search_placeholder": "🔍 Search Server...",
     "search_network_placeholder": "🔍 Search Network Device...",
+    "search_clients_placeholder": "🔍 Search Client...",
+    "search_logs_placeholder": "🔍 Search Log...",
     "search": "🔍 Search",
     "back": "⬅️ Back",
     "search_settings": "⚙️ Search Settings",
     "search_settings_i": "Search Settings",
+    "select_at_least_one_field": "Please select at least one search field.",
 
     "new_server": "➕ New Server",
 

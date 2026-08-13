@@ -555,6 +555,109 @@ def logs():
         )
 
 
+@app.route("/logs/search")
+def logs_search():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    conn, cursor, is_connected = get_db()
+
+    if not is_connected:
+        return render_template(
+            "logs.html",
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            role=session.get("role"),
+            is_admin=session.get("is_admin"),
+            is_connected=False,
+            logs=[],
+        )
+
+    try:
+        q = request.args.get("q", "").strip()
+        fields = request.args.getlist("fields")
+
+        if not q:
+            if conn:
+                conn.close()
+            return redirect(url_for("logs"))
+
+        if not fields:
+            if conn:
+                conn.close()
+            flash(translations.get("select_at_least_one_field", "Lütfen en az bir arama alanı seçin."), "error")
+            return redirect(url_for("logs"))
+
+        allowed_fields = {
+            "username": "username",
+            "action": "action",
+            "target": "target",
+            "description": "description",
+            "created_at": "created_at",
+        }
+
+        selected_fields = []
+        for field in fields:
+            if field in allowed_fields:
+                selected_fields.append(allowed_fields[field])
+
+        if q and not selected_fields:
+            selected_fields = list(allowed_fields.values())
+
+        sql = """
+            SELECT
+                username,
+                action,
+                target,
+                description,
+                created_at
+            FROM logs
+        """
+        values = []
+
+        if q and selected_fields:
+            conditions = []
+            for field in selected_fields:
+                conditions.append(f"CAST({field} AS CHAR) LIKE %s")
+                values.append(f"%{q}%")
+            sql += " WHERE " + " OR ".join(conditions)
+
+        sql += " ORDER BY created_at DESC LIMIT 100"
+
+        cursor.execute(sql, values)
+        logs = cursor.fetchall()
+        conn.close()
+
+        return render_template(
+            "logs.html",
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            role=session.get("role"),
+            is_admin=session.get("is_admin"),
+            is_connected=True,
+            logs=logs,
+        )
+    except Exception:
+        if conn:
+            conn.close()
+
+        return render_template(
+            "logs.html",
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            role=session.get("role"),
+            is_admin=session.get("is_admin"),
+            is_connected=False,
+            logs=[],
+        )
+
+
 @app.route("/")
 def index():
     
@@ -691,6 +794,10 @@ def dashboard():
             win_percent=0,
             other_percent=0,
             top_servers=[],
+            net_labels="[]",
+            net_values="[]",
+            net_other_info_text="",
+            total_net_devices=0,
         )
 
     try:
@@ -903,6 +1010,42 @@ def dashboard():
         )
         top_servers = cursor.fetchall()
 
+        cursor.execute(
+            """
+            SELECT
+                COALESCE(device_type, 'Bilinmeyen') AS dev_type,
+                COUNT(*) AS total
+            FROM network_devices
+            GROUP BY device_type
+            ORDER BY total DESC
+            """
+        )
+        net_stats = cursor.fetchall()
+
+        net_TOP_N = 5
+        net_labels = []
+        net_values = []
+        net_other_total = 0
+        net_other_details = []
+
+        for i, row in enumerate(net_stats):
+            d_type = row["dev_type"] or "Bilinmeyen"
+            total = row["total"]
+
+            if i < net_TOP_N:
+                net_labels.append(d_type)
+                net_values.append(total)
+            else:
+                net_other_total += total
+                net_other_details.append(f"{d_type}: {total}")
+
+        if net_other_total > 0:
+            net_labels.append("Diğer")
+            net_values.append(net_other_total)
+
+        net_other_info_text = ", ".join(net_other_details)
+        total_net_devices = sum(row["total"] for row in net_stats)
+
         conn.close()
 
         return render_template(
@@ -932,6 +1075,10 @@ def dashboard():
             win_percent=win_percent,
             other_percent=other_percent,
             top_servers=top_servers,
+            net_labels=json.dumps(net_labels),
+            net_values=json.dumps(net_values),
+            net_other_info_text=net_other_info_text,
+            total_net_devices=total_net_devices,
         )
     except Exception:
         if conn:
@@ -966,6 +1113,10 @@ def dashboard():
             win_percent=0,
             other_percent=0,
             top_servers=[],
+            net_labels="[]",
+            net_values="[]",
+            net_other_info_text="",
+            total_net_devices=0,
         )
 
 
@@ -1468,8 +1619,16 @@ def search():
         disk_unit = request.args.get("disk_unit", "GB")
         disk_compare = request.args.get("disk_compare", "equal")
 
+        if not q:
+            if conn:
+                conn.close()
+            return redirect(url_for("index"))
+
         if not fields:
-            fields = ["name"]
+            if conn:
+                conn.close()
+            flash(translations.get("select_at_least_one_field", "Lütfen en az bir arama alanı seçin."), "error")
+            return redirect(url_for("index"))
 
         allowed_fields = {
             "name": "servers.name",
@@ -1637,6 +1796,17 @@ def networkdevices_search():
 
         q = request.args.get("q", "").strip()
         fields = request.args.getlist("fields")
+
+        if not q:
+            if conn:
+                conn.close()
+            return redirect(url_for("networkdevices"))
+
+        if not fields:
+            if conn:
+                conn.close()
+            flash(translations.get("select_at_least_one_field", "Lütfen en az bir arama alanı seçin."), "error")
+            return redirect(url_for("networkdevices"))
 
         allowed_fields = {
             "name": "name",
@@ -1980,6 +2150,95 @@ def clients():
 
         flash("Client bilgileri alınamadı.","error")
         return redirect(url_for("index"))
+
+
+@app.route("/clients/search")
+def clients_search():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    conn, cursor, is_connected = get_db()
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    if not is_connected:
+        flash("Veritabanına bağlanılamadı.", "error")
+        return redirect(url_for("clients"))
+
+    try:
+        q = request.args.get("q", "").strip()
+        fields = request.args.getlist("fields")
+
+        if not q:
+            if conn:
+                conn.close()
+            return redirect(url_for("clients"))
+
+        if not fields:
+            if conn:
+                conn.close()
+            flash(translations.get("select_at_least_one_field", "Lütfen en az bir arama alanı seçin."), "error")
+            return redirect(url_for("clients"))
+
+        allowed_fields = {
+            "hostname": "hostname",
+            "ip_address": "ip_address",
+            "username": "username",
+            "os_name": "os_name",
+            "status": "status",
+            "site_status": "site_status",
+            "last_seen": "last_seen",
+        }
+
+        selected_fields = []
+        for field in fields:
+            if field in allowed_fields:
+                selected_fields.append(allowed_fields[field])
+
+        if q and not selected_fields:
+            selected_fields = list(allowed_fields.values())
+
+        sql = """
+            SELECT
+                id,
+                hostname,
+                ip_address,
+                username,
+                os_name,
+                status,
+                site_status,
+                last_seen
+            FROM clients
+        """
+        values = []
+
+        if q and selected_fields:
+            conditions = []
+            for field in selected_fields:
+                conditions.append(f"CAST({field} AS CHAR) LIKE %s")
+                values.append(f"%{q}%")
+            sql += " WHERE " + " OR ".join(conditions)
+
+        sql += " ORDER BY hostname"
+
+        cursor.execute(sql, values)
+        clients = cursor.fetchall()
+        conn.close()
+
+        return render_template(
+            "clients.html",
+            clients=clients,
+            translations=translations,
+            lang=lang,
+            username=session.get("user"),
+            is_admin=session.get("is_admin", False),
+        )
+    except Exception as e:
+        print("Clients search error:", e)
+        if conn:
+            conn.close()
+        flash("Client arama hatası.", "error")
+        return redirect(url_for("clients"))
     
 @app.route("/networkdevices")
 def networkdevices():
@@ -2153,6 +2412,139 @@ def addnetworkdevice_page():
         translations=translations,
         lang=lang
     )
+
+
+@app.route("/deletenetworkdevice/<int:id>")
+@admin_required
+def deletenetworkdevice(id):
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        flash(translations.get("error", "Veritabanı hatası."), "error")
+        return redirect(url_for("networkdevices"))
+
+    try:
+        cursor.execute("SELECT name FROM network_devices WHERE id = %s", (id,))
+        device = cursor.fetchone()
+        dev_name = device["name"] if device else f"ID {id}"
+
+        cursor.execute("DELETE FROM network_devices WHERE id = %s", (id,))
+
+        add_log(
+            cursor,
+            session["user"],
+            "Ağ Cihazı Sil",
+            dev_name,
+            f"'{dev_name}' ağ cihazı silindi."
+        )
+
+        conn.commit()
+        conn.close()
+        flash("Ağ cihazı silindi!", "success")
+    except Exception as e:
+        print("Delete network device error:", e)
+        if conn:
+            conn.close()
+        flash(translations.get("error", "Silme işlemi başarısız."), "error")
+
+    return redirect(url_for("networkdevices"))
+
+
+@app.route("/editnetworkdevice/<int:id>", methods=["POST"])
+@admin_required
+def editnetworkdevice(id):
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        flash(translations.get("error", "Veritabanı hatası."), "error")
+        return redirect(url_for("networkdevices"))
+
+    try:
+        cursor.execute("SELECT * FROM network_devices WHERE id = %s", (id,))
+        old_device = cursor.fetchone()
+
+        if not old_device:
+            conn.close()
+            flash("Cihaz bulunamadı.", "error")
+            return redirect(url_for("networkdevices"))
+
+        name = request.form.get("name", "").strip()
+        device_type = request.form.get("device_type", "").strip()
+        brand = request.form.get("brand", "").strip()
+        model = request.form.get("model", "").strip()
+        serial_number = request.form.get("serial_number", "").strip()
+        ip_address = request.form.get("ip_address", "").strip()
+        mac_address = request.form.get("mac_address", "").strip()
+        location = request.form.get("location", "").strip()
+        status = request.form.get("status", "").strip()
+        software_version = request.form.get("software_version", "").strip()
+        description = request.form.get("description", "").strip()
+
+        form_data = {
+            "name": name,
+            "device_type": device_type,
+            "brand": brand,
+            "model": model,
+            "serial_number": serial_number,
+            "ip_address": ip_address,
+            "mac_address": mac_address,
+            "location": location,
+            "status": status,
+            "software_version": software_version,
+            "description": description,
+        }
+
+        field_labels = [
+            ("name", "Cihaz Adı"),
+            ("device_type", "Tür"),
+            ("brand", "Marka"),
+            ("model", "Model"),
+            ("serial_number", "Seri Numarası"),
+            ("ip_address", "IP Adresi"),
+            ("mac_address", "MAC Adresi"),
+            ("location", "Lokasyon"),
+            ("status", "Durum"),
+            ("software_version", "Software Version"),
+            ("description", "Açıklama"),
+        ]
+
+        changes = []
+        for field_key, label in field_labels:
+            old_val = str(old_device.get(field_key) or "")
+            new_val = str(form_data.get(field_key) or "")
+            if old_val != new_val:
+                changes.append(f"{label}: '{old_val}' → '{new_val}'")
+
+        cursor.execute(
+            """
+            UPDATE network_devices
+            SET name=%s, device_type=%s, brand=%s, model=%s, serial_number=%s,
+                ip_address=%s, mac_address=%s, location=%s, status=%s,
+                software_version=%s, description=%s, updated_at=NOW()
+            WHERE id=%s
+            """,
+            (name, device_type, brand, model, serial_number, ip_address,
+             mac_address, location, status, software_version, description, id)
+        )
+
+        target_name = old_device.get("name") or name
+        for change in changes:
+            add_log(cursor, session["user"], "Ağ Cihazı Düzenle", target_name, change)
+
+        conn.commit()
+        conn.close()
+        flash("Ağ cihazı güncellendi!", "success")
+    except Exception as e:
+        print("Edit network device error:", e)
+        if conn:
+            conn.close()
+        flash(translations.get("error", "Güncelleme hatası."), "error")
+
+    return redirect(url_for("networkdevices"))
     
 @app.route("/api/client/update", methods=["POST"])
 def client_update():
@@ -2248,6 +2640,7 @@ def check_offline_clients():
             print("Offline kontrol hatası:", e)
 
         time.sleep(30)
+
 
 if __name__ == "__main__":
     offline_thread = threading.Thread(

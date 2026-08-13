@@ -15,7 +15,7 @@ body {
     background-attachment: fixed;
 }
 
-#editOverlay {
+#editOverlay, #editNetworkOverlay {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, .45);
@@ -37,7 +37,7 @@ body {
     z-index: 2000;
 }
 
-#editPanel {
+#editPanel, #editNetworkPanel {
     position: fixed;
     top: 0;
     right: -100%;
@@ -54,7 +54,7 @@ body {
     z-index: 1000;
 }
 
-#editPanel input {
+#editPanel input, #editNetworkPanel input {
     width: 100%;
     padding: 10px;
     border: none;
@@ -80,10 +80,18 @@ body {
     background-color: #c6c6c6;
 }
 
-#closeBtn {
+#closeBtn, #closeEditNetworkBtn {
     float: right;
     cursor: pointer;
     font-size: 22px;
+}
+
+.action-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
 }
 
 .page-header {
@@ -1668,4 +1676,37 @@ input.custom-checkbox {
 
 #restoreBtn {
     display: none;
+}
+
+.card-header-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.card-header-toggle h2 {
+    margin: 0;
+}
+
+.toggle-chart-btn {
+    background: rgba(37, 99, 235, 0.25);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #60a5fa;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.25s;
+}
+
+.toggle-chart-btn:hover {
+    background: rgba(37, 99, 235, 0.45);
+    color: #ffffff;
+    transform: translateY(-1px);
 }

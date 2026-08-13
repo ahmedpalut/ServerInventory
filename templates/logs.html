@@ -11,11 +11,13 @@
 
 <body>
 
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div id="toast">
-        {{ messages[0] }}
+    {% for category, message in messages %}
+    <div id="toast" class="{{ category }}-toast">
+        {{ message }}
     </div>
+    {% endfor %}
     {% endif %}
     {% endwith %}
 
@@ -49,31 +51,93 @@
 
     {% include 'navbar.html' %}
 
+    <div class="toolbar">
+        <form id="searchForm" action="/logs/search" method="GET">
+            <div class="search-area">
+                <input type="text" id="searchInput" name="q" placeholder="{{ translations.search_logs_placeholder }}"
+                    value="{{ request.args.get('q', '') }}">
 
-    <table class="logs-table">
-        <thead>
-            <tr>
-                <th>{{translations.date}}</th>
-                <th>{{translations.username}}</th>
-                <th>İşlem</th>
-                <th>Hedef</th>
-                <th>{{translations.description}}</th>
-            </tr>
-        </thead>
+                <button type="submit" id="searchBtn" class="beautify">
+                    {% if request.path == "/logs/search" %}
+                    {{translations.back}}
+                    {% else %}
+                    {{translations.search}}
+                    {% endif %}
+                </button>
 
-        <tbody>
-            {% for log in logs %}
-            <tr>
-                <td>{{ log.created_at }}</td>
-                <td>{{ log.username }}</td>
-                <td>{{ log.action }}</td>
-                <td>{{ log.target }}</td>
-                <td>{{ log.description }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                <button type="button" id="searchSettingsBtn" class="beautify">
+                    {{ translations.search_settings }}
+                </button>
+            </div>
 
+            <div id="searchSettingsOverlay" style="display:none;">
+                <div id="searchSettingsPanel">
+                    <span id="closeSearchSettings">✖</span>
+                    <h2 id="aramalabel">{{ translations.search_settings_i }}</h2>
+                    <br>
+                    <h3 id="aranacakalan">{{ translations.search_fields }}</h3>
+                    <div class="search-options">
+                        <div class="search-fields">
+                            <label><input type="checkbox" name="fields" value="username" checked>
+                                {{translations.username}}</label>
+                            <label><input type="checkbox" name="fields" value="action" checked> İşlem</label>
+                            <label><input type="checkbox" name="fields" value="target" checked> Hedef</label>
+                            <label><input type="checkbox" name="fields" value="description" checked>
+                                {{translations.description}}</label>
+                            <label><input type="checkbox" name="fields" value="created_at" checked>
+                                {{translations.date}}</label>
+                        </div>
+                        <div class="search-buttons">
+                            <button type="button" id="selectAllBtn" class="beautify">{{ translations.select_all
+                                }}</button>
+                            <button type="button" id="clearAllBtn" class="beautify">{{ translations.clear_all
+                                }}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <table class="logs-table">
+            <thead>
+                <tr>
+                    <th>{{translations.date}}</th>
+                    <th>{{translations.username}}</th>
+                    <th>İşlem</th>
+                    <th>Hedef</th>
+                    <th>{{translations.description}}</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.created_at }}</td>
+                    <td>{{ log.username }}</td>
+                    <td>{{ log.action }}</td>
+                    <td>{{ log.target }}</td>
+                    <td>{{ log.description }}</td>
+                </tr>
+                {% else %}
+
+                <tr class="serverRow">
+
+                    <td colspan="5" style="text-align: center;">
+                        Henüz log bulunmuyor.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="{{url_for('static', filename='js/logs.js')}}">
+        
+    </script>
 </body>
 
 </html>

@@ -50,56 +50,116 @@
 
     {% include 'navbar.html' %}
 
-    <h1>Clients</h1>
+    <div class="toolbar">
+        <form id="searchForm" action="/clients/search" method="GET">
+            <div class="search-area">
+                <input type="text" id="searchInput" name="q" placeholder="{{ translations.search_clients_placeholder }}"
+                    value="{{ request.args.get('q', '') }}">
 
-    <table>
-        <thead>
-            <tr>
-                <th>Client</th>
-                <th>IP</th>
-                <th>Kullanıcı</th>
-                <th>OS</th>
-                <th>Durum</th>
-                <th>Site Durumu</th>
-                <th>Son Görülme</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {% for client in clients %}
-            <tr>
-
-                <td>{{ client["hostname"] }}</td>
-
-                <td>{{ client["ip_address"] }}</td>
-
-                <td>{{ client["username"] }}</td>
-
-                <td>{{ client["os_name"] }}</td>
-
-                <td>
-                    {% if client["status"] == "online" %}
-                    🟢 Online
+                <button type="submit" id="searchBtn" class="beautify">
+                    {% if request.path == "/clients/search" %}
+                    {{translations.back}}
                     {% else %}
-                    🔴 Offline
+                    {{translations.search}}
                     {% endif %}
-                </td>
+                </button>
 
-                <td>
-                    {% if client["site_status"] == "active" %}
-                    🟢 Aktif
-                    {% else %}
-                    🔴 Pasif
-                    {% endif %}
-                </td>
+                <button type="button" id="searchSettingsBtn" class="beautify">
+                    {{ translations.search_settings }}
+                </button>
+            </div>
 
-                <td>{{ client["last_seen"] or "-" }}</td>
+            <div id="searchSettingsOverlay" style="display:none;">
+                <div id="searchSettingsPanel">
+                    <span id="closeSearchSettings">✖</span>
+                    <h2 id="aramalabel">{{ translations.search_settings_i }}</h2>
+                    <br>
+                    <h3 id="aranacakalan">{{ translations.search_fields }}</h3>
+                    <div class="search-options">
+                        <div class="search-fields">
+                            <label><input type="checkbox" name="fields" value="hostname" checked> Hostname</label>
+                            <label><input type="checkbox" name="fields" value="ip_address" checked> IP Adresi</label>
+                            <label><input type="checkbox" name="fields" value="username" checked> Kullanıcı</label>
+                            <label><input type="checkbox" name="fields" value="os_name" checked> OS</label>
+                            <label><input type="checkbox" name="fields" value="status" checked> Durum</label>
+                            <label><input type="checkbox" name="fields" value="site_status" checked> Site Durumu</label>
+                            <label><input type="checkbox" name="fields" value="last_seen" checked> Son Görülme</label>
+                        </div>
+                        <div class="search-buttons">
+                            <button type="button" id="selectAllBtn" class="beautify">{{ translations.select_all
+                                }}</button>
+                            <button type="button" id="clearAllBtn" class="beautify">{{ translations.clear_all
+                                }}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>IP</th>
+                    <th>Kullanıcı</th>
+                    <th>OS</th>
+                    <th>Durum</th>
+                    <th>Site Durumu</th>
+                    <th>Son Görülme</th>
+                </tr>
+            </thead>
 
+            <tbody>
+                {% for client in clients %}
+                <tr>
+
+                    <td>{{ client["hostname"] }}</td>
+
+                    <td>{{ client["ip_address"] }}</td>
+
+                    <td>{{ client["username"] }}</td>
+
+                    <td>{{ client["os_name"] }}</td>
+
+                    <td>
+                        {% if client["status"] == "online" %}
+                        🟢 Online
+                        {% else %}
+                        🔴 Offline
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if client["site_status"] == "active" %}
+                        🟢 Aktif
+                        {% else %}
+                        🔴 Pasif
+                        {% endif %}
+                    </td>
+
+                    <td>{{ client["last_seen"] or "-" }}</td>
+
+                </tr>
+                {% else %}
+
+                <tr class="serverRow">
+
+                    <td colspan="7" style="text-align: center;">
+                        Henüz client bulunmuyor.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="{{url_for('static', filename='js/clients.js')}}">
+        
+    </script>
 </body>
 
 </html>
