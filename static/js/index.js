@@ -149,10 +149,11 @@ function openPanel(
 
     document.getElementById("p_name").value = name;
     if (disk >= 1024) {
-        disk /= 1024;
+        disk = Number((disk / 1024).toFixed(2));
         document.getElementById("p_disktur").value = "TB";
     }
     else {
+        disk = Number(parseFloat(disk).toFixed(2));
         document.getElementById("p_disktur").value = "GB";
     }
     document.getElementById("p_disk").value = disk;

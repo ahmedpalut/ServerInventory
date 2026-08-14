@@ -223,6 +223,13 @@
                         </div>
                     </th>
 
+                    <th draggable="true" data-col="description" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Açıklama</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'description')">▼</button>
+                        </div>
+                    </th>
+
                     {% if is_admin %}
                     <th id="th_last">{{translations.operation}}</th>
                     {% endif %}
@@ -262,6 +269,8 @@
 
                     <td data-col="updated_at">{{ device.updated_at or '-' }}</td>
 
+                    <td data-col="description">{{ device.description or '-' }}</td>
+
                     {% if is_admin %}
                     <td class="action-cell">
                         <a href="#" class="edit-btn" data-id="{{ device.id }}" data-name="{{ device.name }}"
@@ -289,7 +298,7 @@
 
                 <tr class="serverRow">
 
-                    <td colspan="13" style="text-align: center;">
+                    <td colspan="14" style="text-align: center;">
                         Henüz ağ cihazı bulunmuyor.
                     </td>
 
