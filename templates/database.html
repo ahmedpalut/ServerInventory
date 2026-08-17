@@ -7,15 +7,18 @@
     <title>{{translations.database}}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
 </head>
 
 <body>
 
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div id="toast">
-        {{ messages[0] }}
+    {% for category, message in messages %}
+    <div id="toast" class="{{ category }}-toast">
+        {{ message }}
     </div>
+    {% endfor %}
     {% endif %}
     {% endwith %}
 
@@ -131,10 +134,15 @@
 
                                 <button type="submit" class="database-action-btn">
                                     <i class="fa-solid fa-plug-circle-check"></i>
-                                    Veritabanına Bağlan
+                                    Veritabanı Hizmetini Çalıştır
                                 </button>
 
                             </form>
+
+                            <button type="button" id="connectDatabaseBtn" class="database-action-btn">
+                                <i class="fa-solid fa-globe"></i>
+                                Veritabanına Bağlan
+                            </button>
 
                         </div>
                     </div>
@@ -179,6 +187,29 @@
                             <i class="fa-solid fa-shield-halved"></i>
                             <span>Güvenlik</span>
                         </div>
+
+                        <div class="database-card-content">
+
+                            <form action="{{ url_for('change_database_password') }}" method="POST">
+
+                                <label>Yeni Şifre</label>
+
+                                <input type="password" name="new_password" id="newDatabasePassword"
+                                    placeholder="Yeni şifre" required class="password-input">
+
+                                <label>Yeni Şifre (Tekrar)</label>
+
+                                <input type="password" name="new_password_confirm" id="newDatabasePasswordConfirm"
+                                    placeholder="Yeni şifreyi tekrar girin" required class="password-input">
+
+                                <button type="submit" class="database-action-btn">
+                                    <i class="fa-solid fa-key"></i>
+                                    Şifreyi Değiştir
+                                </button>
+
+                            </form>
+
+                        </div>
                     </div>
 
                 </div>
@@ -186,6 +217,42 @@
             </div>
 
         </div>
+    </div>
+
+    <div id="connectDatabaseOverlay">
+
+        <div id="connectDatabasePanel">
+
+            <span id="closeConnectDatabase">✖</span>
+
+            <h2>Veritabanı Bağlantısını Değiştir</h2>
+
+            <form action="/connect_database" method="POST">
+
+                <label>Host</label>
+                <input type="text" name="host" value="{{ config_db_host }}" required>
+
+                <label>Port</label>
+                <input type="text" name="port" value="{{ config_db_port }}" required>
+
+                <label>Kullanıcı Adı</label>
+                <input type="text" name="user" value="{{ config_db_user }}" required>
+
+                <label>Şifre</label>
+                <input type="password" name="password" placeholder="Şifre">
+
+                <label>Veritabanı</label>
+                <input type="text" name="database" value="{{ config_db_name }}" required>
+
+                <button type="submit" class="beautify">
+                    <i class="fa-solid fa-plug"></i>
+                    Bağlan
+                </button>
+
+            </form>
+
+        </div>
+
     </div>
 
 

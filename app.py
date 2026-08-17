@@ -1,6 +1,6 @@
 from flask import *
 from datetime import datetime
-from dotenv import load_dotenv
+from dotenv import load_dotenv, set_key, find_dotenv
 from ldap3 import Server, Connection, SUBTREE, SIMPLE, NONE
 from functools import wraps
 import json
@@ -15,26 +15,348 @@ import threading
 
 load_dotenv()
 
-
-def get_db():
-    try:
-        conn = mysql.connector.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME"),
-            connect_timeout=2,
-        )
-        return conn, conn.cursor(dictionary=True), True
-    except Exception:
-        return None, None, False
-
-
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
 AD_SERVER = os.getenv("LDAP_SERVER")
 AD_DOMAIN = os.getenv("LDAP_DOMAIN")
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        lang = session.get("lang", "tr")
+        translations = get_translation(lang)
+        if not session.get("is_admin"):
+            flash(translations["permission"], "error")
+            return redirect(url_for("index"))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+def mysql_service_running():
+    try:
+        result = subprocess.run(
+            [
+                "powershell",
+                "-NoProfile",
+                "-Command",
+                "Get-Service -Name 'MySQL*' -ErrorAction SilentlyContinue | Where-Object {$_.Status -eq 'Running'}"
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+
+        return bool(result.stdout.strip())
+
+    except Exception as e:
+        print("MySQL service check error:", e)
+        return False
+
+
+DB_CONFIG = {
+    "host": os.getenv("DB_HOST", "localhost"),
+    "port": os.getenv("DB_PORT", "3306"),
+    "user": os.getenv("DB_USER", "root"),
+    "password": os.getenv("DB_PASSWORD", ""),
+    "database": os.getenv("DB_NAME", "")
+}
+
+
+def get_db():
+    try:
+        conn = mysql.connector.connect(
+            host=DB_CONFIG["host"],
+            port=DB_CONFIG["port"],
+            user=DB_CONFIG["user"],
+            password=DB_CONFIG["password"],
+            database=DB_CONFIG["database"],
+            connect_timeout=2
+        )
+
+        return conn, conn.cursor(dictionary=True), True
+
+    except Exception:
+        return None, None, False
+
+REQUIRED_DATABASE_SCHEMA = {
+    "servers": [
+        "id",
+        "name",
+        "disk_gb",
+        "ram_g",
+        "core_amount",
+        "ip_address",
+        "usage_project",
+        "os_type_id",
+        "created_at"
+    ],
+    "os_types": [
+        "id",
+        "name"
+    ],
+    "custom_columns": [
+        "id",
+        "column_name",
+        "data_type",
+        "created_at"
+    ],
+    "custom_values": [
+        "server_id",
+        "column_id",
+        "value"
+    ],
+    "clients": [
+        "id",
+        "hostname",
+        "ip_address",
+        "username",
+        "os_name",
+        "status",
+        "site_status",
+        "last_seen"
+    ],
+    "network_devices": [
+        "id",
+        "name",
+        "device_type",
+        "brand",
+        "model",
+        "serial_number",
+        "ip_address",
+        "mac_address",
+        "location",
+        "status",
+        "software_version",
+        "description",
+        "created_at",
+        "updated_at"
+    ],
+    "logs": [
+        "id",
+        "username",
+        "action",
+        "target",
+        "description",
+        "created_at"
+    ]
+}
+
+
+def validate_database_schema(conn, database_name):
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        for table_name, required_columns in REQUIRED_DATABASE_SCHEMA.items():
+
+            cursor.execute(
+                """
+                SELECT COUNT(*) AS total
+                FROM information_schema.tables
+                WHERE table_schema = %s
+                AND table_name = %s
+                """,
+                (database_name, table_name)
+            )
+
+            table_result = cursor.fetchone()
+
+            if not table_result or table_result["total"] == 0:
+                return False, f"'{table_name}' tablosu bulunamadı."
+
+            cursor.execute(
+                """
+                SELECT COLUMN_NAME AS column_name
+                FROM information_schema.columns
+                WHERE table_schema = %s
+                AND table_name = %s
+                """,
+                (database_name, table_name)
+            )
+
+            existing_columns = {
+                row["column_name"]
+                for row in cursor.fetchall()
+            }
+
+            missing_columns = [
+                column
+                for column in required_columns
+                if column not in existing_columns
+            ]
+
+            if missing_columns:
+                return False, (
+                    f"'{table_name}' tablosunda eksik sütunlar: "
+                    + ", ".join(missing_columns)
+                )
+
+        return True, "Veritabanı uyumlu."
+
+    finally:
+        cursor.close()
+
+@app.route("/change_database_password", methods=["POST"])
+@admin_required
+def change_database_password():
+
+    new_password = request.form.get("new_password", "")
+    new_password_confirm = request.form.get("new_password_confirm", "")
+
+    if not new_password or not new_password_confirm:
+        flash("Yeni şifre alanlarını doldurun.", "error")
+        return redirect(url_for("database"))
+
+    if new_password != new_password_confirm:
+        flash("Yeni şifreler eşleşmiyor.", "error")
+        return redirect(url_for("database"))
+
+    if not is_db_password_strong(new_password):
+        flash(
+            "Şifre en az 8 karakter olmalı ve büyük harf, "
+            "küçük harf ve rakam içermelidir.",
+            "error"
+        )
+        return redirect(url_for("database"))
+
+    conn = None
+    cursor = None
+
+    try:
+
+        conn, cursor, is_connected = get_db()
+
+        if not is_connected:
+            flash("Veritabanına bağlı değil.", "error")
+            return redirect(url_for("database"))
+
+        db_user = DB_CONFIG["user"]
+
+        safe_user = db_user.replace("`", "``")
+
+        cursor.execute(
+            f"ALTER USER `{safe_user}`@`localhost` IDENTIFIED BY %s",
+            (new_password,)
+        )
+
+        conn.commit()
+
+        conn.close()
+        conn = None
+
+        DB_CONFIG["password"] = new_password
+
+        dotenv_path = find_dotenv()
+
+        if dotenv_path:
+            set_key(
+                dotenv_path,
+                "DB_PASSWORD",
+                new_password
+            )
+
+        flash(
+            "Veritabanı şifresi başarıyla değiştirildi.",
+            "success"
+        )
+
+    except Exception as e:
+
+        print("Database password change error:", repr(e))
+
+        if cursor:
+            try:
+                cursor.close()
+            except:
+                pass
+
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
+
+        flash(
+            f"Veritabanı şifresi değiştirilemedi: {e}",
+            "error"
+        )
+
+    return redirect(url_for("database"))
+
+@app.route("/connect_database", methods=["POST"])
+@admin_required
+def connect_database():
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+
+    if not mysql_service_running():
+        flash("MySQL hizmeti çalışmıyor.", "error")
+        return redirect(url_for("database"))
+
+    host = request.form.get("host", "").strip()
+    port = request.form.get("port", "3306").strip()
+    user = request.form.get("user", "").strip()
+    password = request.form.get("password", "")
+    database = request.form.get("database", "").strip()
+
+    if not host or not port or not user or not database or not password:
+        flash("Veritabanı bilgilerini eksiksiz girin.", "error")
+        return redirect(url_for("database"))
+    
+    conn = None
+
+    try:
+        conn = mysql.connector.connect(
+            host=host,
+            port=int(port),
+            user=user,
+            password=password,
+            database=database,
+            connection_timeout=5
+        )
+
+        if not conn.is_connected():
+            flash("Veritabanına bağlanılamadı.", "error")
+            return redirect(url_for("database"))
+
+        valid, message = validate_database_schema(conn, database)
+
+        if not valid:
+            conn.close()
+            flash(f"Veritabanı uyumsuz: {message}", "error")
+            return redirect(url_for("database"))
+
+        conn.close()
+
+        DB_CONFIG["host"] = host
+        DB_CONFIG["port"] = port
+        DB_CONFIG["user"] = user
+        DB_CONFIG["password"] = password
+        DB_CONFIG["database"] = database
+
+        dotenv_path = find_dotenv()
+
+        if dotenv_path:
+            set_key(dotenv_path, "DB_HOST", host)
+            set_key(dotenv_path, "DB_PORT", port)
+            set_key(dotenv_path, "DB_USER", user)
+            set_key(dotenv_path, "DB_PASSWORD", password)
+            set_key(dotenv_path, "DB_NAME", database)
+
+        flash("Veritabanı bağlantısı başarılı.", "success")
+
+    except Exception as e:
+        print("Database connection error:", repr(e))
+
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
+
+        flash(f"Veritabanına bağlanılamadı: {e}", "error")
+
+    return redirect(url_for("database"))
 
 
 def get_translation(lang="tr"):
@@ -59,18 +381,6 @@ def change_language(lang):
         session["lang"] = lang
     return redirect(request.referrer or url_for("index"))
 
-
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        lang = session.get("lang", "tr")
-        translations = get_translation(lang)
-        if not session.get("is_admin"):
-            flash(translations["permission"], "error")
-            return redirect(url_for("index"))
-        return f(*args, **kwargs)
-
-    return decorated_function
 
 @app.before_request
 def update_client_last_seen():
@@ -107,11 +417,11 @@ def database_restore():
 
     mysql_path = r"C:\Program Files\MySQL\MySQL Server 9.7\bin\mysql.exe"
 
-    db_host = os.getenv("DB_HOST", "localhost")
-    db_port = os.getenv("DB_PORT", "3306")
-    db_user = os.getenv("DB_USER", "root")
-    db_password = os.getenv("DB_PASSWORD", "")
-    db_name = os.getenv("DB_NAME")
+    db_host = DB_CONFIG["host"]
+    db_port = DB_CONFIG["port"]
+    db_user = DB_CONFIG["user"]
+    db_password = DB_CONFIG["password"]
+    db_name = DB_CONFIG["database"]
 
     file = request.files.get("database_file")
 
@@ -187,6 +497,22 @@ def database_restore():
 
             flash(f"Restore error: {error_message}","error")
             return redirect(url_for("database"))
+        
+        log_conn, log_cursor, log_connected = get_db()
+        
+        if log_connected:
+            username=session["user"]
+        
+            add_log(
+                log_cursor,
+                username,
+                "Veritabanı İçe Aktar",
+                db_name,
+                f"{file.filename} dosyası içe aktarıldı."
+            )
+            
+            log_conn.commit()
+            log_conn.close()
 
         flash("Veritabanı başarıyla geri yüklendi.","success")
         return redirect(url_for("database"))
@@ -204,6 +530,22 @@ def database_restore():
             except Exception:
                 pass
 
+def is_db_password_strong(password):
+
+    if len(password) < 8:
+        return False
+
+    if not re.search(r"[A-Z]", password):
+        return False
+
+    if not re.search(r"[a-z]", password):
+        return False
+
+    if not re.search(r"\d", password):
+        return False
+
+    return True
+
 @app.route("/backup_database")
 @admin_required
 def backup_database():
@@ -216,11 +558,11 @@ def backup_database():
 
     conn.close()
 
-    db_name = os.getenv("DB_NAME")
-    db_user = os.getenv("DB_USER")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST", "localhost")
-    db_port = os.getenv("DB_PORT", "3306")
+    db_name = DB_CONFIG["database"]
+    db_user = DB_CONFIG["user"]
+    db_password = DB_CONFIG["password"]
+    db_host = DB_CONFIG["host"]
+    db_port = DB_CONFIG["port"]
 
     filename = f"{db_name}_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.sql"
     filepath = os.path.join(os.getcwd(), filename)
@@ -264,6 +606,23 @@ def backup_database():
 
             flash(f"Backup error: {error_message}","error")
             return redirect(url_for("database"))
+        
+        
+        log_conn, log_cursor, log_connected = get_db()
+
+        if log_connected:
+            username = session["user"]
+
+            add_log(
+                log_cursor,
+                username,
+                "Veritabanı Dışa Aktar",
+                db_name,
+                f"{filename} dosyası dışa aktarıldı"
+            )
+
+            log_conn.commit()
+            log_conn.close()
 
         return send_file(
             filepath,
@@ -271,7 +630,7 @@ def backup_database():
             download_name=filename,
             mimetype="application/sql"
         )
-
+        
     except Exception as e:
         print("Backup error:", e)
 
@@ -486,6 +845,31 @@ def start_database():
 
     return redirect(url_for("database"))
 
+@app.route("/mysql_service_status")
+@admin_required
+def mysql_service_status():
+
+    service_name = os.getenv("MYSQL_SERVICE")
+
+    try:
+        status = win32serviceutil.QueryServiceStatus(service_name)[1]
+
+        if status == win32service.SERVICE_RUNNING:
+            return {"running": True}
+
+        return {"running": False}
+
+    except Exception as e:
+        print(e)
+        return {"running": False}
+
+@app.route("/database_service_warning")
+@admin_required
+def database_service_warning():
+
+    flash("MySQL hizmeti kapalı!", "error")
+
+    return redirect(url_for("database"))
 
 @app.route("/logs")
 def logs():
@@ -1143,30 +1527,46 @@ def database():
             db_size="0 MB",
             table_count=0,
             server_count=0,
-            db_name="",
-            logs=[],
+            db_name=DB_CONFIG["database"],
+            config_db_host=DB_CONFIG["host"],
+            config_db_port=DB_CONFIG["port"],
+            config_db_user=DB_CONFIG["user"],
+            config_db_name=DB_CONFIG["database"],
+            logs=[]
         )
 
     try:
+        active_database = DB_CONFIG["database"]
 
         cursor.execute("SELECT COUNT(*) AS total FROM servers")
-        server_count = cursor.fetchone()["total"]
-
-        cursor.execute(
-            "SELECT COUNT(*) AS total FROM information_schema.tables WHERE table_schema = %s",
-            (os.getenv("DB_NAME"),),
-        )
-        table_count = cursor.fetchone()["total"]
+        server_result = cursor.fetchone()
+        server_count = server_result["total"]
 
         cursor.execute(
             """
-            SELECT 
-                ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb 
-            FROM information_schema.tables 
+            SELECT COUNT(*) AS total
+            FROM information_schema.tables
             WHERE table_schema = %s
             """,
-            (os.getenv("DB_NAME"),),
+            (active_database,)
         )
+
+        table_result = cursor.fetchone()
+        table_count = table_result["total"]
+
+        cursor.execute(
+            """
+            SELECT
+                ROUND(
+                    SUM(data_length + index_length) / 1024 / 1024,
+                    2
+                ) AS size_mb
+            FROM information_schema.tables
+            WHERE table_schema = %s
+            """,
+            (active_database,)
+        )
+
         db_size_row = cursor.fetchone()
         db_size = f"{db_size_row['size_mb'] or 0} MB"
 
@@ -1184,12 +1584,19 @@ def database():
             db_size=db_size,
             table_count=table_count,
             server_count=server_count,
-            db_name=os.getenv("DB_NAME"),
+            db_name=active_database,
+            config_db_host=DB_CONFIG["host"],
+            config_db_port=DB_CONFIG["port"],
+            config_db_user=DB_CONFIG["user"],
+            config_db_name=DB_CONFIG["database"]
         )
 
-    except Exception:
+    except Exception as e:
+        print("Database page error:", repr(e))
+
         if conn:
             conn.close()
+
         return render_template(
             "database.html",
             translations=translations,
@@ -1198,10 +1605,16 @@ def database():
             role=session.get("role"),
             is_admin=session.get("is_admin"),
             is_connected=False,
-            db_status=translations["connection_status_online"],
+            db_status=translations["connection_status_offline"],
             db_size="0 MB",
             table_count=0,
             server_count=0,
+            db_name=DB_CONFIG["database"],
+            config_db_host=DB_CONFIG["host"],
+            config_db_port=DB_CONFIG["port"],
+            config_db_user=DB_CONFIG["user"],
+            config_db_name=DB_CONFIG["database"],
+            logs=[]
         )
 
 
