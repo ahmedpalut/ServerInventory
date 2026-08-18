@@ -16,7 +16,8 @@ body {
 }
 
 #editOverlay,
-#editNetworkOverlay {
+#editNetworkOverlay,
+#autoBackupOverlay {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, .45);
@@ -76,7 +77,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #ffffff;
+    background-color: #555;
     border-radius: 10px;
     border: 2px solid #1e293b;
 }
@@ -86,7 +87,8 @@ body {
 }
 
 #closeBtn,
-#closeEditNetworkBtn {
+#closeEditNetworkBtn,
+#closeAutoBackup {
     float: right;
     cursor: pointer;
     font-size: 22px;
@@ -1824,10 +1826,6 @@ input.custom-checkbox {
     display: block;
 }
 
-#autoBackupOverlay.active #autoBackupPanel {
-    right: 0;
-}
-
 #autoBackupPanel h2 {
     margin-top: 0;
     margin-bottom: 25px;
@@ -1844,7 +1842,14 @@ input.custom-checkbox {
 #autoBackupForm {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
+}
+
+#autoBackupForm label {
+    font-size: 14px;
+    margin-top: 8px;
+    color: #e2e8f0;
+    font-weight: 500;
 }
 
 #autoBackupForm input,
@@ -1868,4 +1873,24 @@ input.custom-checkbox {
     align-items: center;
     justify-content: space-between;
     gap: 15px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+#autoBackupPanel {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: min(400px, 100vw);
+    height: 100vh;
+    background: #1e293b;
+    padding: 25px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    transition: right 0.3s ease;
+    z-index: 9999;
+}
+
+#autoBackupPanel.open {
+    right: 0;
 }

@@ -12,6 +12,8 @@ import mysql.connector
 import os
 import re
 import threading
+import socket
+from scheduler import update_backup_schedule
 
 load_dotenv()
 
@@ -139,6 +141,17 @@ REQUIRED_DATABASE_SCHEMA = {
         "target",
         "description",
         "created_at"
+    ],
+    "backup_settings": [
+        "id",
+        "is_enabled",
+        "frequency",
+        "backup_time",
+        "backup_folder",
+        "max_backup_count",
+        "delete_old_backups",
+        "last_backup_date",
+        "last_backup_status"
     ]
 }
 
@@ -147,6 +160,31 @@ def validate_database_schema(conn, database_name):
     cursor = conn.cursor(dictionary=True)
 
     try:
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS backup_settings (
+                id INT PRIMARY KEY DEFAULT 1,
+                is_enabled TINYINT(1) DEFAULT 0,
+                frequency VARCHAR(20) DEFAULT 'daily',
+                backup_time VARCHAR(10) DEFAULT '03:00',
+                backup_folder VARCHAR(255) DEFAULT '',
+                max_backup_count INT DEFAULT 10,
+                delete_old_backups TINYINT(1) DEFAULT 1,
+                last_backup_date VARCHAR(50) DEFAULT NULL,
+                last_backup_status VARCHAR(255) DEFAULT NULL,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cursor.execute(
+            """
+            INSERT INTO backup_settings (id, is_enabled, frequency, backup_time, backup_folder, max_backup_count, delete_old_backups)
+            SELECT 1, 0, 'daily', '03:00', '', 10, 1
+            WHERE NOT EXISTS (SELECT 1 FROM backup_settings WHERE id = 1)
+            """
+        )
+        conn.commit()
+
         for table_name, required_columns in REQUIRED_DATABASE_SCHEMA.items():
 
             cursor.execute(
@@ -466,7 +504,7 @@ def database_restore():
         )
 
         with open(temp_path, "w", encoding="utf-8") as f:
-            f.write(sql_content)
+            f.write("SET FOREIGN_KEY_CHECKS = 0;\n" + sql_content + "\nSET FOREIGN_KEY_CHECKS = 1;\n")
 
         command = [
             mysql_path,
@@ -698,7 +736,6 @@ def login():
                 if is_connected:
                     client_ip = request.remote_addr
 
-                    import socket
                     hostname = socket.gethostname()
 
                     cursor.execute("""
@@ -3120,6 +3157,149 @@ def check_offline_clients():
             print("Offline kontrol hatası:", e)
 
         time.sleep(30)
+
+
+def ensure_backup_settings_table(cursor):
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS backup_settings (
+            id INT PRIMARY KEY DEFAULT 1,
+            is_enabled TINYINT(1) DEFAULT 0,
+            frequency VARCHAR(20) DEFAULT 'daily',
+            backup_day VARCHAR(20) DEFAULT 'mon',
+            backup_time VARCHAR(10) DEFAULT '03:00',
+            backup_folder VARCHAR(255) DEFAULT '',
+            max_backup_count INT DEFAULT 10,
+            delete_old_backups TINYINT(1) DEFAULT 1,
+            last_backup_date VARCHAR(50) DEFAULT NULL,
+            last_backup_status VARCHAR(255) DEFAULT NULL,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+        """
+    )
+    try:
+        cursor.execute("ALTER TABLE backup_settings ADD COLUMN backup_day VARCHAR(20) DEFAULT 'mon'")
+    except Exception:
+        pass
+
+    cursor.execute(
+        """
+        INSERT INTO backup_settings (id, is_enabled, frequency, backup_day, backup_time, backup_folder, max_backup_count, delete_old_backups)
+        SELECT 1, 0, 'daily', 'mon', '03:00', '', 10, 1
+        WHERE NOT EXISTS (SELECT 1 FROM backup_settings WHERE id = 1)
+        """
+    )
+
+
+@app.route("/api/backup/select-folder", methods=["POST"])
+@admin_required
+def select_backup_folder_dialog():
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+
+        selected_directory = filedialog.askdirectory(
+            title="Yedekleme Klasörünü Seçin"
+        )
+        root.destroy()
+
+        if selected_directory:
+            selected_directory = selected_directory.replace("/", "\\")
+            return jsonify({"success": True, "folder": selected_directory}), 200
+        else:
+            return jsonify({"success": False, "message": "Klasör seçilmedi."}), 200
+    except Exception as e:
+        print("Folder picker dialog error:", e)
+        return jsonify({"error": "Klasör seçici açılamadı: " + str(e)}), 500
+
+
+@app.route("/api/backup/settings", methods=["GET"])
+@admin_required
+def get_backup_settings():
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        return jsonify({"error": "Veritabanına bağlanılamadı."}), 500
+
+    try:
+        ensure_backup_settings_table(cursor)
+        conn.commit()
+
+        cursor.execute("SELECT * FROM backup_settings WHERE id = 1")
+        settings = cursor.fetchone()
+        if not settings:
+            settings = {
+                "id": 1,
+                "is_enabled": 0,
+                "frequency": "daily",
+                "backup_day": "mon",
+                "backup_time": "03:00",
+                "backup_folder": "",
+                "max_backup_count": 10,
+                "delete_old_backups": 1,
+                "last_backup_date": None,
+                "last_backup_status": None
+            }
+
+        return jsonify({"success": True, "settings": settings}), 200
+    except Exception as e:
+        print("Backup settings fetch error:", e)
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route("/api/backup/settings", methods=["POST"])
+@admin_required
+def save_backup_settings():
+    conn, cursor, is_connected = get_db()
+    if not is_connected:
+        return jsonify({"error": "Veritabanına bağlanılamadı."}), 500
+
+    try:
+        ensure_backup_settings_table(cursor)
+
+        data = request.get_json() or {}
+
+        is_enabled = 1 if data.get("is_enabled") else 0
+        frequency = data.get("frequency", "daily").strip()
+        backup_day = data.get("backup_day", "mon").strip()
+        backup_time = data.get("backup_time", "03:00").strip()
+        backup_folder = data.get("backup_folder", "").strip()
+        max_backup_count = int(data.get("max_backup_count", 10))
+        delete_old_backups = 1 if data.get("delete_old_backups") else 0
+
+        cursor.execute(
+            """
+            INSERT INTO backup_settings
+                (id, is_enabled, frequency, backup_day, backup_time, backup_folder, max_backup_count, delete_old_backups)
+            VALUES (1, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                is_enabled = VALUES(is_enabled),
+                frequency = VALUES(frequency),
+                backup_day = VALUES(backup_day),
+                backup_time = VALUES(backup_time),
+                backup_folder = VALUES(backup_folder),
+                max_backup_count = VALUES(max_backup_count),
+                delete_old_backups = VALUES(delete_old_backups)
+            """,
+            (is_enabled, frequency, backup_day, backup_time, backup_folder, max_backup_count, delete_old_backups)
+        )
+        conn.commit()
+
+        update_backup_schedule(is_enabled, frequency, backup_day, backup_time, backup_folder, max_backup_count, delete_old_backups, get_db, DB_CONFIG, add_log)
+
+        return jsonify({"success": True, "message": "Yedekleme ayarları kaydedildi."}), 200
+    except Exception as e:
+        print("Backup settings save error:", e)
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 if __name__ == "__main__":
