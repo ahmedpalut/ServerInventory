@@ -39,7 +39,8 @@ body {
 }
 
 #editPanel,
-#editNetworkPanel {
+#editNetworkPanel,
+#autoBackupPanel {
     position: fixed;
     top: 0;
     right: -100%;
@@ -57,7 +58,8 @@ body {
 }
 
 #editPanel input,
-#editNetworkPanel input {
+#editNetworkPanel input,
+#autoBackupPanel input {
     width: 100%;
     padding: 10px;
     border: none;
@@ -1657,7 +1659,7 @@ input.custom-checkbox {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.55);
-    z-index: 9999;
+    z-index: 200;
 
     align-items: center;
     justify-content: center;
@@ -1807,4 +1809,63 @@ input.custom-checkbox {
     padding: 10px;
     border: none;
     border-radius: 8px;
+}
+
+#autoBackupOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    z-index: 9998;
+}
+
+
+#autoBackupOverlay.active {
+    display: block;
+}
+
+#autoBackupOverlay.active #autoBackupPanel {
+    right: 0;
+}
+
+#autoBackupPanel h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+#closeAutoBackup {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+#autoBackupForm {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#autoBackupForm input,
+#autoBackupForm select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+}
+
+.backup-folder-row {
+    display: flex;
+    gap: 8px;
+}
+
+.backup-folder-row input {
+    flex: 1;
+}
+
+.database-setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
 }

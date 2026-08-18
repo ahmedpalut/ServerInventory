@@ -7,10 +7,40 @@ const searchBtn = document.getElementById("searchBtn");
 const searchFields = document.querySelectorAll('input[name="fields"]');
 const selectAllBtn = document.getElementById("selectAllBtn");
 const clearAllBtn = document.getElementById("clearAllBtn");
-
+const deviceTypeSelect = document.getElementById("net_device_type");
+const otherDeviceTypeContainer = document.getElementById("otherDeviceTypeContainer");
+const otherDeviceTypeInput = document.getElementById("otherDeviceType");
 let activeColumn = null;
 let columnSearchActive = false;
 let searchActive = "{{ request.path }}" === "/networkdevices/search";
+let draggedKey = null;
+
+if (
+    deviceTypeSelect &&
+    otherDeviceTypeContainer &&
+    otherDeviceTypeInput
+) {
+
+    deviceTypeSelect.addEventListener("change", function () {
+
+        if (this.value === "Diğer") {
+
+            otherDeviceTypeContainer.style.display = "block";
+            otherDeviceTypeInput.required = true;
+            otherDeviceTypeInput.focus();
+
+        } else {
+
+            otherDeviceTypeContainer.style.display = "none";
+            otherDeviceTypeInput.required = false;
+            otherDeviceTypeInput.value = "";
+
+        }
+
+    });
+
+}
+
 updateSearchButton();
 
 function openNetworkEditFromBtn(btn) {

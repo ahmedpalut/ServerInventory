@@ -33,7 +33,7 @@
 
             <label>Cihaz Türü</label>
 
-            <select name="device_type" class="beautifySelect" required>
+            <select name="device_type" class="beautifySelect" required id="net_device_type">
 
                 <option value="" selected disabled>Cihaz türü seçin</option>
 
@@ -42,9 +42,19 @@
                 <option value="Firewall">Firewall</option>
                 <option value="Access Point">Access Point</option>
                 <option value="Modem">Modem</option>
+
+                {% for device_type in device_types %}
+                <option value="{{ device_type }}">{{ device_type }}</option>
+                {% endfor %}
+
                 <option value="Diğer">Diğer</option>
 
             </select>
+
+            <div id="otherDeviceTypeContainer" style="display: none; margin-top: 10px;">
+                <input type="text" name="other_device_type" id="otherDeviceType" placeholder="Yeni cihaz türünü girin"
+                    class="beautifyInput">
+            </div>
 
 
             <label>Marka</label>
@@ -112,6 +122,7 @@
 
     </div>
 
+    <script src="{{url_for('static', filename='js/addnetworkdevice.js')}}"></script>
 </body>
 
 </html>

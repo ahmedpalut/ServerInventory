@@ -98,32 +98,84 @@
     </div>
 
     <div class="table-container">
-        <table>
+        <table id="clientsTable">
+
             <thead>
                 <tr>
-                    <th>Client</th>
-                    <th>IP</th>
-                    <th>Kullanıcı</th>
-                    <th>OS</th>
-                    <th>Durum</th>
-                    <th>Site Durumu</th>
-                    <th>Son Görülme</th>
+
+                    <th draggable="true" data-col="hostname" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Client</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'hostname')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="ip_address" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>IP</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'ip_address')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="username" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Kullanıcı</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'username')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="os_name" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>OS</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'os_name')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="status" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Durum</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'status')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="site_status" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Site Durumu</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'site_status')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="last_seen" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Son Görülme</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'last_seen')">▼</button>
+                        </div>
+                    </th>
+
                 </tr>
             </thead>
 
             <tbody>
                 {% for client in clients %}
-                <tr>
+                <tr class="serverRow">
 
-                    <td>{{ client["hostname"] }}</td>
+                    <td data-col="hostname">
+                        {{ client["hostname"] }}
+                    </td>
 
-                    <td>{{ client["ip_address"] }}</td>
+                    <td data-col="ip_address">
+                        {{ client["ip_address"] }}
+                    </td>
 
-                    <td>{{ client["username"] }}</td>
+                    <td data-col="username">
+                        {{ client["username"] }}
+                    </td>
 
-                    <td>{{ client["os_name"] }}</td>
+                    <td data-col="os_name">
+                        {{ client["os_name"] }}
+                    </td>
 
-                    <td>
+                    <td data-col="status">
                         {% if client["status"] == "online" %}
                         🟢 Online
                         {% else %}
@@ -131,7 +183,7 @@
                         {% endif %}
                     </td>
 
-                    <td>
+                    <td data-col="site_status">
                         {% if client["site_status"] == "active" %}
                         🟢 Aktif
                         {% else %}
@@ -139,7 +191,9 @@
                         {% endif %}
                     </td>
 
-                    <td>{{ client["last_seen"] or "-" }}</td>
+                    <td data-col="last_seen">
+                        {{ client["last_seen"] or "-" }}
+                    </td>
 
                 </tr>
                 {% else %}
@@ -155,10 +209,24 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        <div id="sharedColumnMenu" class="column-dropdown-menu" style="display:none;">
+            <div onclick="executeSort('asc')">
+                {{ translations.asc }}
+            </div>
+
+            <div onclick="executeSort('desc')">
+                {{ translations.desc }}
+            </div>
+
+            <div onclick="openSharedSearch(event)">
+                {{ translations.search_column }}
+            </div>
+        </div>
     </div>
 
     <script src="{{url_for('static', filename='js/clients.js')}}">
-        
+
     </script>
 </body>
 

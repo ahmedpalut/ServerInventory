@@ -100,26 +100,77 @@
     </div>
 
     <div class="logs-table-container">
-        <table class="logs-table">
+        <table id="logsTable" class="logs-table">
+
             <thead>
                 <tr>
-                    <th>{{translations.date}}</th>
-                    <th>{{translations.username}}</th>
-                    <th>İşlem</th>
-                    <th>Hedef</th>
-                    <th>{{translations.description}}</th>
+
+                    <th draggable="true" data-col="created_at" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>{{translations.date}}</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'created_at')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="username" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>{{translations.username}}</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'username')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="action" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>İşlem</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'action')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="target" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>Hedef</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'target')">▼</button>
+                        </div>
+                    </th>
+
+                    <th draggable="true" data-col="description" class="draggable-th">
+                        <div class="th-wrapper">
+                            <span>{{translations.description}}</span>
+                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'description')">▼</button>
+                        </div>
+                    </th>
+
                 </tr>
             </thead>
 
             <tbody>
+
                 {% for log in logs %}
-                <tr>
-                    <td>{{ log.created_at }}</td>
-                    <td>{{ log.username }}</td>
-                    <td>{{ log.action }}</td>
-                    <td>{{ log.target }}</td>
-                    <td>{{ log.description }}</td>
+
+                <tr class="serverRow">
+
+                    <td data-col="created_at">
+                        {{ log.created_at }}
+                    </td>
+
+                    <td data-col="username">
+                        {{ log.username }}
+                    </td>
+
+                    <td data-col="action">
+                        {{ log.action }}
+                    </td>
+
+                    <td data-col="target">
+                        {{ log.target }}
+                    </td>
+
+                    <td data-col="description">
+                        {{ log.description }}
+                    </td>
+
                 </tr>
+
                 {% else %}
 
                 <tr class="serverRow">
@@ -131,12 +182,27 @@
                 </tr>
 
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
 
+            </tbody>
+
+        </table>
+
+        <div id="sharedColumnMenu" class="column-dropdown-menu" style="display:none;">
+            <div onclick="executeSort('asc')">
+                {{ translations.asc }}
+            </div>
+
+            <div onclick="executeSort('desc')">
+                {{ translations.desc }}
+            </div>
+
+            <div onclick="openSharedSearch(event)">
+                {{ translations.search_column }}
+            </div>
+        </div>
+    </div>
     <script src="{{url_for('static', filename='js/logs.js')}}">
-        
+
     </script>
 </body>
 

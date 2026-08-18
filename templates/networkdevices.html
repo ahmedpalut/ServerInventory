@@ -332,6 +332,11 @@
                 <option value="Firewall">Firewall</option>
                 <option value="Access Point">Access Point</option>
                 <option value="Modem">Modem</option>
+
+                {% for device_type in device_types %}
+                <option value="{{ device_type }}">{{ device_type }}</option>
+                {% endfor %}
+
                 <option value="Diğer">Diğer</option>
 
             </select>

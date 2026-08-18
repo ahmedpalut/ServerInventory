@@ -9,6 +9,11 @@ const connectDatabaseBtn = document.getElementById("connectDatabaseBtn");
 const connectDatabaseOverlay = document.getElementById("connectDatabaseOverlay");
 const connectDatabasePanel = document.getElementById("connectDatabasePanel");
 const closeConnectDatabase = document.getElementById("closeConnectDatabase");
+const autoBackupToggle = document.getElementById("autoBackupToggle");
+const autoBackupOverlay = document.getElementById("autoBackupOverlay");
+const autoBackupPanel = document.getElementById("autoBackupPanel");
+const closeAutoBackup = document.getElementById("closeAutoBackup");
+const autoBackupForm = document.getElementById("autoBackupForm");
 
 if (connectDatabaseBtn) {
     connectDatabaseBtn.onclick = async function () {
@@ -91,21 +96,6 @@ function openDatabasePanel() {
     dbPanelOverlay.classList.toggle("active");
 }
 
-
-if (databaseSettingsPanel) {
-    databaseSettingsPanel.onclick = function (e) {
-        e.stopPropagation();
-    };
-}
-
-
-if (dbSettingsButton) {
-    dbSettingsButton.addEventListener("click", function () {
-        openDatabasePanel();
-    });
-}
-
-
 if (closeDbSettings) {
     closeDbSettings.addEventListener("click", function () {
         dbPanelOverlay.classList.remove("active");
@@ -135,4 +125,176 @@ if (databaseFile) {
         }
 
     });
+}
+if (autoBackupToggle) {
+    autoBackupToggle.addEventListener("change", function () {
+
+        if (this.checked) {
+
+            document.body.classList.add("modal-open");
+
+            const panel = document.getElementById("autoBackupPanel");
+            const overlay = document.getElementById("autoBackupOverlay");
+
+            if (panel) {
+                panel.style.right = "0";
+            }
+
+            if (overlay) {
+                overlay.style.display = "block";
+            }
+
+        } else {
+
+            closeAutoBackupPanel();
+
+        }
+
+    });
+}
+
+
+function closeAutoBackupPanel() {
+
+    document.body.classList.remove("modal-open");
+
+    const panel = document.getElementById("autoBackupPanel");
+    const overlay = document.getElementById("autoBackupOverlay");
+
+    if (panel) {
+        panel.style.right = "-100%";
+    }
+
+    if (overlay) {
+        overlay.style.display = "none";
+    }
+
+    if (autoBackupToggle) {
+        autoBackupToggle.checked = false;
+    }
+}
+
+
+if (closeAutoBackup) {
+
+    closeAutoBackup.addEventListener("click", function () {
+
+        closeAutoBackupPanel();
+
+    });
+
+}
+
+
+if (autoBackupOverlay) {
+
+    autoBackupOverlay.addEventListener("click", function (e) {
+
+        if (e.target === autoBackupOverlay) {
+
+            closeAutoBackupPanel();
+
+        }
+
+    });
+
+}
+
+
+if (autoBackupToggle) {
+    autoBackupToggle.addEventListener("change", function () {
+
+        if (this.checked) {
+
+            document.body.classList.add("modal-open");
+
+            const panel = document.getElementById("autoBackupPanel");
+            const overlay = document.getElementById("autoBackupOverlay");
+
+            if (panel) {
+                panel.style.right = "0";
+            }
+
+            if (overlay) {
+                overlay.style.display = "block";
+            }
+
+        } else {
+
+            closeAutoBackupPanel();
+
+        }
+
+    });
+}
+
+
+function closeAutoBackupPanel() {
+
+    document.body.classList.remove("modal-open");
+
+    const panel = document.getElementById("autoBackupPanel");
+    const overlay = document.getElementById("autoBackupOverlay");
+
+    if (panel) {
+        panel.style.right = "-100%";
+    }
+
+    if (overlay) {
+        overlay.style.display = "none";
+    }
+
+    if (autoBackupToggle) {
+        autoBackupToggle.checked = false;
+    }
+}
+
+
+if (closeAutoBackup) {
+
+    closeAutoBackup.addEventListener("click", function () {
+
+        closeAutoBackupPanel();
+
+    });
+
+}
+
+
+if (autoBackupOverlay) {
+
+    autoBackupOverlay.addEventListener("click", function (e) {
+
+        if (e.target === autoBackupOverlay) {
+
+            closeAutoBackupPanel();
+
+        }
+
+    });
+
+}
+
+
+if (autoBackupPanel) {
+
+    autoBackupPanel.addEventListener("click", function (e) {
+
+        e.stopPropagation();
+
+    });
+
+}
+
+
+if (autoBackupForm) {
+
+    autoBackupForm.addEventListener("submit", function (e) {
+
+        e.preventDefault();
+
+        closeAutoBackupPanel();
+
+    });
+
 }

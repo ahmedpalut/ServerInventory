@@ -642,132 +642,131 @@ def backup_database():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    session["user"] = "apalut"
-    session["role"] = "admin"
-    session["is_admin"] = True
+    # session["user"] = "apalut"
+    # session["role"] = "admin"
+    # session["is_admin"] = True
 
-    return redirect(url_for("index"))
+    # return redirect(url_for("index"))
 
-    # lang = session.get("lang", "tr")
-    # translations = get_translation(lang)
-    # if request.method == "POST":
-    #     username = request.form.get("username")
-    #     password = request.form.get("password")
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
 
-    #     if "\\" in username:
-    #         user_dn = username
-    #     else:
-    #         user_dn = f"{username}@{AD_DOMAIN}"
+        if "\\" in username:
+            user_dn = username
+        else:
+            user_dn = f"{username}@{AD_DOMAIN}"
 
-    #     conn = None
-    #     try:
-    #         server = Server(AD_SERVER, get_info=NONE)
-    #         conn = Connection(
-    #             server,
-    #             user=user_dn,
-    #             password=password,
-    #             authentication=SIMPLE,
-    #             raise_exceptions=True,
-    #         )
+        conn = None
+        try:
+            server = Server(AD_SERVER, get_info=NONE)
+            conn = Connection(
+                server,
+                user=user_dn,
+                password=password,
+                authentication=SIMPLE,
+                raise_exceptions=True,
+            )
 
-    #         if conn.bind():
-    #             search_base = ",".join([f"DC={x}" for x in AD_DOMAIN.split(".")])
-    #             conn.search(
-    #                 search_base=search_base,
-    #                 search_filter=f"(sAMAccountName={username})",
-    #                 search_scope=SUBTREE,
-    #                 attributes=["memberOf"],
-    #             )
+            if conn.bind():
+                search_base = ",".join([f"DC={x}" for x in AD_DOMAIN.split(".")])
+                conn.search(
+                    search_base=search_base,
+                    search_filter=f"(sAMAccountName={username})",
+                    search_scope=SUBTREE,
+                    attributes=["memberOf"],
+                )
 
-    #             role = "Visitor"
-    #             if conn.entries:
-    #                 groups = conn.entries[0]["memberOf"]
-    #                 for group in groups:
-    #                     group = str(group)
-    #                     if "CN=Test Admin," in group or "CN=Domain Admins," in group:
-    #                         role = "Admin"
+                role = "Visitor"
+                if conn.entries:
+                    groups = conn.entries[0]["memberOf"]
+                    for group in groups:
+                        group = str(group)
+                        if "CN=Test Admin," in group or "CN=Domain Admins," in group:
+                            role = "Admin"
 
-    #             session.clear()
-    #             session["user"] = username
-    #             session["role"] = role
-    #             session["is_admin"] = role == "Admin"
-    #             flash(translations["login_s"])
+                session.clear()
+                session["user"] = username
+                session["role"] = role
+                session["is_admin"] = role == "Admin"
+                flash(translations["login_s"],"success")
 
-    #             conn_db, cursor, is_connected = get_db()
+                conn_db, cursor, is_connected = get_db()
 
-    #             if is_connected:
-    #                 client_ip = request.remote_addr
+                if is_connected:
+                    client_ip = request.remote_addr
 
-    #                 import socket
-    #                 hostname = socket.gethostname()
+                    import socket
+                    hostname = socket.gethostname()
 
-    #                 cursor.execute("""
-    #                     SELECT id
-    #                     FROM clients
-    #                     WHERE hostname = %s
-    #                 """, (hostname,))
+                    cursor.execute("""
+                        SELECT id
+                        FROM clients
+                        WHERE hostname = %s
+                    """, (hostname,))
 
-    #                 client = cursor.fetchone()
+                    client = cursor.fetchone()
 
-    #                 if client:
-    #                     # Agent'ın oluşturduğu gerçek client kaydını güncelle
-    #                     cursor.execute("""
-    #                         UPDATE clients
-    #                         SET username = %s,
-    #                             site_status = %s,
-    #                             last_seen = NOW()
-    #                         WHERE id = %s
-    #                     """, (
-    #                         username,
-    #                         "active",
-    #                         client[0]
-    #                     ))
+                    if client:
+                        cursor.execute("""
+                            UPDATE clients
+                            SET username = %s,
+                                site_status = %s,
+                                last_seen = NOW()
+                            WHERE id = %s
+                        """, (
+                            username,
+                            "active",
+                            client["id"]
+                        ))
 
-    #                 else:
-    #                     cursor.execute("""
-    #                         INSERT INTO clients
-    #                             (hostname, ip_address, username, os_name,
-    #                             status, site_status, last_seen)
-    #                         VALUES
-    #                             (%s, %s, %s, %s, %s, %s, NOW())
-    #                     """, (
-    #                         hostname,
-    #                         client_ip,
-    #                         username,
-    #                         None,
-    #                         "online",
-    #                         "active"
-    #                     ))
+                    else:
+                        cursor.execute("""
+                            INSERT INTO clients
+                                (hostname, ip_address, username, os_name,
+                                status, site_status, last_seen)
+                            VALUES
+                                (%s, %s, %s, %s, %s, %s, NOW())
+                        """, (
+                            hostname,
+                            client_ip,
+                            username,
+                            None,
+                            "online",
+                            "active"
+                        ))
 
-    #                 add_log(
-    #                     cursor,
-    #                     username,
-    #                     "Giriş",
-    #                     "Sunucu Envanteri",
-    #                     f"{username}, sunucu envanter sitesine giriş yaptı."
-    #                 )
+                    add_log(
+                        cursor,
+                        username,
+                        "Giriş",
+                        "Sunucu Envanteri",
+                        f"{username}, sunucu envanter sitesine giriş yaptı."
+                    )
 
-    #                 conn_db.commit()
-    #                 cursor.close()
-    #                 conn_db.close()
+                    conn_db.commit()
+                    cursor.close()
+                    conn_db.close()
                     
-    #                 return redirect(url_for("index"))
-    #         else:
-    #             flash(translations["name_error"])
-    #             return redirect(url_for("login"))
+                    return redirect(url_for("index"))
+            else:
+                flash(translations["name_error"],"error")
+                return redirect(url_for("login"))
 
-    #     except Exception as e:
-    #         print("LOGIN HATASI:", repr(e))
-    #         flash(translations["error"])
-    #         if conn:
-    #             conn.unbind()
-    #         return redirect(url_for("login"))
+        except Exception as e:
+            print("LOGIN HATASI:", repr(e))
+            flash(translations["error"],"error")
+            if conn:
+                conn.unbind()
+            return redirect(url_for("login"))
 
-    #     finally:
-    #         if conn:
-    #             conn.unbind()
+        finally:
+            if conn:
+                conn.unbind()
 
-    # return render_template("login.html", translations=translations, lang=lang)
+    return render_template("login.html", translations=translations, lang=lang)
 
 
 @app.route("/logout")
@@ -2664,14 +2663,19 @@ def networkdevices():
     conn, cursor, is_connected = get_db()
 
     if not is_connected:
-        flash(translations.get("error", "Database disconnected"),"error")
+        flash(
+            translations.get("error", "Database disconnected"),
+            "error"
+        )
+
         return render_template(
             "networkdevices.html",
             translations=translations,
             lang=lang,
             username=username,
             is_admin=is_admin,
-            devices=[]
+            devices=[],
+            device_types=[]
         )
 
     try:
@@ -2697,6 +2701,24 @@ def networkdevices():
 
         devices = cursor.fetchall()
 
+        cursor.execute("""
+            SELECT DISTINCT device_type
+            FROM network_devices
+            WHERE device_type IS NOT NULL
+              AND device_type != ''
+              AND device_type NOT IN (
+                  'Switch',
+                  'Router',
+                  'Firewall',
+                  'Access Point',
+                  'Modem',
+                  'Diğer'
+              )
+            ORDER BY device_type
+        """)
+
+        device_types = [row["device_type"] for row in cursor.fetchall()]
+
         conn.close()
 
         return render_template(
@@ -2705,7 +2727,8 @@ def networkdevices():
             lang=lang,
             username=username,
             is_admin=is_admin,
-            devices=devices
+            devices=devices,
+            device_types=device_types
         )
 
     except Exception as e:
@@ -2714,7 +2737,10 @@ def networkdevices():
         if conn:
             conn.close()
 
-        flash(translations.get("error", "Database error"),"error")
+        flash(
+            translations.get("error", "Database error"),
+            "error"
+        )
 
         return render_template(
             "networkdevices.html",
@@ -2722,7 +2748,8 @@ def networkdevices():
             lang=lang,
             username=username,
             is_admin=is_admin,
-            devices=[]
+            devices=[],
+            device_types=[]
         )
     
 @app.route("/addnetworkdevice", methods=["POST"])
@@ -2740,6 +2767,15 @@ def addnetworkdevice():
     try:
         name = request.form["name"].strip()
         device_type = request.form["device_type"]
+        
+        if device_type == "Diğer":
+            device_type = request.form.get("other_device_type", "").strip()
+            
+            if not device_type:
+                flash("Lütfen cihaz türünü girin.", "error")
+                conn.close()
+                return redirect(url_for("addnetworkdevice_page"))
+            
         brand = request.form["brand"].strip()
         model = request.form["model"].strip()
         serial_number = request.form["serial_number"].strip()
@@ -2820,10 +2856,41 @@ def addnetworkdevice_page():
     lang = session.get("lang", "tr")
     translations = get_translation(lang)
 
+    conn, cursor, is_connected = get_db()
+
+    device_types = []
+
+    if is_connected:
+        try:
+            cursor.execute("""
+                SELECT DISTINCT device_type
+                FROM network_devices
+                WHERE device_type IS NOT NULL
+                  AND device_type != ''
+                  AND device_type NOT IN (
+                      'Switch',
+                      'Router',
+                      'Firewall',
+                      'Access Point',
+                      'Modem',
+                      'Diğer'
+                  )
+                ORDER BY device_type
+            """)
+
+            device_types = [
+                row["device_type"]
+                for row in cursor.fetchall()
+            ]
+
+        finally:
+            conn.close()
+
     return render_template(
         "addnetworkdevice.html",
         translations=translations,
-        lang=lang
+        lang=lang,
+        device_types=device_types
     )
 
 
