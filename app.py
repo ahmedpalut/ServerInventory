@@ -1,5 +1,5 @@
 from flask import *
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv, set_key, find_dotenv
 from ldap3 import Server, Connection, SUBTREE, SIMPLE, NONE
 from functools import wraps
@@ -114,8 +114,6 @@ REQUIRED_DATABASE_SCHEMA = {
         "ip_address",
         "username",
         "os_name",
-        "status",
-        "site_status",
         "last_seen"
     ],
     "network_devices": [
@@ -183,6 +181,17 @@ def validate_database_schema(conn, database_name):
             WHERE NOT EXISTS (SELECT 1 FROM backup_settings WHERE id = 1)
             """
         )
+
+        try:
+            cursor.execute("ALTER TABLE clients DROP COLUMN status")
+        except Exception:
+            pass
+
+        try:
+            cursor.execute("ALTER TABLE clients DROP COLUMN site_status")
+        except Exception:
+            pass
+
         conn.commit()
 
         for table_name, required_columns in REQUIRED_DATABASE_SCHEMA.items():
@@ -437,11 +446,10 @@ def update_client_last_seen():
     try:
         cursor.execute("""
             UPDATE clients
-            SET last_seen = NOW(),
-                status = %s
+            SET last_seen = NOW()
             WHERE username = %s
               AND ip_address = %s
-        """, ("online", username, client_ip))
+        """, (username, client_ip))
 
         conn.commit()
 
@@ -750,29 +758,24 @@ def login():
                         cursor.execute("""
                             UPDATE clients
                             SET username = %s,
-                                site_status = %s,
                                 last_seen = NOW()
                             WHERE id = %s
                         """, (
                             username,
-                            "active",
                             client["id"]
                         ))
 
                     else:
                         cursor.execute("""
                             INSERT INTO clients
-                                (hostname, ip_address, username, os_name,
-                                status, site_status, last_seen)
+                                (hostname, ip_address, username, os_name, last_seen)
                             VALUES
-                                (%s, %s, %s, %s, %s, %s, NOW())
+                                (%s, %s, %s, %s, NOW())
                         """, (
                             hostname,
                             client_ip,
                             username,
-                            None,
-                            "online",
-                            "active"
+                            None
                         ))
 
                     add_log(
@@ -816,12 +819,6 @@ def logout():
     conn, cursor, is_connected = get_db()
 
     if is_connected:
-        cursor.execute("""
-            UPDATE clients
-            SET site_status = %s
-            WHERE username = %s
-        """, ("inactive", username))
-
         add_log(
             cursor,
             username,
@@ -2556,23 +2553,12 @@ def clients():
 
     try:
         cursor.execute("""
-        UPDATE clients
-        SET status = 'offline'
-        WHERE last_seen IS NULL
-        OR last_seen < NOW() - INTERVAL 2 MINUTE
-        """)
-
-        conn.commit()
-        
-        cursor.execute("""
             SELECT
                 id,
                 hostname,
                 ip_address,
                 username,
                 os_name,
-                status,
-                site_status,
                 last_seen
             FROM clients
             ORDER BY hostname
@@ -2634,8 +2620,6 @@ def clients_search():
             "ip_address": "ip_address",
             "username": "username",
             "os_name": "os_name",
-            "status": "status",
-            "site_status": "site_status",
             "last_seen": "last_seen",
         }
 
@@ -2654,8 +2638,6 @@ def clients_search():
                 ip_address,
                 username,
                 os_name,
-                status,
-                site_status,
                 last_seen
             FROM clients
         """
@@ -3062,101 +3044,6 @@ def editnetworkdevice(id):
         flash(translations.get("error", "Güncelleme hatası."), "error")
 
     return redirect(url_for("networkdevices"))
-    
-@app.route("/api/client/update", methods=["POST"])
-def client_update():
-    data = request.get_json()
-
-    if not data:
-        return jsonify({"error": "Veri alınamadı"}), 400
-
-    hostname = data.get("hostname")
-    username = data.get("username")
-    os_name = data.get("os_name")
-    ip_address = data.get("ip_address")
-
-    if not hostname or not username:
-        return jsonify({"error": "Eksik bilgi"}), 400
-
-    conn, cursor, is_connected = get_db()
-
-    if not is_connected:
-        return jsonify({"error": "Veritabanına bağlanılamadı"}), 500
-
-    try:
-        cursor.execute("""
-            SELECT id
-            FROM clients
-            WHERE hostname = %s
-        """, (hostname,))
-
-        client = cursor.fetchone()
-
-        if client:
-            cursor.execute("""
-                UPDATE clients
-                SET ip_address = %s,
-                    username = %s,
-                    os_name = %s,
-                    status = %s,
-                    last_seen = NOW()
-                WHERE hostname = %s
-            """, (
-                ip_address,
-                username,
-                os_name,
-                "online",
-                hostname
-            ))
-
-        else:
-            cursor.execute("""
-                INSERT INTO clients
-                    (hostname, ip_address, username, os_name, status, site_status, last_seen)
-                VALUES
-                    (%s, %s, %s, %s, %s, %s, NOW())
-            """, (
-                hostname,
-                ip_address,
-                username,
-                os_name,
-                "online",
-                "inactive"
-            ))
-
-        conn.commit()
-
-        return jsonify({"success": True}), 200
-
-    except Exception as e:
-        print("CLIENT AGENT HATASI:", repr(e))
-        conn.rollback()
-        return jsonify({"error": "Sunucu hatası"}), 500
-
-    finally:
-        cursor.close()
-        conn.close()
-
-def check_offline_clients():
-    while True:
-        try:
-            conn, cursor, is_connected = get_db()
-
-            if is_connected:
-                cursor.execute("""
-                    UPDATE clients
-                    SET status = 'offline'
-                    WHERE last_seen < NOW() - INTERVAL 60 SECOND
-                """)
-
-                conn.commit()
-                cursor.close()
-                conn.close()
-
-        except Exception as e:
-            print("Offline kontrol hatası:", e)
-
-        time.sleep(30)
 
 
 def ensure_backup_settings_table(cursor):
@@ -3302,11 +3189,163 @@ def save_backup_settings():
         conn.close()
 
 
-if __name__ == "__main__":
-    offline_thread = threading.Thread(
-        target=check_offline_clients,
-        daemon=True
-    )
-    offline_thread.start()
+def parse_ad_timestamp(val):
+    if not val:
+        return None
+    try:
+        if isinstance(val, (list, tuple)) and len(val) > 0:
+            val = val[0]
+            
+        if isinstance(val, datetime):
+            return val.strftime("%Y-%m-%d %H:%M:%S")
 
+        num_val = int(str(val).strip())
+        if num_val <= 0 or num_val == 9223372036854775807:
+            return None
+
+        days = num_val // 864000000000
+        rem = num_val % 864000000000
+        seconds = rem // 10000000
+        microseconds = (rem % 10000000) // 10
+
+        start = datetime(1601, 1, 1)
+        dt = start + timedelta(days=days, seconds=seconds, microseconds=microseconds)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception as e:
+        print("AD timestamp parse error:", e)
+        return None
+
+
+@app.route("/api/clients/sync_ad", methods=["POST"])
+@admin_required
+def sync_clients_from_ad():
+    if not session.get("is_admin"):
+        return jsonify({"error": "Bu işlem için admin yetkisi gereklidir."}), 403
+
+    load_dotenv(find_dotenv(), override=True)
+
+    if not AD_SERVER or not AD_DOMAIN:
+        return jsonify({"error": "Active Directory (LDAP) sunucu bilgileri yapılandırılmamış."}), 400
+
+    data = request.get_json() or {}
+    ad_user = data.get("ad_user", "").strip() or os.getenv("LDAP_BIND_USER") or os.getenv("AD_USER")
+    ad_pass = data.get("ad_password", "").strip() or os.getenv("LDAP_BIND_PASSWORD") or os.getenv("AD_PASSWORD")
+
+    if ad_user and "\\" not in ad_user and "@" not in ad_user:
+        ad_user = f"{ad_user}@{AD_DOMAIN}"
+
+    if not ad_user or not ad_pass:
+        return jsonify({
+            "error": "Lütfen Active Directory kullanıcı adı ve şifrenizi girin."
+        }), 400
+
+    try:
+        server = Server(AD_SERVER, get_info=NONE)
+        conn_ad = Connection(
+            server,
+            user=ad_user,
+            password=ad_pass,
+            authentication=SIMPLE,
+            raise_exceptions=True
+        )
+
+        if not conn_ad.bind():
+            return jsonify({"error": "Active Directory bağlantısı kurulamadı."}), 500
+
+        custom_search_base = os.getenv("LDAP_SEARCH_BASE") or os.getenv("AD_SEARCH_BASE")
+        if custom_search_base:
+            search_base = custom_search_base.strip()
+        else:
+            search_base = ",".join([f"DC={x}" for x in AD_DOMAIN.split(".")])
+
+        target_ou = os.getenv("LDAP_TARGET_OU") or os.getenv("AD_TARGET_OU")
+        if target_ou:
+            search_filter = f"(&(objectCategory=computer)(objectClass=computer)(operatingSystem=Windows*)(!(operatingSystem=*Server*))(distinguishedName=*{target_ou.strip()}*))"
+        else:
+            search_filter = "(&(objectCategory=computer)(objectClass=computer)(operatingSystem=Windows*)(!(operatingSystem=*Server*)))"
+
+        attributes = ["cn", "dNSHostName", "operatingSystem", "description", "distinguishedName", "lastLogonTimestamp", "lastLogon"]
+
+        conn_ad.search(
+            search_base=search_base,
+            search_filter=search_filter,
+            search_scope=SUBTREE,
+            attributes=attributes
+        )
+
+        conn_db, cursor, is_connected = get_db()
+        if not is_connected:
+            return jsonify({"error": "Veritabanı bağlantısı kurulamadı."}), 500
+
+        added_count = 0
+        updated_count = 0
+
+        for entry in conn_ad.entries:
+            hostname = str(entry.cn.value) if entry.cn and entry.cn.value else ""
+            if not hostname:
+                continue
+
+            dns_name = str(entry.dNSHostName.value) if entry.dNSHostName and entry.dNSHostName.value else hostname
+            os_name = str(entry.operatingSystem.value) if entry.operatingSystem and entry.operatingSystem.value else "Windows"
+            description = str(entry.description.value) if entry.description and entry.description.value else ""
+
+            raw_logon = (entry.lastLogon.value if hasattr(entry, "lastLogon") and entry.lastLogon else None) or (entry.lastLogonTimestamp.value if hasattr(entry, "lastLogonTimestamp") and entry.lastLogonTimestamp else None)
+            last_seen_val = parse_ad_timestamp(raw_logon)
+
+            cursor.execute("SELECT id FROM clients WHERE hostname = %s", (hostname,))
+            existing = cursor.fetchone()
+
+            if existing:
+                if last_seen_val:
+                    cursor.execute("""
+                        UPDATE clients
+                        SET ip_address = %s,
+                            username = %s,
+                            os_name = %s,
+                            last_seen = %s
+                        WHERE hostname = %s
+                    """, (dns_name, description, os_name, last_seen_val, hostname))
+                else:
+                    cursor.execute("""
+                        UPDATE clients
+                        SET ip_address = %s,
+                            username = %s,
+                            os_name = %s
+                        WHERE hostname = %s
+                    """, (dns_name, description, os_name, hostname))
+                updated_count += 1
+            else:
+                cursor.execute("""
+                    INSERT INTO clients (hostname, ip_address, username, os_name, last_seen)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (hostname, dns_name, description, os_name, last_seen_val or datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                added_count += 1
+
+        conn_db.commit()
+
+        username = session.get("user", "System")
+        add_log(
+            cursor,
+            username,
+            "AD Senkronizasyon",
+            "Clients",
+            f"Active Directory'den {added_count} yeni bilgisayar eklendi, {updated_count} güncellendi."
+        )
+        conn_db.commit()
+
+        cursor.close()
+        conn_db.close()
+        conn_ad.unbind()
+
+        return jsonify({
+            "success": True,
+            "message": f"Active Directory senkronizasyonu başarılı: {added_count} bilgisayar eklendi, {updated_count} güncellendi."
+        }), 200
+
+    except Exception as e:
+        print("AD Sync Error:", e)
+        return jsonify({"error": f"AD Senkronizasyon Hatası: {str(e)}"}), 500
+
+
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -67,6 +67,12 @@
                 <button type="button" id="searchSettingsBtn" class="beautify">
                     {{ translations.search_settings }}
                 </button>
+
+                {% if is_admin %}
+                <button type="button" id="syncAdBtn" class="beautify" style="margin-left: 8px;">
+                    <i class="fa-solid fa-arrows-rotate"></i> AD Senkronize Et
+                </button>
+                {% endif %}
             </div>
 
             <div id="searchSettingsOverlay" style="display:none;">
@@ -79,10 +85,8 @@
                         <div class="search-fields">
                             <label><input type="checkbox" name="fields" value="hostname" checked> Hostname</label>
                             <label><input type="checkbox" name="fields" value="ip_address" checked> IP Adresi</label>
-                            <label><input type="checkbox" name="fields" value="username" checked> Kullanıcı</label>
+                            <label><input type="checkbox" name="fields" value="username" checked> Açıklama</label>
                             <label><input type="checkbox" name="fields" value="os_name" checked> OS</label>
-                            <label><input type="checkbox" name="fields" value="status" checked> Durum</label>
-                            <label><input type="checkbox" name="fields" value="site_status" checked> Site Durumu</label>
                             <label><input type="checkbox" name="fields" value="last_seen" checked> Son Görülme</label>
                         </div>
                         <div class="search-buttons">
@@ -119,7 +123,7 @@
 
                     <th draggable="true" data-col="username" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Kullanıcı</span>
+                            <span>Açıklama</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'username')">▼</button>
                         </div>
                     </th>
@@ -128,20 +132,6 @@
                         <div class="th-wrapper">
                             <span>OS</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'os_name')">▼</button>
-                        </div>
-                    </th>
-
-                    <th draggable="true" data-col="status" class="draggable-th">
-                        <div class="th-wrapper">
-                            <span>Durum</span>
-                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'status')">▼</button>
-                        </div>
-                    </th>
-
-                    <th draggable="true" data-col="site_status" class="draggable-th">
-                        <div class="th-wrapper">
-                            <span>Site Durumu</span>
-                            <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'site_status')">▼</button>
                         </div>
                     </th>
 
@@ -175,22 +165,6 @@
                         {{ client["os_name"] }}
                     </td>
 
-                    <td data-col="status">
-                        {% if client["status"] == "online" %}
-                        🟢 Online
-                        {% else %}
-                        🔴 Offline
-                        {% endif %}
-                    </td>
-
-                    <td data-col="site_status">
-                        {% if client["site_status"] == "active" %}
-                        🟢 Aktif
-                        {% else %}
-                        🔴 Pasif
-                        {% endif %}
-                    </td>
-
                     <td data-col="last_seen">
                         {{ client["last_seen"] or "-" }}
                     </td>
@@ -200,7 +174,7 @@
 
                 <tr class="serverRow">
 
-                    <td colspan="7" style="text-align: center;">
+                    <td colspan="5" style="text-align: center;">
                         Henüz client bulunmuyor.
                     </td>
 
@@ -223,6 +197,29 @@
                 {{ translations.search_column }}
             </div>
         </div>
+    </div>
+
+    <div id="adSyncOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9998;" onclick="closeAdSyncPanel()"></div>
+
+    <div id="adSyncPanel" style="position:fixed; top:0; right:-100%; width:min(400px, 100vw); height:100vh; background:#1e293b; padding:25px; box-sizing:border-box; transition:right 0.3s ease; overflow-y:auto; z-index:9999; color:#fff;">
+        <span style="position:absolute; top:15px; right:20px; cursor:pointer; font-size:20px; color:#cbd5e1;" onclick="closeAdSyncPanel()">✖</span>
+
+        <h2 style="margin-top:0; font-size:18px; color:#f8fafc; margin-bottom:8px;">Active Directory Senkronizasyon</h2>
+        <p style="font-size:13px; color:#94a3b8; margin-bottom:20px; line-height:1.4;">
+            Bilgisayarları senkronize etmek için Active Directory kullanıcı adı ve şifrenizi girin.
+        </p>
+
+        <form id="adSyncForm">
+            <label style="display:block; font-size:13px; color:#cbd5e1; margin-bottom:6px;">AD Kullanıcı Adı</label>
+            <input type="text" id="adSyncUser" placeholder="apalut@gig.net.tr" value="{{ username }}" style="width:100%; padding:10px; border:none; border-radius:8px; background:rgba(255,255,255,0.08); color:#fff; margin-bottom:14px; box-sizing:border-box;" required>
+
+            <label style="display:block; font-size:13px; color:#cbd5e1; margin-bottom:6px;">AD Şifresi</label>
+            <input type="password" id="adSyncPassword" placeholder="Active Directory Şifreniz" style="width:100%; padding:10px; border:none; border-radius:8px; background:rgba(255,255,255,0.08); color:#fff; margin-bottom:20px; box-sizing:border-box;" required>
+
+            <button type="button" id="startAdSyncBtn" class="beautify" style="width:100%; padding:12px; font-weight:bold;">
+                <i class="fa-solid fa-arrows-rotate"></i> Senkronize Et
+            </button>
+        </form>
     </div>
 
     <script src="{{url_for('static', filename='js/clients.js')}}">

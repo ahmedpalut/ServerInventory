@@ -8,6 +8,76 @@ const clearAllBtn = document.getElementById("clearAllBtn");
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
 
+function openAdSyncPanel() {
+    document.body.classList.add("modal-open");
+    const panel = document.getElementById("adSyncPanel");
+    const overlay = document.getElementById("adSyncOverlay");
+    if (panel) panel.style.right = "0";
+    if (overlay) overlay.style.display = "block";
+}
+
+function closeAdSyncPanel() {
+    document.body.classList.remove("modal-open");
+    const panel = document.getElementById("adSyncPanel");
+    const overlay = document.getElementById("adSyncOverlay");
+    if (panel) panel.style.right = "-100%";
+    if (overlay) overlay.style.display = "none";
+}
+
+const syncAdBtn = document.getElementById("syncAdBtn");
+if (syncAdBtn) {
+    syncAdBtn.addEventListener("click", function () {
+        openAdSyncPanel();
+    });
+}
+
+const startAdSyncBtn = document.getElementById("startAdSyncBtn");
+if (startAdSyncBtn) {
+    startAdSyncBtn.addEventListener("click", function () {
+        const userInput = document.getElementById("adSyncUser");
+        const passwordInput = document.getElementById("adSyncPassword");
+
+        const adUser = userInput ? userInput.value.trim() : "";
+        const adPassword = passwordInput ? passwordInput.value : "";
+
+        if (!adUser || !adPassword) {
+            alert("Lütfen Active Directory kullanıcı adı ve şifrenizi girin.");
+            return;
+        }
+
+        startAdSyncBtn.disabled = true;
+        startAdSyncBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Senkronize Ediliyor...';
+
+        fetch("/api/clients/sync_ad", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                ad_user: adUser,
+                ad_password: adPassword
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            startAdSyncBtn.disabled = false;
+            startAdSyncBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Senkronize Et';
+            if (data.success) {
+                alert(data.message || "Active Directory senkronizasyonu tamamlandı.");
+                closeAdSyncPanel();
+                window.location.reload();
+            } else {
+                alert("Senkronizasyon Hatası: " + (data.error || "Bilinmeyen hata."));
+            }
+        })
+        .catch(err => {
+            startAdSyncBtn.disabled = false;
+            startAdSyncBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Senkronize Et';
+            alert("İstek gönderilemedi: " + err);
+        });
+    });
+}
+
 let activeColumn = null;
 let columnSearchActive = false;
 let searchActive = window.location.pathname === "/clients/search";

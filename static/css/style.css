@@ -41,7 +41,8 @@ body {
 
 #editPanel,
 #editNetworkPanel,
-#autoBackupPanel {
+#autoBackupPanel,
+#adSyncPanel {
     position: fixed;
     top: 0;
     right: -100%;
@@ -60,11 +61,14 @@ body {
 
 #editPanel input,
 #editNetworkPanel input,
-#autoBackupPanel input {
+#autoBackupPanel input,
+#adSyncPanel input,
+#adSyncPanel select {
     width: 100%;
     padding: 10px;
     border: none;
     border-radius: 8px;
+    margin-bottom: 12px;
 }
 
 ::-webkit-scrollbar {
