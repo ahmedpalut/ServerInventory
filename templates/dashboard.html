@@ -173,55 +173,120 @@
         const netOtherInfoText = "{{ net_other_info_text }}";
         const netTitle = "Toplam Ağ Cihazı ({{ total_net_devices }})";
 
+        const clientLabels = JSON.parse('{{ client_labels | safe }}');
+        const clientValues = JSON.parse('{{ client_values | safe }}');
+        const clientOtherInfoText = "{{ client_other_info_text }}";
+        const clientTitle = "Toplam Client Bilgisayar ({{ total_clients }})";
+
         let currentMainMode = "server";
         let mainChart = null;
 
-        function renderMainChart(labels, values, otherInfoText) {
+        function renderMainChart(labels, values, otherInfoText, chartType = "doughnut") {
             if (mainChart) {
                 mainChart.destroy();
             }
 
-            mainChart = new Chart(document.getElementById("osChart"), {
-                type: "doughnut",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: "right",
-                            align: "center",
-                            labels: {
-                                color: "#ffffff",
-                                padding: 10,
-                                boxWidth: 14,
-                                font: {
-                                    size: 12,
-                                    weight: "bold"
+            const chartColors = [
+                "#3b82f6", "#ec4899", "#f97316", "#eab308", "#14b8a6", "#a855f7", "#6366f1", "#84cc16"
+            ];
+
+            if (chartType === "bar") {
+                mainChart = new Chart(document.getElementById("osChart"), {
+                    type: "bar",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: chartColors.slice(0, labels.length),
+                            borderRadius: 6,
+                            borderWidth: 0,
+                            minBarLength: 25
+                        }]
+                    },
+                    options: {
+                        indexAxis: "y",
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    afterBody: function (context) {
+                                        const item = context[0];
+                                        const label = item.label || item.chart.data.labels[item.dataIndex];
+                                        if (label === "Diğer" && otherInfoText) {
+                                            return ["", "İçerik:"].concat(otherInfoText.split(", "));
+                                        }
+                                        return [];
+                                    }
                                 }
                             }
                         },
-                        tooltip: {
-                            callbacks: {
-                                afterBody: function (context) {
-                                    const item = context[0];
-                                    const label = item.label || item.chart.data.labels[item.dataIndex];
-                                    if (label === "Diğer" && otherInfoText) {
-                                        return ["", "İçerik:"].concat(otherInfoText.split(", "));
+                        scales: {
+                            x: {
+                                type: "logarithmic",
+                                min: 1,
+                                grid: { color: "rgba(255, 255, 255, 0.1)" },
+                                ticks: {
+                                    color: "#ffffff",
+                                    callback: function (val) {
+                                        if (val === 1 || val === 10 || val === 100 || val === 350) {
+                                            return val;
+                                        }
+                                        return null;
                                     }
-                                    return [];
+                                }
+                            },
+                            y: {
+                                grid: { display: false },
+                                ticks: { color: "#ffffff", font: { weight: "bold" } }
+                            }
+                        }
+                    }
+                });
+            } else {
+                mainChart = new Chart(document.getElementById("osChart"), {
+                    type: "doughnut",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: "right",
+                                align: "center",
+                                labels: {
+                                    color: "#ffffff",
+                                    padding: 10,
+                                    boxWidth: 14,
+                                    font: {
+                                        size: 12,
+                                        weight: "bold"
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    afterBody: function (context) {
+                                        const item = context[0];
+                                        const label = item.label || item.chart.data.labels[item.dataIndex];
+                                        if (label === "Diğer" && otherInfoText) {
+                                            return ["", "İçerik:"].concat(otherInfoText.split(", "));
+                                        }
+                                        return [];
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         }
 
         function toggleMainChart() {
@@ -231,13 +296,18 @@
             if (currentMainMode === "server") {
                 currentMainMode = "network";
                 titleEl.textContent = netTitle;
+                btnEl.innerHTML = '<i class="fa-solid fa-desktop"></i> Client Bilgisayarlar';
+                renderMainChart(netLabels, netValues, netOtherInfoText, "doughnut");
+            } else if (currentMainMode === "network") {
+                currentMainMode = "client";
+                titleEl.textContent = clientTitle;
                 btnEl.innerHTML = '<i class="fa-solid fa-server"></i> Sunucular';
-                renderMainChart(netLabels, netValues, netOtherInfoText);
+                renderMainChart(clientLabels, clientValues, clientOtherInfoText, "bar");
             } else {
                 currentMainMode = "server";
                 titleEl.textContent = serverTitle;
                 btnEl.innerHTML = '<i class="fa-solid fa-network-wired"></i> Ağ Cihazları';
-                renderMainChart(serverLabels, serverValues, serverOtherInfoText);
+                renderMainChart(serverLabels, serverValues, serverOtherInfoText, "doughnut");
             }
         }
 

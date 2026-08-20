@@ -157,6 +157,8 @@ function loadBackupSettings(updateToggle = false) {
                 const delEl = document.getElementById("deleteOldBackups");
                 if (delEl) delEl.checked = Boolean(s.delete_old_backups);
 
+                updateMaxBackupCountVisibility();
+
                 const lastBackupEl = document.getElementById("lastBackupDisplay");
                 const statusEl = document.getElementById("lastBackupStatusDisplay");
                 if (lastBackupEl) {
@@ -265,17 +267,34 @@ if (selectBackupFolderBtn) {
         .then(data => {
             if (data.success && data.folder && folderInput) {
                 folderInput.value = data.folder;
+            } else if (data.error) {
+                alert("Hata: " + data.error);
             }
         })
         .catch(err => {
-            console.error("Klasör seçici hatası:", err);
-            const currentPath = folderInput ? folderInput.value : "";
-            const choice = prompt("Yedeklerin kaydedileceği klasör yolunu girin:", currentPath || "C:\\ServerInventoryBackups");
-            if (choice !== null && folderInput) {
-                folderInput.value = choice.trim();
-            }
+            alert("Klasör seçici hatası: " + err);
         });
     });
+}
+
+function updateMaxBackupCountVisibility() {
+    const delEl = document.getElementById("deleteOldBackups");
+    const maxEl = document.getElementById("maxBackupCount");
+    const maxLabel = document.querySelector('label[for="maxBackupCount"]');
+    if (delEl && maxEl) {
+        const isChecked = delEl.checked;
+        maxEl.disabled = !isChecked;
+        maxEl.style.opacity = isChecked ? "1" : "0.4";
+        maxEl.style.cursor = isChecked ? "default" : "not-allowed";
+        if (maxLabel) {
+            maxLabel.style.opacity = isChecked ? "1" : "0.5";
+        }
+    }
+}
+
+const deleteOldBackupsCheckbox = document.getElementById("deleteOldBackups");
+if (deleteOldBackupsCheckbox) {
+    deleteOldBackupsCheckbox.addEventListener("change", updateMaxBackupCountVisibility);
 }
 
 const backupFrequencyEl = document.getElementById("backupFrequency");

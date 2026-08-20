@@ -51,8 +51,7 @@ def mysql_service_running():
 
         return bool(result.stdout.strip())
 
-    except Exception as e:
-        print("MySQL service check error:", e)
+    except Exception:
         return False
 
 
@@ -307,10 +306,7 @@ def change_database_password():
             "success"
         )
 
-    except Exception as e:
-
-        print("Database password change error:", repr(e))
-
+    except Exception:
         if cursor:
             try:
                 cursor.close()
@@ -393,8 +389,6 @@ def connect_database():
         flash("Veritabanı bağlantısı başarılı.", "success")
 
     except Exception as e:
-        print("Database connection error:", repr(e))
-
         if conn:
             try:
                 conn.close()
@@ -678,8 +672,6 @@ def backup_database():
         )
         
     except Exception as e:
-        print("Backup error:", e)
-
         if os.path.exists(filepath):
             os.remove(filepath)
 
@@ -701,6 +693,13 @@ def login():
         password = request.form.get("password")
 
         if "\\" in username:
+            sam_username = username.split("\\")[-1]
+        elif "@" in username:
+            sam_username = username.split("@")[0]
+        else:
+            sam_username = username
+
+        if "\\" in username or "@" in username:
             user_dn = username
         else:
             user_dn = f"{username}@{AD_DOMAIN}"
@@ -720,7 +719,7 @@ def login():
                 search_base = ",".join([f"DC={x}" for x in AD_DOMAIN.split(".")])
                 conn.search(
                     search_base=search_base,
-                    search_filter=f"(sAMAccountName={username})",
+                    search_filter=f"(sAMAccountName={sam_username})",
                     search_scope=SUBTREE,
                     attributes=["memberOf"],
                 )
@@ -795,8 +794,7 @@ def login():
                 flash(translations["name_error"],"error")
                 return redirect(url_for("login"))
 
-        except Exception as e:
-            print("LOGIN HATASI:", repr(e))
+        except Exception:
             flash(translations["error"],"error")
             if conn:
                 conn.unbind()
@@ -872,8 +870,7 @@ def start_database():
 
         flash("MySQL servisi başlatılamadı.","error")
 
-    except Exception as e:
-        print(e)
+    except Exception:
         flash("Bir hata oluştu.","error")
 
     return redirect(url_for("database"))
@@ -892,8 +889,7 @@ def mysql_service_status():
 
         return {"running": False}
 
-    except Exception as e:
-        print(e)
+    except Exception:
         return {"running": False}
 
 @app.route("/database_service_warning")
@@ -905,6 +901,7 @@ def database_service_warning():
     return redirect(url_for("database"))
 
 @app.route("/logs")
+@admin_required
 def logs():
     if "user" not in session:
         return redirect(url_for("login"))
@@ -973,6 +970,7 @@ def logs():
 
 
 @app.route("/logs/search")
+@admin_required
 def logs_search():
     if "user" not in session:
         return redirect(url_for("login"))
@@ -1463,6 +1461,42 @@ def dashboard():
         net_other_info_text = ", ".join(net_other_details)
         total_net_devices = sum(row["total"] for row in net_stats)
 
+        cursor.execute(
+            """
+            SELECT
+                COALESCE(os_name, 'Windows') AS client_os,
+                COUNT(*) AS total
+            FROM clients
+            GROUP BY os_name
+            ORDER BY total DESC
+            """
+        )
+        client_stats = cursor.fetchall()
+
+        client_TOP_N = 5
+        client_labels = []
+        client_values = []
+        client_other_total = 0
+        client_other_details = []
+
+        for i, row in enumerate(client_stats):
+            c_os = row["client_os"] or "Windows"
+            total = row["total"]
+
+            if i < client_TOP_N:
+                client_labels.append(c_os)
+                client_values.append(total)
+            else:
+                client_other_total += total
+                client_other_details.append(f"{c_os}: {total}")
+
+        if client_other_total > 0:
+            client_labels.append("Diğer")
+            client_values.append(client_other_total)
+
+        client_other_info_text = ", ".join(client_other_details)
+        total_clients = sum(row["total"] for row in client_stats)
+
         conn.close()
 
         return render_template(
@@ -1496,6 +1530,10 @@ def dashboard():
             net_values=json.dumps(net_values),
             net_other_info_text=net_other_info_text,
             total_net_devices=total_net_devices,
+            client_labels=json.dumps(client_labels),
+            client_values=json.dumps(client_values),
+            client_other_info_text=client_other_info_text,
+            total_clients=total_clients,
         )
     except Exception:
         if conn:
@@ -1534,6 +1572,10 @@ def dashboard():
             net_values="[]",
             net_other_info_text="",
             total_net_devices=0,
+            client_labels="[]",
+            client_values="[]",
+            client_other_info_text="",
+            total_clients=0,
         )
 
 
@@ -1624,9 +1666,7 @@ def database():
             config_db_name=DB_CONFIG["database"]
         )
 
-    except Exception as e:
-        print("Database page error:", repr(e))
-
+    except Exception:
         if conn:
             conn.close()
 
@@ -1688,14 +1728,23 @@ def edit(id):
             flash(translations.get("error", "Server not found"),"error")
             return redirect(url_for("index"))
 
-        name = request.form["ad"]
-        disk = float(request.form["disk"])
-        ram = int(request.form["ram"])
-        ip = request.form["ip"]
-        project = request.form["project"]
-        cpu = int(request.form["cpu"])
-        date = request.form["date"] or None
-        disk_type = request.form["disktur"]
+        name = request.form.get("ad", "").strip()
+        try:
+            disk = float(request.form.get("disk", 0))
+            ram = int(request.form.get("ram", 0))
+            cpu = int(request.form.get("cpu", 0))
+        except (ValueError, TypeError):
+            flash(translations.get("invalid_numeric_values", "RAM, Disk ve CPU alanlarına geçerli sayısal değerler giriniz."), "error")
+            return redirect(url_for("index"))
+
+        if disk < 1 or ram < 1 or cpu < 1:
+            flash(translations.get("numeric_min_validation", "RAM, Disk ve CPU değerleri 1 veya daha büyük olmalıdır."), "error")
+            return redirect(url_for("index"))
+
+        ip = request.form.get("ip", "").strip()
+        project = request.form.get("project", "").strip()
+        date = request.form.get("date") or None
+        disk_type = request.form.get("disktur", "GB")
 
         if disk_type.upper() == "TB":
             disk *= 1024
@@ -1882,9 +1931,7 @@ def edit(id):
         flash(translations["server_updated"],"success")
         return redirect(url_for("index"))
 
-    except Exception as e:
-        print(e)
-
+    except Exception:
         if conn:
             conn.close()
 
@@ -1944,13 +1991,22 @@ def add():
 
     try:
         if request.method == "POST":
-            name = request.form["ad"]
-            disk_gb = float(request.form["disk"])
-            ram_g = int(request.form["ram"])
-            core_amount = int(request.form["cpu"])
-            ip_address = request.form["ip"]
-            usage_project = request.form["aciklama"]
-            created_at = request.form["tarih"]
+            name = request.form.get("ad", "").strip()
+            try:
+                disk_gb = float(request.form.get("disk", 0))
+                ram_g = int(request.form.get("ram", 0))
+                core_amount = int(request.form.get("cpu", 0))
+            except (ValueError, TypeError):
+                flash(translations.get("invalid_numeric_values", "RAM, Disk ve CPU alanlarına geçerli sayısal değerler giriniz."), "error")
+                return redirect(url_for("add"))
+
+            if disk_gb < 1 or ram_g < 1 or core_amount < 1:
+                flash(translations.get("numeric_min_validation", "RAM, Disk ve CPU değerleri 1 veya daha büyük olmalıdır."), "error")
+                return redirect(url_for("add"))
+
+            ip_address = request.form.get("ip", "").strip()
+            usage_project = request.form.get("aciklama", "").strip()
+            created_at = request.form.get("tarih")
 
             if created_at == "":
                 created_at = None
@@ -2331,10 +2387,7 @@ def networkdevices_search():
             devices=devices
         )
 
-    except Exception as e:
-
-        print(e)
-
+    except Exception:
         if conn:
             conn.close()
 
@@ -2487,9 +2540,7 @@ def editcolumn(id):
 
         return redirect(url_for("index"))
 
-    except Exception as e:
-        print(e)
-
+    except Exception:
         if conn:
             conn.close()
 
@@ -2577,9 +2628,7 @@ def clients():
             is_admin=session.get("is_admin", False)
         )
 
-    except Exception as e:
-        print("Clients error:", e)
-
+    except Exception:
         if conn:
             conn.close()
 
@@ -2664,8 +2713,7 @@ def clients_search():
             username=session.get("user"),
             is_admin=session.get("is_admin", False),
         )
-    except Exception as e:
-        print("Clients search error:", e)
+    except Exception:
         if conn:
             conn.close()
         flash("Client arama hatası.", "error")
@@ -2750,8 +2798,7 @@ def networkdevices():
             device_types=device_types
         )
 
-    except Exception as e:
-        print(e)
+    except Exception:
 
         if conn:
             conn.close()
@@ -2860,9 +2907,7 @@ def addnetworkdevice():
         flash("Ağ cihazı başarıyla eklendi.","success")
         return redirect(url_for("networkdevices"))
 
-    except Exception as e:
-        print(e)
-
+    except Exception:
         if conn:
             conn.close()
 
@@ -2942,8 +2987,7 @@ def deletenetworkdevice(id):
         conn.commit()
         conn.close()
         flash("Ağ cihazı silindi!", "success")
-    except Exception as e:
-        print("Delete network device error:", e)
+    except Exception:
         if conn:
             conn.close()
         flash(translations.get("error", "Silme işlemi başarısız."), "error")
@@ -2973,6 +3017,10 @@ def editnetworkdevice(id):
 
         name = request.form.get("name", "").strip()
         device_type = request.form.get("device_type", "").strip()
+        if device_type == "Diğer":
+            other_device_type = request.form.get("other_device_type", "").strip()
+            if other_device_type:
+                device_type = other_device_type
         brand = request.form.get("brand", "").strip()
         model = request.form.get("model", "").strip()
         serial_number = request.form.get("serial_number", "").strip()
@@ -3037,8 +3085,7 @@ def editnetworkdevice(id):
         conn.commit()
         conn.close()
         flash("Ağ cihazı güncellendi!", "success")
-    except Exception as e:
-        print("Edit network device error:", e)
+    except Exception:
         if conn:
             conn.close()
         flash(translations.get("error", "Güncelleme hatası."), "error")
@@ -3079,8 +3126,10 @@ def ensure_backup_settings_table(cursor):
 
 
 @app.route("/api/backup/select-folder", methods=["POST"])
-@admin_required
 def select_backup_folder_dialog():
+    if "user" not in session:
+        return jsonify({"error": "Oturum açmanız gerekmektedir."}), 401
+
     try:
         import tkinter as tk
         from tkinter import filedialog
@@ -3100,13 +3149,13 @@ def select_backup_folder_dialog():
         else:
             return jsonify({"success": False, "message": "Klasör seçilmedi."}), 200
     except Exception as e:
-        print("Folder picker dialog error:", e)
         return jsonify({"error": "Klasör seçici açılamadı: " + str(e)}), 500
 
 
 @app.route("/api/backup/settings", methods=["GET"])
-@admin_required
 def get_backup_settings():
+    if "user" not in session:
+        return jsonify({"error": "Oturum açmanız gerekmektedir."}), 401
     conn, cursor, is_connected = get_db()
     if not is_connected:
         return jsonify({"error": "Veritabanına bağlanılamadı."}), 500
@@ -3133,7 +3182,6 @@ def get_backup_settings():
 
         return jsonify({"success": True, "settings": settings}), 200
     except Exception as e:
-        print("Backup settings fetch error:", e)
         return jsonify({"error": str(e)}), 500
     finally:
         cursor.close()
@@ -3141,8 +3189,9 @@ def get_backup_settings():
 
 
 @app.route("/api/backup/settings", methods=["POST"])
-@admin_required
 def save_backup_settings():
+    if not session.get("is_admin"):
+        return jsonify({"error": "Otomatik yedekleme ayarlarını kaydetmek için Admin yetkisi gereklidir."}), 403
     conn, cursor, is_connected = get_db()
     if not is_connected:
         return jsonify({"error": "Veritabanına bağlanılamadı."}), 500
@@ -3182,7 +3231,6 @@ def save_backup_settings():
 
         return jsonify({"success": True, "message": "Yedekleme ayarları kaydedildi."}), 200
     except Exception as e:
-        print("Backup settings save error:", e)
         return jsonify({"error": str(e)}), 500
     finally:
         cursor.close()
@@ -3211,8 +3259,7 @@ def parse_ad_timestamp(val):
         start = datetime(1601, 1, 1)
         dt = start + timedelta(days=days, seconds=seconds, microseconds=microseconds)
         return dt.strftime("%Y-%m-%d %H:%M:%S")
-    except Exception as e:
-        print("AD timestamp parse error:", e)
+    except Exception:
         return None
 
 
@@ -3343,7 +3390,6 @@ def sync_clients_from_ad():
         }), 200
 
     except Exception as e:
-        print("AD Sync Error:", e)
         return jsonify({"error": f"AD Senkronizasyon Hatası: {str(e)}"}), 500
 
 

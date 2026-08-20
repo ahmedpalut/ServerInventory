@@ -41,6 +41,24 @@ if (
 
 }
 
+const editDeviceTypeSelect = document.getElementById("net_device_type");
+const editOtherDeviceTypeContainer = document.getElementById("otherDeviceTypeContainer_edit");
+const editOtherDeviceTypeInput = document.getElementById("otherDeviceType_edit");
+
+if (editDeviceTypeSelect && editOtherDeviceTypeContainer && editOtherDeviceTypeInput) {
+    editDeviceTypeSelect.addEventListener("change", function () {
+        if (this.value === "Diğer") {
+            editOtherDeviceTypeContainer.style.display = "block";
+            editOtherDeviceTypeInput.required = true;
+            editOtherDeviceTypeInput.focus();
+        } else {
+            editOtherDeviceTypeContainer.style.display = "none";
+            editOtherDeviceTypeInput.required = false;
+            editOtherDeviceTypeInput.value = "";
+        }
+    });
+}
+
 updateSearchButton();
 
 function openNetworkEditFromBtn(btn) {
@@ -71,7 +89,30 @@ function openNetworkEditPanel(id, name, deviceType, brand, model, serialNumber, 
     };
 
     setVal("net_name", name);
-    setVal("net_device_type", deviceType);
+    
+    if (editDeviceTypeSelect) {
+        editDeviceTypeSelect.value = deviceType || "";
+        if (editDeviceTypeSelect.value !== deviceType && deviceType) {
+            editDeviceTypeSelect.value = "Diğer";
+            if (editOtherDeviceTypeContainer && editOtherDeviceTypeInput) {
+                editOtherDeviceTypeContainer.style.display = "block";
+                editOtherDeviceTypeInput.value = deviceType;
+                editOtherDeviceTypeInput.required = true;
+            }
+        } else if (editDeviceTypeSelect.value === "Diğer") {
+            if (editOtherDeviceTypeContainer && editOtherDeviceTypeInput) {
+                editOtherDeviceTypeContainer.style.display = "block";
+                editOtherDeviceTypeInput.required = true;
+            }
+        } else {
+            if (editOtherDeviceTypeContainer && editOtherDeviceTypeInput) {
+                editOtherDeviceTypeContainer.style.display = "none";
+                editOtherDeviceTypeInput.required = false;
+                editOtherDeviceTypeInput.value = "";
+            }
+        }
+    }
+
     setVal("net_brand", brand);
     setVal("net_model", model);
     setVal("net_serial_number", serialNumber);

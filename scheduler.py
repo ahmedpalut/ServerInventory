@@ -32,10 +32,10 @@ def perform_backup_rotation(folder_path, max_count, delete_old):
             for old_file in files_to_delete:
                 try:
                     os.remove(old_file)
-                except Exception as del_e:
-                    print("Failed to remove old backup file:", del_e)
-    except Exception as e:
-        print("Rotation error:", e)
+                except Exception:
+                    pass
+    except Exception:
+        pass
 
 
 def generate_native_python_sql_dump(cursor, db_name, filepath):
@@ -81,7 +81,6 @@ def generate_native_python_sql_dump(cursor, db_name, filepath):
 def execute_auto_backup(get_db_func, db_config, add_log_func):
     conn, cursor, is_connected = get_db_func()
     if not is_connected:
-        print("Automatic backup failed: Database connection unavailable.")
         return
 
     try:
@@ -166,8 +165,8 @@ def execute_auto_backup(get_db_func, db_config, add_log_func):
             )
             conn.commit()
 
-    except Exception as outer_err:
-        print("Execute auto backup error:", outer_err)
+    except Exception:
+        pass
     finally:
         cursor.close()
         conn.close()
@@ -222,5 +221,5 @@ def update_backup_schedule(is_enabled, frequency, backup_day, backup_time, backu
                 id="db_auto_backup",
                 replace_existing=True,
             )
-    except Exception as err:
-        print("Update backup schedule error:", err)
+    except Exception:
+        pass

@@ -20,10 +20,17 @@
         <span>Clients</span>
     </a>
 
+    {% if is_admin %}
     <a href="{{ url_for('logs') }}" class="nav-item {% if request.endpoint == 'logs' %}active{% endif %}">
         <i class="fa-solid fa-clock-rotate-left"></i>
         {{ translations.logs }}
     </a>
+    {% else %}
+    <a href="#" class="nav-item disabled-nav-item" onclick="alert('Bu sayfaya erişim yetkiniz bulunmamaktadır. (Admin yetkisi gereklidir)'); return false;">
+        <i class="fa-solid fa-lock"></i>
+        {{ translations.logs }}
+    </a>
+    {% endif %}
 
     <a href="{{ url_for('networkdevices') }}"
         class="nav-item {% if request.endpoint == 'networkdevices' %}active{% endif %}">

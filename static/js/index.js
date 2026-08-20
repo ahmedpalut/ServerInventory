@@ -157,7 +157,24 @@ function openPanel(
         document.getElementById("p_disktur").value = "GB";
     }
     document.getElementById("p_disk").value = disk;
-    document.getElementById("server").value = (os && os !== "None") ? os : "";
+    
+    const serverSelect = document.getElementById("server");
+    if (serverSelect) {
+        serverSelect.value = (os && os !== "None") ? os : "";
+        if (serverSelect.value === "Yeni") {
+            if (serverekle) serverekle.style.display = "block";
+            const yeniInput = document.getElementById("yeniIsletim");
+            if (yeniInput) yeniInput.required = true;
+        } else {
+            if (serverekle) serverekle.style.display = "none";
+            const yeniInput = document.getElementById("yeniIsletim");
+            if (yeniInput) {
+                yeniInput.required = false;
+                yeniInput.value = "";
+            }
+        }
+    }
+
     document.getElementById("p_ram").value = ram;
     document.getElementById("p_ip").value = ip;
     document.getElementById("p_project").value = project;

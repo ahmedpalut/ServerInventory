@@ -1254,6 +1254,15 @@ input.custom-checkbox {
     background: #2563eb;
 }
 
+.disabled-nav-item {
+    opacity: 0.55;
+    cursor: not-allowed !important;
+}
+
+.disabled-nav-item:hover {
+    background: transparent !important;
+}
+
 .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;

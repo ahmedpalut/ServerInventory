@@ -24,7 +24,7 @@
             <input type="text" name="ad" required>
 
             <label id="l2">{{translations.e_disk}}</label>
-            <input type="text" name="disk" required>
+            <input type="number" name="disk" min="1" step="any" required>
 
             <label id="l9">{{translations.e_disk_type}}</label>
             <select name="disktur" class="beautifySelect">
@@ -49,13 +49,13 @@
             <br><br>
 
             <label id="l4">{{translations.ram}}</label>
-            <input type="text" name="ram" required>
+            <input type="number" name="ram" min="1" step="any" required>
 
             <label id="l5">{{translations.ip}}</label>
             <input type="text" name="ip" required>
 
             <label id="l7">{{translations.cpu}}</label>
-            <input type="text" name="cpu" required>
+            <input type="number" name="cpu" min="1" step="1" required>
 
             <label id="l8">{{translations.date}}</label>
             <input type="date" name="tarih">
