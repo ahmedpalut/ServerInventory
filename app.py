@@ -245,16 +245,18 @@ def validate_database_schema(conn, database_name):
 @app.route("/change_database_password", methods=["POST"])
 @admin_required
 def change_database_password():
+    lang = session.get("lang", "tr")
+    translations = get_translation(lang)
 
     new_password = request.form.get("new_password", "")
     new_password_confirm = request.form.get("new_password_confirm", "")
 
     if not new_password or not new_password_confirm:
-        flash("Yeni şifre alanlarını doldurun.", "error")
+        flash(translations.get("fill_new_password_fields", "Yeni şifre alanlarını doldurun."), "error")
         return redirect(url_for("database"))
 
     if new_password != new_password_confirm:
-        flash("Yeni şifreler eşleşmiyor.", "error")
+        flash(translations.get("passwords_do_not_match", "Yeni şifreler eşleşmiyor."), "error")
         return redirect(url_for("database"))
 
     if not is_db_password_strong(new_password):
@@ -273,7 +275,7 @@ def change_database_password():
         conn, cursor, is_connected = get_db()
 
         if not is_connected:
-            flash("Veritabanına bağlı değil.", "error")
+            flash(translations.get("db_disconnected", "Veritabanına bağlı değil."), "error")
             return redirect(url_for("database"))
 
         db_user = DB_CONFIG["user"]
@@ -302,11 +304,11 @@ def change_database_password():
             )
 
         flash(
-            "Veritabanı şifresi başarıyla değiştirildi.",
+            translations.get("password_changed_success", "Veritabanı şifresi başarıyla değiştirildi."),
             "success"
         )
 
-    except Exception:
+    except Exception as e:
         if cursor:
             try:
                 cursor.close()
@@ -333,7 +335,7 @@ def connect_database():
     translations = get_translation(lang)
 
     if not mysql_service_running():
-        flash("MySQL hizmeti çalışmıyor.", "error")
+        flash(translations.get("mysql_not_running", "MySQL hizmeti çalışmıyor."), "error")
         return redirect(url_for("database"))
 
     host = request.form.get("host", "").strip()
@@ -343,7 +345,7 @@ def connect_database():
     database = request.form.get("database", "").strip()
 
     if not host or not port or not user or not database or not password:
-        flash("Veritabanı bilgilerini eksiksiz girin.", "error")
+        flash(translations.get("fill_db_info", "Veritabanı bilgilerini eksiksiz girin."), "error")
         return redirect(url_for("database"))
     
     conn = None
@@ -359,14 +361,14 @@ def connect_database():
         )
 
         if not conn.is_connected():
-            flash("Veritabanına bağlanılamadı.", "error")
+            flash(translations.get("cannot_connect_db", "Veritabanına bağlanılamadı."), "error")
             return redirect(url_for("database"))
 
         valid, message = validate_database_schema(conn, database)
 
         if not valid:
             conn.close()
-            flash(f"Veritabanı uyumsuz: {message}", "error")
+            flash(translations.get("db_incompatible", "Veritabanı uyumsuz: ") + str(message), "error")
             return redirect(url_for("database"))
 
         conn.close()
@@ -3394,4 +3396,4 @@ def sync_clients_from_ad():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)

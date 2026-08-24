@@ -118,19 +118,19 @@
                     <div class="database-card">
                         <div class="database-card-title">
                             <i class="fa-solid fa-gear"></i>
-                            <span>Genel Ayarlar</span>
+                            <span>{{translations.general_settings}}</span>
                         </div>
 
                         <div class="database-card-content">
 
                             <div class="database-setting-row">
-                                <span>Otomatik Yedekleme</span>
+                                <span>{{translations.automatic_backup}}</span>
                                 <input type="checkbox" id="autoBackupToggle">
                             </div>
 
                             <button type="button" id="autoBackupSettingsBtn" class="database-action-btn" style="display: none; margin-top: 12px; width: 100%;" onclick="openAutoBackupPanel()">
                                 <i class="fa-solid fa-gear"></i>
-                                Otomatik Yedekleme Ayarları
+                                {{translations.automatic_backup_settings}}
                             </button>
 
                         </div>
@@ -139,7 +139,7 @@
                     <div class="database-card">
                         <div class="database-card-title">
                             <i class="fa-solid fa-broom"></i>
-                            <span>Bakım</span>
+                            <span>{{ translations.maintenance_title }}</span>
                         </div>
 
                         <div class="database-card-content">
@@ -148,14 +148,14 @@
 
                                 <button type="submit" class="database-action-btn">
                                     <i class="fa-solid fa-plug-circle-check"></i>
-                                    Veritabanı Hizmetini Çalıştır
+                                    {{ translations.run_db_service }}
                                 </button>
 
                             </form>
 
                             <button type="button" id="connectDatabaseBtn" class="database-action-btn">
                                 <i class="fa-solid fa-globe"></i>
-                                Veritabanına Bağlan
+                                {{ translations.connect_to_db }}
                             </button>
 
                         </div>
@@ -164,14 +164,14 @@
                     <div class="database-card">
                         <div class="database-card-title">
                             <i class="fa-solid fa-database"></i>
-                            <span>Yedekleme</span>
+                            <span>{{ translations.backup_title }}</span>
                         </div>
 
                         <div class="database-card-content">
 
                             <a href="{{ url_for('backup_database') }}" class="database-action-btn">
                                 <i class="fa-solid fa-file-export"></i>
-                                SQL Olarak Dışa Aktar
+                                {{ translations.export_sql }}
                             </a>
 
                             <form action="{{ url_for('database_restore') }}" method="POST"
@@ -181,14 +181,14 @@
 
                                 <label for="database_file" class="database-action-btn" id="sqlsec">
                                     <i class="fa-solid fa-file-import"></i>
-                                    SQL Olarak İçeri Aktar
+                                    {{ translations.import_sql }}
                                 </label>
 
                                 <span id="selected_file"></span>
 
                                 <button type="submit" class="database-action-btn" id="restoreBtn">
                                     <i class="fa-solid fa-database"></i>
-                                    Veritabanını Geri Yükle
+                                    {{ translations.restore_db }}
                                 </button>
 
                             </form>
@@ -199,26 +199,26 @@
                     <div class="database-card">
                         <div class="database-card-title">
                             <i class="fa-solid fa-shield-halved"></i>
-                            <span>Güvenlik</span>
+                            <span>{{ translations.security_title }}</span>
                         </div>
 
                         <div class="database-card-content">
 
                             <form action="{{ url_for('change_database_password') }}" method="POST">
 
-                                <label>Yeni Şifre</label>
+                                <label>{{ translations.new_db_password }}</label>
 
                                 <input type="password" name="new_password" id="newDatabasePassword"
-                                    placeholder="Yeni şifre" required class="password-input">
+                                    placeholder="{{ translations.new_db_password }}" required class="password-input">
 
-                                <label>Yeni Şifre (Tekrar)</label>
+                                <label>{{ translations.confirm_db_password }}</label>
 
                                 <input type="password" name="new_password_confirm" id="newDatabasePasswordConfirm"
-                                    placeholder="Yeni şifreyi tekrar girin" required class="password-input">
+                                    placeholder="{{ translations.confirm_db_password }}" required class="password-input">
 
                                 <button type="submit" class="database-action-btn">
                                     <i class="fa-solid fa-key"></i>
-                                    Şifreyi Değiştir
+                                    {{ translations.change_db_password }}
                                 </button>
 
                             </form>
@@ -239,57 +239,57 @@
 
         <span id="closeAutoBackup" onclick="closeAutoBackupPanel()">✖</span>
 
-        <h2>Otomatik Yedekleme</h2>
+        <h2>{{ translations.auto_backup_settings }}</h2>
 
         <div id="backupStatusBanner" style="background: rgba(255,255,255,0.06); padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; color: #cbd5e1;">
-            <div id="lastBackupDisplay">Son Yedekleme: Yükleniyor...</div>
+            <div id="lastBackupDisplay">{{translations.last_backup}}</div>
             <div id="lastBackupStatusDisplay" style="margin-top: 4px; font-size: 12px; color: #94a3b8;"></div>
         </div>
 
         <form id="autoBackupForm">
 
-            <label for="backupFrequency">Yedekleme Sıklığı</label>
+            <label for="backupFrequency">{{ translations.backup_frequency }}</label>
             <select id="backupFrequency" class="beautifySelect">
-                <option value="daily">Her Gün</option>
-                <option value="weekly">Her Hafta</option>
-                <option value="monthly">Her Ay</option>
+                <option value="daily">{{ translations.daily }}</option>
+                <option value="weekly">{{ translations.weekly }}</option>
+                <option value="monthly">{{ translations.monthly }}</option>
             </select>
 
             <div id="backupDayGroup" style="display: none;">
-                <label for="backupDay">Yedekleme Günü</label>
+                <label for="backupDay">{{ translations.backup_day }}</label>
                 <select id="backupDay" class="beautifySelect">
-                    <option value="mon">Pazartesi</option>
-                    <option value="tue">Salı</option>
-                    <option value="wed">Çarşamba</option>
-                    <option value="thu">Perşembe</option>
-                    <option value="fri">Cuma</option>
-                    <option value="sat">Cumartesi</option>
-                    <option value="sun">Pazar</option>
+                    <option value="mon">{{ translations.mon }}</option>
+                    <option value="tue">{{ translations.tue }}</option>
+                    <option value="wed">{{ translations.wed }}</option>
+                    <option value="thu">{{ translations.thu }}</option>
+                    <option value="fri">{{ translations.fri }}</option>
+                    <option value="sat">{{ translations.sat }}</option>
+                    <option value="sun">{{ translations.sun }}</option>
                 </select>
             </div>
 
-            <label for="backupTime">Yedekleme Saati</label>
+            <label for="backupTime">{{ translations.backup_time }}</label>
             <input type="time" id="backupTime" value="03:00">
 
-            <label for="backupFolder">Yedekleme Klasörü</label>
+            <label for="backupFolder">{{ translations.backup_folder }}</label>
             <div class="backup-folder-row">
-                <input type="text" id="backupFolder" placeholder="Yedeklerin kaydedileceği klasör">
+                <input type="text" id="backupFolder" placeholder="{{ translations.backup_folder }}">
                 <button type="button" id="selectBackupFolder" class="beautify">
-                    Seç
+                    {{ translations.select }}
                 </button>
             </div>
 
-            <label for="maxBackupCount">Maksimum Yedek Sayısı</label>
+            <label for="maxBackupCount">{{ translations.max_backup_count }}</label>
             <input type="number" id="maxBackupCount" value="10" min="1">
 
             <div class="database-setting-row">
-                <span>Eski yedekleri otomatik sil</span>
+                <span>{{ translations.delete_old_backups }}</span>
                 <input type="checkbox" id="deleteOldBackups" checked>
             </div>
 
             <button type="button" id="saveAutoBackupBtn" class="add-btn bold">
                 <i class="fa-solid fa-floppy-disk"></i>
-                Ayarları Kaydet
+                {{ translations.save_settings }}
             </button>
 
         </form>
@@ -302,7 +302,7 @@
 
             <span id="closeConnectDatabase">✖</span>
 
-            <h2>Veritabanı Bağlantısını Değiştir</h2>
+            <h2>{{translations.change_db_connection}}</h2>
 
             <form action="/connect_database" method="POST">
 
@@ -312,18 +312,18 @@
                 <label>Port</label>
                 <input type="text" name="port" value="{{ config_db_port }}" required>
 
-                <label>Kullanıcı Adı</label>
+                <label>{{translations.username}}</label>
                 <input type="text" name="user" value="{{ config_db_user }}" required>
 
-                <label>Şifre</label>
+                <label>{{translations.password}}</label>
                 <input type="password" name="password" placeholder="Şifre">
 
-                <label>Veritabanı</label>
+                <label>{{translations.database}}</label>
                 <input type="text" name="database" value="{{ config_db_name }}" required>
 
                 <button type="submit" class="beautify">
                     <i class="fa-solid fa-plug"></i>
-                    Bağlan
+                    {{translations.connect}}
                 </button>
 
             </form>

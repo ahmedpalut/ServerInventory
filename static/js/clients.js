@@ -41,12 +41,12 @@ if (startAdSyncBtn) {
         const adPassword = passwordInput ? passwordInput.value : "";
 
         if (!adUser || !adPassword) {
-            alert("Lütfen Active Directory kullanıcı adı ve şifrenizi girin.");
+            alert(window.translations?.enter_ad_credentials || "Lütfen Active Directory kullanıcı adı ve şifrenizi girin.");
             return;
         }
 
         startAdSyncBtn.disabled = true;
-        startAdSyncBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Senkronize Ediliyor...';
+        startAdSyncBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (window.translations?.loading || "Yükleniyor...");
 
         fetch("/api/clients/sync_ad", {
             method: "POST",
@@ -61,19 +61,19 @@ if (startAdSyncBtn) {
         .then(res => res.json())
         .then(data => {
             startAdSyncBtn.disabled = false;
-            startAdSyncBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Senkronize Et';
+            startAdSyncBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> ' + (window.translations?.start_sync || "Senkronize Et");
             if (data.success) {
-                alert(data.message || "Active Directory senkronizasyonu tamamlandı.");
+                alert(data.message || (window.translations?.ad_sync_success || "Active Directory senkronizasyonu tamamlandı."));
                 closeAdSyncPanel();
                 window.location.reload();
             } else {
-                alert("Senkronizasyon Hatası: " + (data.error || "Bilinmeyen hata."));
+                alert((window.translations?.ad_sync_error || "Senkronizasyon Hatası: ") + (data.error || (window.translations?.unknown_error || "Bilinmeyen hata.")));
             }
         })
         .catch(err => {
             startAdSyncBtn.disabled = false;
-            startAdSyncBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Senkronize Et';
-            alert("İstek gönderilemedi: " + err);
+            startAdSyncBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> ' + (window.translations?.start_sync || "Senkronize Et");
+            alert((window.translations?.request_failed || "İstek gönderilemedi: ") + err);
         });
     });
 }

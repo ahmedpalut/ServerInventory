@@ -223,11 +223,8 @@ body {
     transform: translateY(-2px);
 }
 
-#addNetworkDevice {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: normal;
+#addNetworkBtn{
+    margin-right: auto;
 }
 
 #searchInput {
@@ -341,6 +338,11 @@ a {
     padding: 10px 18px;
     border-radius: 10px;
     text-align: center;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
 }
 
 .add-btn:hover {

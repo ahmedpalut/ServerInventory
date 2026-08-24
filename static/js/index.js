@@ -98,7 +98,7 @@ if (columnOverlay) {
 
 if (columnDeleteForm) {
     columnDeleteForm.onsubmit = function () {
-        return confirm("Bu sütun silinecek. Devam etmek istiyor musunuz?");
+        return confirm(window.translations?.confirm_delete_column || "Bu sütun silinecek. Devam etmek istiyor musunuz?");
     };
 }
 
@@ -448,7 +448,7 @@ if (columnForm) {
         const newType = document.getElementById("columnType").value;
 
         if (originalType !== newType) {
-            return confirm("Veri tipini değiştiriyorsunuz. Bu sütuna ait mevcut tüm değerler silinecek. Devam etmek istiyor musunuz?");
+            return confirm(window.translations?.confirm_change_data_type || "Veri tipini değiştiriyorsunuz. Bu sütuna ait mevcut tüm değerler silinecek. Devam etmek istiyor musunuz?");
         }
 
         return true;

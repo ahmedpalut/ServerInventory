@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ağ Cihazı Ekle</title>
+    <title>{{ translations.add_network_device }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
@@ -15,7 +15,7 @@
 
         <div class="top-bar">
 
-            <h1 id="title">Ağ Cihazı Ekle</h1>
+            <h1 id="title">{{ translations.add_network_device }}</h1>
 
             <a href="/change_language/{{ 'en' if lang == 'tr' else 'tr' }}" id="langButton">
                 {{ 'EN' if lang == 'tr' else 'TR' }}
@@ -27,15 +27,15 @@
         <form action="/addnetworkdevice" method="POST">
 
 
-            <label>Cihaz Adı</label>
+            <label>{{ translations.device_name }}</label>
             <input type="text" name="name" required>
 
 
-            <label>Cihaz Türü</label>
+            <label>{{ translations.type }}</label>
 
             <select name="device_type" class="beautifySelect" required id="net_device_type">
 
-                <option value="" selected disabled>Cihaz türü seçin</option>
+                <option value="" selected disabled>{{ translations.select_device_type }}</option>
 
                 <option value="Switch">Switch</option>
                 <option value="Router">Router</option>
@@ -47,72 +47,72 @@
                 <option value="{{ device_type }}">{{ device_type }}</option>
                 {% endfor %}
 
-                <option value="Diğer">Diğer</option>
+                <option value="Diğer">{{ translations.new }}</option>
 
             </select>
 
             <div id="otherDeviceTypeContainer" style="display: none; margin-top: 10px;">
-                <input type="text" name="other_device_type" id="otherDeviceType" placeholder="Yeni cihaz türünü girin"
+                <input type="text" name="other_device_type" id="otherDeviceType" placeholder="{{ translations.enter_new_device_type }}"
                     class="beautifyInput">
             </div>
 
 
-            <label>Marka</label>
+            <label>{{ translations.brand }}</label>
             <input type="text" name="brand">
 
 
-            <label>Model</label>
+            <label>{{ translations.model }}</label>
             <input type="text" name="model">
 
 
-            <label>Seri Numarası</label>
+            <label>{{ translations.serial_number }}</label>
             <input type="text" name="serial_number">
 
 
-            <label>IP Adresi</label>
+            <label>{{ translations.ip_address }}</label>
             <input type="text" name="ip_address">
 
 
-            <label>MAC Adresi</label>
+            <label>{{ translations.mac_address }}</label>
             <input type="text" name="mac_address">
 
 
-            <label>Lokasyon</label>
+            <label>{{ translations.location }}</label>
             <input type="text" name="location">
 
 
-            <label>Durum</label>
+            <label>{{ translations.status }}</label>
 
             <select name="status" class="beautifySelect">
 
-                <option value="Aktif">Aktif</option>
-                <option value="Pasif">Pasif</option>
-                <option value="Bakımda">Bakımda</option>
-                <option value="Arızalı">Arızalı</option>
+                <option value="Aktif">{{ translations.active }}</option>
+                <option value="Pasif">{{ translations.passive }}</option>
+                <option value="Bakımda">{{ translations.maintenance }}</option>
+                <option value="Arızalı">{{ translations.faulty }}</option>
 
             </select>
 
 
-            <label>Software Version</label>
+            <label>{{ translations.software_version }}</label>
             <input type="text" name="software_version">
 
 
-            <label>Tarih</label>
+            <label>{{ translations.date }}</label>
             <input type="date" name="created_at">
 
 
-            <label>Açıklama</label>
+            <label>{{ translations.description }}</label>
             <input type="text" name="description">
 
 
             <div class="buttons">
 
                 <button type="submit" id="saveBtn">
-                    Ekle
+                    {{ translations.add }}
                 </button>
 
                 <a href="/networkdevices" id="cancelBtn">
-                    İptal
+                    {{ translations.cancel }}
                 </a>
 
             </div>

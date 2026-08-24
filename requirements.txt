@@ -1,0 +1,6 @@
+Flask
+python-dotenv
+mysql-connector-python
+ldap3
+APScheduler
+pywin32

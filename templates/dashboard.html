@@ -34,7 +34,7 @@
         <div class="header-buttons">
 
             <button class="pdf-btn" onclick="downloadPDF()">
-                <i class="fa-solid fa-file-pdf"></i> Raporu PDF İndir
+                <i class="fa-solid fa-file-pdf"></i> {{translations.download_pdf}}
             </button>
 
             <a href="/logout" title="{{translations.logout}}" class="logout-btn"
@@ -50,7 +50,7 @@
         <div class="kpi-card">
             <div class="kpi-icon"><i class="fa-solid fa-hard-drive"></i></div>
             <div class="kpi-info">
-                <span class="kpi-label">Toplam Disk Kapasitesi</span>
+                <span class="kpi-label">{{ translations.total_disk_capacity }}</span>
                 <h3 class="kpi-value">{{ total_disk_str }}</h3>
             </div>
         </div>
@@ -58,7 +58,7 @@
         <div class="kpi-card">
             <div class="kpi-icon"><i class="fa-solid fa-memory"></i></div>
             <div class="kpi-info">
-                <span class="kpi-label">Toplam RAM Kapasitesi</span>
+                <span class="kpi-label">{{ translations.total_ram_capacity }}</span>
                 <h3 class="kpi-value">{{ total_ram_str }}</h3>
             </div>
         </div>
@@ -66,7 +66,7 @@
         <div class="kpi-card">
             <div class="kpi-icon"><i class="fa-solid fa-microchip"></i></div>
             <div class="kpi-info">
-                <span class="kpi-label">Toplam CPU Core</span>
+                <span class="kpi-label">{{ translations.total_cpu_core }}</span>
                 <h3 class="kpi-value">{{ total_cpu }} Core</h3>
             </div>
         </div>
@@ -74,7 +74,7 @@
         <div class="kpi-card">
             <div class="kpi-icon"><i class="fa-solid fa-layer-group"></i></div>
             <div class="kpi-info">
-                <span class="kpi-label">OS Dağılım Oranı</span>
+                <span class="kpi-label">{{ translations.os_distribution_rate }}</span>
                 <h3 class="kpi-value">%{{ win_percent }} Win / %{{ other_percent }} Diğer</h3>
             </div>
         </div>
@@ -84,9 +84,9 @@
 
         <div class="dashboard-card">
             <div class="card-header-toggle">
-                <h2 id="osChartTitle">Toplam Sunucu ({{ total_servers }})</h2>
+                <h2 id="osChartTitle">{{translations.total_server}}({{ total_servers }})</h2>
                 <button id="toggleChartBtn" class="toggle-chart-btn" onclick="toggleMainChart()">
-                    <i class="fa-solid fa-network-wired"></i> Ağ Cihazları
+                    <i class="fa-solid fa-network-wired"></i> {{translations.network_devices}}
                 </button>
             </div>
             <div class="chart-container">
@@ -95,36 +95,36 @@
         </div>
 
         <div class="dashboard-card">
-            <h2>Disk Dağılımı</h2>
+            <h2>{{ translations.disk_distribution }}</h2>
             <div class="chart-container">
                 <canvas id="diskChart"></canvas>
             </div>
         </div>
 
         <div class="dashboard-card">
-            <h2>CPU Dağılımı</h2>
+            <h2>{{ translations.cpu_distribution }}</h2>
             <div class="chart-container">
                 <canvas id="cpuChart"></canvas>
             </div>
         </div>
 
         <div class="dashboard-card">
-            <h2>RAM Dağılımı</h2>
+            <h2>{{ translations.ram_distribution }}</h2>
             <div class="chart-container">
                 <canvas id="ramChart"></canvas>
             </div>
         </div>
 
         <div class="dashboard-card date-card">
-            <span class="undated-text">Tarihsiz Sunucu: {{ no_date }}</span>
-            <h2>Sunucu Eklenme Tarihi</h2>
+            <span class="undated-text">{{ translations.undated_server }}: {{ no_date }}</span>
+            <h2>{{ translations.server_added_date }}</h2>
             <div class="chart-container">
                 <canvas id="dateChart"></canvas>
             </div>
         </div>
 
         <div class="dashboard-card date-card">
-            <h2>En Yüksek Kapasiteli Sunucular (Top 3)</h2>
+            <h2>{{ translations.top_capacity_servers }}</h2>
             <div class="top-servers-grid">
                 {% for server in top_servers %}
                 <div class="top-server-item">
@@ -166,17 +166,17 @@
         const serverLabels = JSON.parse('{{ labels | tojson | safe }}');
         const serverValues = JSON.parse('{{ values | tojson | safe }}');
         const serverOtherInfoText = "{{ other_info_text }}";
-        const serverTitle = "Toplam Sunucu ({{ total_servers }})";
+        const serverTitle = "{{ translations.total_server }} ({{ total_servers }})";
 
         const netLabels = JSON.parse('{{ net_labels | safe }}');
         const netValues = JSON.parse('{{ net_values | safe }}');
         const netOtherInfoText = "{{ net_other_info_text }}";
-        const netTitle = "Toplam Ağ Cihazı ({{ total_net_devices }})";
+        const netTitle = "{{ translations.total_network_devices }} ({{ total_net_devices }})";
 
         const clientLabels = JSON.parse('{{ client_labels | safe }}');
         const clientValues = JSON.parse('{{ client_values | safe }}');
         const clientOtherInfoText = "{{ client_other_info_text }}";
-        const clientTitle = "Toplam Client Bilgisayar ({{ total_clients }})";
+        const clientTitle = "{{ translations.total_clients }} ({{ total_clients }})";
 
         let currentMainMode = "server";
         let mainChart = null;
@@ -214,8 +214,10 @@
                                     afterBody: function (context) {
                                         const item = context[0];
                                         const label = item.label || item.chart.data.labels[item.dataIndex];
-                                        if (label === "Diğer" && otherInfoText) {
-                                            return ["", "İçerik:"].concat(otherInfoText.split(", "));
+                                        const otherLabel = window.translations?.other || "Diğer";
+                                        if ((label === "Diğer" || label === "Other" || label === otherLabel) && otherInfoText) {
+                                            const headerText = window.translations?.content || "İçerik:";
+                                            return ["", headerText].concat(otherInfoText.split(", "));
                                         }
                                         return [];
                                     }
@@ -276,8 +278,10 @@
                                     afterBody: function (context) {
                                         const item = context[0];
                                         const label = item.label || item.chart.data.labels[item.dataIndex];
-                                        if (label === "Diğer" && otherInfoText) {
-                                            return ["", "İçerik:"].concat(otherInfoText.split(", "));
+                                        const otherLabel = window.translations?.other || "Diğer";
+                                        if ((label === "Diğer" || label === "Other" || label === otherLabel) && otherInfoText) {
+                                            const headerText = window.translations?.content || "İçerik:";
+                                            return ["", headerText].concat(otherInfoText.split(", "));
                                         }
                                         return [];
                                     }

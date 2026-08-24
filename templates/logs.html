@@ -80,8 +80,8 @@
                         <div class="search-fields">
                             <label><input type="checkbox" name="fields" value="username" checked>
                                 {{translations.username}}</label>
-                            <label><input type="checkbox" name="fields" value="action" checked> İşlem</label>
-                            <label><input type="checkbox" name="fields" value="target" checked> Hedef</label>
+                            <label><input type="checkbox" name="fields" value="action" checked> {{ translations.action_type }}</label>
+                            <label><input type="checkbox" name="fields" value="target" checked> {{ translations.target }}</label>
                             <label><input type="checkbox" name="fields" value="description" checked>
                                 {{translations.description}}</label>
                             <label><input type="checkbox" name="fields" value="created_at" checked>
@@ -121,14 +121,14 @@
 
                     <th draggable="true" data-col="action" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>İşlem</span>
+                            <span>{{ translations.action_type }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'action')">▼</button>
                         </div>
                     </th>
 
                     <th draggable="true" data-col="target" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Hedef</span>
+                            <span>{{ translations.target }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'target')">▼</button>
                         </div>
                     </th>
@@ -176,7 +176,7 @@
                 <tr class="serverRow">
 
                     <td colspan="5" style="text-align: center;">
-                        Henüz log bulunmuyor.
+                        {{ translations.no_logs }}
                     </td>
 
                 </tr>

@@ -127,6 +127,14 @@
 
         </form>
 
+        <div>
+            {% if is_admin %}
+            <a href="{{ url_for('addnetworkdevice_page') }}" class="add-btn" id="addNetworkBtn">
+                {{ translations.add_new_network_device }}
+            </a>
+            {% endif %}
+        </div>
+
     </div>
 
     <div class="table-container">
@@ -139,35 +147,35 @@
 
                     <th draggable="true" data-col="name" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Cihaz Adı</span>
+                            <span>{{ translations.device_name }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'name')">▼</button>
                         </div>
                     </th>
 
                     <th draggable="true" data-col="device_type" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Tür</span>
+                            <span>{{ translations.type }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'device_type')">▼</button>
                         </div>
                     </th>
 
                     <th draggable="true" data-col="brand" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Marka</span>
+                            <span>{{ translations.brand }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'brand')">▼</button>
                         </div>
                     </th>
 
                     <th draggable="true" data-col="model" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Model</span>
+                            <span>{{ translations.model }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'model')">▼</button>
                         </div>
                     </th>
 
                     <th draggable="true" data-col="serial_number" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Seri Numarası</span>
+                            <span>{{ translations.serial_number }}</span>
                             <button class="column-menu-btn"
                                 onclick="toggleColumnMenu(event, 'serial_number')">▼</button>
                         </div>
@@ -175,35 +183,35 @@
 
                     <th draggable="true" data-col="ip_address" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>IP Adresi</span>
+                            <span>{{ translations.ip_address }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'ip_address')">▼</button>
                         </div>
                     </th>
 
                     <th draggable="true" data-col="mac_address" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>MAC Adresi</span>
+                            <span>{{ translations.mac_address }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'mac_address')">▼</button>
                         </div>
                     </th>
 
                     <th draggable="true" data-col="location" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Lokasyon</span>
+                            <span>{{ translations.location }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'location')">▼</button>
                         </div>
                     </th>
 
                     <th draggable="true" data-col="status" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Durum</span>
+                            <span>{{ translations.status }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'status')">▼</button>
                         </div>
                     </th>
 
                     <th draggable="true" data-col="software_version" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Software Version</span>
+                            <span>{{ translations.software_version }}</span>
                             <button class="column-menu-btn"
                                 onclick="toggleColumnMenu(event, 'software_version')">▼</button>
                         </div>
@@ -211,27 +219,27 @@
 
                     <th draggable="true" data-col="created_at" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Oluşturulma</span>
+                            <span>{{ translations.created_at }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'created_at')">▼</button>
                         </div>
                     </th>
 
                     <th draggable="true" data-col="updated_at" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Son Güncelleme</span>
+                            <span>{{ translations.updated_at }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'updated_at')">▼</button>
                         </div>
                     </th>
 
                     <th draggable="true" data-col="description" class="draggable-th">
                         <div class="th-wrapper">
-                            <span>Açıklama</span>
+                            <span>{{ translations.description }}</span>
                             <button class="column-menu-btn" onclick="toggleColumnMenu(event, 'description')">▼</button>
                         </div>
                     </th>
 
                     {% if is_admin %}
-                    <th id="th_last">{{translations.operation}}</th>
+                    <th id="th_last">{{ translations.operation }}</th>
                     {% endif %}
 
                 </tr>
@@ -249,21 +257,21 @@
 
                     <td data-col="device_type">{{ device.device_type }}</td>
 
-                    <td data-col="brand">{{ device.brand }}</td>
+                    <td data-col="brand">{{ device.brand or '-' }}</td>
 
-                    <td data-col="model">{{ device.model }}</td>
+                    <td data-col="model">{{ device.model or '-' }}</td>
 
-                    <td data-col="serial_number">{{ device.serial_number }}</td>
+                    <td data-col="serial_number">{{ device.serial_number or '-' }}</td>
 
-                    <td data-col="ip_address">{{ device.ip_address }}</td>
+                    <td data-col="ip_address">{{ device.ip_address or '-' }}</td>
 
-                    <td data-col="mac_address">{{ device.mac_address }}</td>
+                    <td data-col="mac_address">{{ device.mac_address or '-' }}</td>
 
-                    <td data-col="location">{{ device.location }}</td>
+                    <td data-col="location">{{ device.location or '-' }}</td>
 
-                    <td data-col="status">{{ device.status }}</td>
+                    <td data-col="status">{{ device.status or '-' }}</td>
 
-                    <td data-col="software_version">{{ device.software_version }}</td>
+                    <td data-col="software_version">{{ device.software_version or '-' }}</td>
 
                     <td data-col="created_at">{{ device.created_at or '-' }}</td>
 
@@ -299,7 +307,7 @@
                 <tr class="serverRow">
 
                     <td colspan="14" style="text-align: center;">
-                        Henüz ağ cihazı bulunmuyor.
+                        {{ translations.no_network_devices }}
                     </td>
 
                 </tr>
@@ -316,16 +324,16 @@
 
     <div id="editNetworkPanel">
         <span onclick="closeNetworkEditPanel()" id="closeEditNetworkBtn">✖</span>
-        <h2>Ağ Cihazı Düzenle</h2>
+        <h2>{{ translations.edit_network_device }}</h2>
 
         <form id="editNetworkForm" method="POST">
-            <label>Cihaz Adı</label><br>
+            <label>{{ translations.device_name }}</label><br>
             <input type="text" name="name" id="net_name" required><br><br>
 
-            <label>Cihaz Türü</label><br>
+            <label>{{ translations.type }}</label><br>
             <select name="device_type" class="beautifySelect" required id="net_device_type">
 
-                <option value="" selected disabled>Cihaz türü seçin</option>
+                <option value="" selected disabled>{{ translations.select_device_type }}</option>
 
                 <option value="Switch">Switch</option>
                 <option value="Router">Router</option>
@@ -337,38 +345,39 @@
                 <option value="{{ device_type }}">{{ device_type }}</option>
                 {% endfor %}
 
-                <option value="Diğer">Diğer</option>
+                <option value="Diğer">{{ translations.new }}</option>
 
             </select>
 
             <div id="otherDeviceTypeContainer_edit" style="display: none; margin-top: 10px;">
-                <input type="text" name="other_device_type" id="otherDeviceType_edit" placeholder="Yeni cihaz türünü girin" class="beautifyInput">
+                <input type="text" name="other_device_type" id="otherDeviceType_edit"
+                    placeholder="{{ translations.enter_new_device_type }}" class="beautifyInput">
             </div><br><br>
 
-            <label>Marka</label><br>
+            <label>{{ translations.brand }}</label><br>
             <input type="text" name="brand" id="net_brand"><br><br>
 
-            <label>Model</label><br>
+            <label>{{ translations.model }}</label><br>
             <input type="text" name="model" id="net_model"><br><br>
 
-            <label>Seri Numarası</label><br>
+            <label>{{ translations.serial_number }}</label><br>
             <input type="text" name="serial_number" id="net_serial_number"><br><br>
 
-            <label>IP Adresi</label><br>
+            <label>{{ translations.ip_address }}</label><br>
             <input type="text" name="ip_address" id="net_ip_address"><br><br>
 
-            <label>MAC Adresi</label><br>
+            <label>{{ translations.mac_address }}</label><br>
             <input type="text" name="mac_address" id="net_mac_address"><br><br>
 
-            <label>Lokasyon</label><br>
+            <label>{{ translations.location }}</label><br>
             <input type="text" name="location" id="net_location"><br><br>
 
-            <label>Durum</label><br>
+            <label>{{ translations.status }}</label><br>
             <select name="status" id="net_status" class="beautifySelect">
-                <option value="Aktif">Aktif</option>
-                <option value="Pasif">Pasif</option>
-                <option value="Bakımda">Bakımda</option>
-                <option value="Arızalı">Arızalı</option>
+                <option value="Aktif">{{ translations.active }}</option>
+                <option value="Pasif">{{ translations.passive }}</option>
+                <option value="Bakımda">{{ translations.maintenance }}</option>
+                <option value="Arızalı">{{ translations.faulty }}</option>
             </select><br><br>
 
             <label>Software Version</label><br>

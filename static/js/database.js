@@ -268,11 +268,11 @@ if (selectBackupFolderBtn) {
             if (data.success && data.folder && folderInput) {
                 folderInput.value = data.folder;
             } else if (data.error) {
-                alert("Hata: " + data.error);
+                alert((window.translations?.error || "Hata: ") + data.error);
             }
         })
         .catch(err => {
-            alert("Klasör seçici hatası: " + err);
+            alert((window.translations?.folder_picker_error || "Klasör seçici hatası: ") + err);
         });
     });
 }
@@ -336,15 +336,15 @@ function performSaveBackupSettings() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert(data.message || "Yedekleme ayarları kaydedildi.");
+            alert(data.message || (window.translations?.backup_settings_saved || "Yedekleme ayarları kaydedildi."));
             closeAutoBackupPanel();
             loadBackupSettings(true);
         } else {
-            alert("Hata: " + (data.error || "Ayarlar kaydedilemedi."));
+            alert((window.translations?.error || "Hata: ") + (data.error || (window.translations?.backup_settings_save_error || "Ayarlar kaydedilemedi.")));
         }
     })
     .catch(err => {
-        alert("İstek gönderilemedi: " + err);
+        alert((window.translations?.request_failed || "İstek gönderilemedi: ") + err);
     });
 }
 

@@ -17,7 +17,7 @@
 
     <a href="{{ url_for('clients') }}" class="nav-item {% if request.endpoint == 'clients' %}active{% endif %}">
         <i class="fa-solid fa-desktop"></i>
-        <span>Clients</span>
+        <span>{{ translations.clients }}</span>
     </a>
 
     {% if is_admin %}
@@ -26,7 +26,7 @@
         {{ translations.logs }}
     </a>
     {% else %}
-    <a href="#" class="nav-item disabled-nav-item" onclick="alert('Bu sayfaya erişim yetkiniz bulunmamaktadır. (Admin yetkisi gereklidir)'); return false;">
+    <a href="#" class="nav-item disabled-nav-item" onclick="alert('{{ translations.permission }}'); return false;">
         <i class="fa-solid fa-lock"></i>
         {{ translations.logs }}
     </a>
@@ -35,7 +35,7 @@
     <a href="{{ url_for('networkdevices') }}"
         class="nav-item {% if request.endpoint == 'networkdevices' %}active{% endif %}">
         <i class="fa-solid fa-network-wired"></i>
-        Ağ Cihazları
+        {{ translations.network_devices }}
     </a>
 
     <a href="/change_language/{{ 'en' if lang == 'tr' else 'tr' }}" id="langButton">
@@ -45,16 +45,17 @@
     {% if request.endpoint == 'database' %}
     <button class="beautify" id="dbSettingsBtn" onclick="openDatabasePanel()">
         <i class="fa-solid fa-cog"></i>
-        DB Ayarları
+        {{ translations.db_settings }}
     </button>
     {% endif %}
 
-    {% if is_admin %}
-        {% if request.endpoint == 'networkdevices' %}
-        <a href="{{ url_for('addnetworkdevice_page') }}" class="add-btn" id="addNetworkDevice">
-           ➕ Ağ Cihazı Ekle
-        </a>
-        {% endif %}
-    {% endif %}
-
 </nav>
+
+<script id="translations-data" type="application/json">{{ translations | tojson | safe }}</script>
+<script>
+    try {
+        window.translations = JSON.parse(document.getElementById("translations-data").textContent);
+    } catch (e) {
+        window.translations = {};
+    }
+</script>
